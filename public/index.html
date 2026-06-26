@@ -456,6 +456,81 @@ table.data-table tbody td{padding:9px 12px;font-size:12px;color:var(--navy);font
 .ai-section-injected{background:rgba(36,233,163,.05);border:1px solid rgba(36,233,163,.15);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:16px;font-size:12.5px;color:var(--navy);line-height:1.7;}
 .ai-section-injected-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#1db88a;margin-bottom:6px;}
 
+
+
+/* ═══════════════════════════════════
+   INSIGHTS ENGINE — Upload + AI
+   ═══════════════════════════════════ */
+.upload-panel{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;margin-bottom:20px;}
+.upload-panel-title{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.upload-panel-title .up-badge{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgba(36,233,163,.12);color:#1db88a;border:1px solid rgba(36,233,163,.2);border-radius:10px;padding:2px 8px;}
+.upload-drop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.upload-drop{border:1.5px dashed var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg);}
+.upload-drop:hover,.upload-drop.dragover{border-color:var(--green);background:rgba(36,233,163,.05);}
+.upload-drop input{display:none;}
+.upload-drop-icon{font-size:20px;margin-bottom:6px;}
+.upload-drop-label{font-size:11.5px;font-weight:600;color:var(--navy);margin-bottom:3px;}
+.upload-drop-sub{font-size:10px;color:var(--muted);}
+.upload-drop-files{margin-top:8px;font-size:10px;color:#1db88a;line-height:1.6;}
+.upload-run-btn{display:flex;align-items:center;gap:8px;background:var(--navy);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 20px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;}
+.upload-run-btn:hover{background:#0a2d7a;}
+.upload-run-btn:disabled{background:var(--muted);cursor:not-allowed;}
+.upload-run-btn .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none;}
+.upload-run-btn.running .spinner{display:block;}
+.upload-run-btn.running .btn-label{opacity:.7;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.upload-status{font-size:11.5px;color:var(--muted);margin-left:12px;font-style:italic;}
+.upload-status.error{color:var(--danger);}
+.upload-status.success{color:#1db88a;}
+
+/* AI-generated insight cards */
+.ai-insight-card{border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
+.ai-insight-card-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--border);}
+.ai-insight-card-type{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);}
+.ai-insight-card-date{font-size:10px;color:var(--muted);font-family:var(--mono);}
+.ai-insight-card-body{padding:14px 16px;font-size:12.5px;color:var(--navy);line-height:1.7;}
+.ai-insight-card-body ul{margin:8px 0 0 0;padding-left:18px;}
+.ai-insight-card-body li{margin-bottom:4px;}
+.ai-section-injected{background:rgba(36,233,163,.05);border:1px solid rgba(36,233,163,.15);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:16px;font-size:12.5px;color:var(--navy);line-height:1.7;}
+.ai-section-injected-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#1db88a;margin-bottom:6px;}
+
+
+/* ═══════════════════════════════════
+   LISTING AUDIT ENGINE
+   ═══════════════════════════════════ */
+.la-audit-zone{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);margin-top:10px;overflow:hidden;border-left:4px solid var(--warn);}
+.la-audit-zone-hd{padding:10px 14px 8px;background:var(--bg);border-bottom:1px solid var(--border);}
+.la-audit-zone-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--warn);margin-bottom:3px;}
+.la-audit-zone-field{font-size:12.5px;font-weight:700;color:var(--navy);}
+.la-audit-note{font-size:12.5px;color:var(--navy);line-height:1.65;padding:10px 14px;}
+.la-audit-note strong{color:var(--danger);}
+.la-audit-rewrite{padding:10px 14px 12px;font-size:12.5px;color:var(--navy);line-height:1.65;background:rgba(36,233,163,.05);border-top:1px solid rgba(36,233,163,.15);position:relative;}
+.la-audit-rewrite-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#1db88a;margin-bottom:4px;}
+.la-audit-copy-btn{position:absolute;top:10px;right:12px;background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer;color:var(--muted);}
+.la-audit-copy-btn:hover{background:var(--white);}
+.la-audit-chars{font-size:10px;color:var(--muted);margin-top:5px;}
+.la-audit-chars .over{color:var(--danger);font-weight:600;}
+.la-audit-zone.clean{border-left-color:#1db88a;}
+.la-audit-zone.clean .la-audit-zone-label{color:#1db88a;}
+
+/* Per-SKU updated/feedback bar */
+.la-update-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:rgba(36,233,163,.06);border:1px solid rgba(36,233,163,.2);border-radius:var(--radius-sm);margin-top:16px;flex-wrap:wrap;}
+.la-update-bar-label{font-size:11px;font-weight:600;color:var(--navy);flex-shrink:0;}
+.la-update-btn{background:var(--green);color:var(--navy);border:none;border-radius:var(--radius-sm);padding:6px 14px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:var(--font);}
+.la-update-btn:hover{background:#1dd494;}
+.la-update-btn:disabled{background:var(--muted);color:#fff;cursor:not-allowed;}
+.la-skip-select{font-size:11px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 8px;background:#fff;color:var(--navy);font-family:var(--font);cursor:pointer;}
+.la-update-status{font-size:11px;font-style:italic;}
+.la-update-status.saved{color:#1db88a;}
+.la-update-status.pending{color:var(--warn);}
+
+/* Audit buttons in the upload panel */
+.audit-run-btn{display:flex;align-items:center;gap:8px;background:rgba(0,31,96,.08);color:var(--navy);border:1px solid rgba(0,31,96,.2);border-radius:var(--radius-sm);padding:10px 18px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;}
+.audit-run-btn:hover{background:rgba(0,31,96,.15);}
+.audit-run-btn:disabled{opacity:.5;cursor:not-allowed;}
+.audit-run-btn .spinner{width:14px;height:14px;border:2px solid rgba(0,31,96,.2);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;display:none;}
+.audit-run-btn.running .spinner{display:block;}
+.audit-run-btn.running .btn-label{opacity:.6;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1354,16 +1429,104 @@ As inventory availability improves, the current sales mix provides a strong foun
 
   <!-- ══ LISTING AUDIT (internal only) ══ -->
   <div class="page" id="page-listing">
-    <div class="page-hd"><div><div class="page-title">Listing Audit</div><div class="page-sub">Per-SKU listing snapshot · Title · Hero Actives · keyword coverage · live-copy fields</div></div></div>
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Listing Audit</div>
+        <div class="page-sub">Live listing copy · Title · Item Highlights · Bullets 1–5 · Description · Backend Keywords</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="listings-sync-badge" style="font-size:10px;color:var(--muted);font-family:var(--mono);"></span>
+        <button class="btn-edit" style="padding:6px 12px;font-size:11px;" onclick="loadListingsFromSheet(true)">↻ Refresh</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <button class="audit-run-btn" id="run-audit-btn" onclick="runListingAudit()">
+        <div class="spinner"></div>
+        <span class="btn-label">📋 Run Listing Audit</span>
+      </button>
+      <span id="upload-status" class="upload-status"></span>
+    </div>
     <div style="background:rgba(200,125,47,0.08);border:1px solid rgba(200,125,47,0.22);border-radius:var(--radius-sm);padding:11px 15px;margin:10px 0;font-size:11.5px;color:var(--warn);line-height:1.6;">⚑ Titles, ASINs, ratings, BSR and hero actives below are live/verified. The full <strong>Item Highlights, Bullets 1–5, Description and Backend Search Terms</strong> are not exported in the current data set — pull the live copy from Seller Central to complete each card. Each is marked below.</div>
     <div class="channel-tabs"><button class="ch-tab active" onclick="showChannel('listing','la-scar',this)">Scar</button><button class="ch-tab" onclick="showChannel('listing','la-scarplus',this)">Scar+ SPF 30</button><button class="ch-tab" onclick="showChannel('listing','la-brite',this)">Brite</button><button class="ch-tab" onclick="showChannel('listing','la-bruise',this)">Bruise</button><button class="ch-tab" onclick="showChannel('listing','la-arc',this)">ARC Cream</button><button class="ch-tab" onclick="showChannel('listing','la-duo',this)">Recovery Duo</button><button class="ch-tab" onclick="showChannel('listing','la-kit',this)">24HR Scar Kit</button></div>
     <div class="channel-page active" id="la-scar">
       <div class="ai-section-injected" id="ai-listing-insight" style="display:none;"><div class="ai-section-injected-label">✦ AI Listing Insights — Last Upload</div><div id="ai-listing-text"></div></div><div class="la-hero"><div class="la-hero-left"><div class="la-hero-meta">SVA0001 &nbsp;·&nbsp; ASIN B07RCJDFN4 &nbsp;·&nbsp; Scar Reducing Treatments</div><div class="la-hero-title">Scar</div><div class="la-hero-tags"><span class="la-hero-tag">4.5 ★</span><span class="la-hero-tag">809 reviews</span><span class="la-hero-tag bsr">BSR #58 Scar Reducing Treatments (#28,889 H&amp;H)</span></div></div><div class="la-hero-actives"><div class="la-hero-actives-lbl">Hero Actives</div><div class="la-hero-actives-primary">Selective Growth Factors (sh-Polypeptides), Vitamin C (Tetrahexyldecyl Ascorbate), Hyaluronic Acid, Allantoin · silicone matrix</div></div></div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">157 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">Skinuva® Scar Cream for Face &amp; Body (1 oz) | Helps Fade the Appearance of Old &amp; New Scars, Treatment for Surgery, Burns &amp; Other Skin Trauma, For Medium Scars</div></div><div class="la-note">Tier-1 keyword coverage in title: <span class="kw-coverage-tag miss">Keyword</span> <span class="kw-coverage-tag hit">scar cream</span> <span class="kw-coverage-tag miss">silicone scar gel</span> <span class="kw-coverage-tag miss">scar gel</span> <span class="kw-coverage-tag miss">scar removal cream</span> <span class="kw-coverage-tag miss">acne scar treatment</span> </div></div><div class="la-card"><div class="la-card-label">Item Highlights (≤125 chars)</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Scar.</div></div></div><div class="la-card"><div class="la-card-label">Bullet Points 1–5</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Scar.</div></div></div><div class="la-card"><div class="la-card-label">Product Description / A+</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Scar.</div></div></div><div class="la-card"><div class="la-card-label">Backend Search Terms (≤249 bytes)</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Scar.</div></div></div></div>
+    
+    <div class="la-update-bar" id="update-bar-la-scar">
+      <span class="la-update-bar-label">📋 Listing audit —</span>
+      <button class="la-update-btn" onclick="markListingUpdated('la-scar','SVA0001','Scar')">✓ Mark Updated</button>
+      <select class="la-skip-select" id="skip-reason-la-scar"><option value="">— skip reason —</option>
+        <option value="waiting-approval">Waiting on brand approval</option>
+        <option value="disagree">Disagree with suggestion</option>
+        <option value="not-priority">Not a priority this week</option>
+        <option value="already-live">Already live / in review</option></select>
+      <button class="la-update-btn" style="background:var(--muted);color:#fff;" onclick="logSkipReason('la-scar','SVA0001','Scar')">Log Skip</button>
+      <span class="la-update-status" id="update-status-la-scar"></span>
+    </div>
     <div class="channel-page" id="la-scarplus"><div class="la-hero"><div class="la-hero-left"><div class="la-hero-meta">SVA0006 &nbsp;·&nbsp; ASIN B0BRNWSQ8H &nbsp;·&nbsp; Scar Reducing Treatments</div><div class="la-hero-title">Scar+ SPF 30</div><div class="la-hero-tags"><span class="la-hero-tag">4.2 ★</span><span class="la-hero-tag">106 reviews</span><span class="la-hero-tag bsr">BSR #56 Scar Reducing Treatments</span></div></div><div class="la-hero-actives"><div class="la-hero-actives-lbl">Hero Actives</div><div class="la-hero-actives-primary">Growth Factors (sh-Polypeptide-1/5/6), Zinc Oxide 10% (Broad-Spectrum SPF 30), Centella Asiatica, Vitamin C, Hyaluronic Acid</div></div></div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">91 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">Skinuva® Scar+ SPF 30 Scar Cream (1 oz) — Broad-Spectrum Mineral Sunscreen + Growth Factors</div></div><div class="la-note">Tier-1 keyword coverage in title: <span class="kw-coverage-tag miss">Keyword</span> <span class="kw-coverage-tag hit">scar cream</span> <span class="kw-coverage-tag miss">silicone scar gel</span> <span class="kw-coverage-tag miss">scar gel</span> <span class="kw-coverage-tag miss">scar removal cream</span> <span class="kw-coverage-tag miss">acne scar treatment</span> </div></div><div class="la-card"><div class="la-card-label">Item Highlights (≤125 chars)</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Scar+ SPF 30.</div></div></div><div class="la-card"><div class="la-card-label">Bullet Points 1–5</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Scar+ SPF 30.</div></div></div><div class="la-card"><div class="la-card-label">Product Description / A+</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Scar+ SPF 30.</div></div></div><div class="la-card"><div class="la-card-label">Backend Search Terms (≤249 bytes)</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Scar+ SPF 30.</div></div></div></div>
+    
+    <div class="la-update-bar" id="update-bar-la-scarplus">
+      <span class="la-update-bar-label">📋 Listing audit —</span>
+      <button class="la-update-btn" onclick="markListingUpdated('la-scarplus','SVA0006','Scar+ SPF 30')">✓ Mark Updated</button>
+      <select class="la-skip-select" id="skip-reason-la-scarplus"><option value="">— skip reason —</option>
+        <option value="waiting-approval">Waiting on brand approval</option>
+        <option value="disagree">Disagree with suggestion</option>
+        <option value="not-priority">Not a priority this week</option>
+        <option value="already-live">Already live / in review</option></select>
+      <button class="la-update-btn" style="background:var(--muted);color:#fff;" onclick="logSkipReason('la-scarplus','SVA0006','Scar+ SPF 30')">Log Skip</button>
+      <span class="la-update-status" id="update-status-la-scarplus"></span>
+    </div>
     <div class="channel-page" id="la-brite"><div class="la-hero"><div class="la-hero-left"><div class="la-hero-meta">SVA0003 &nbsp;·&nbsp; ASIN B0861CGWLF &nbsp;·&nbsp; Face Moisturizers</div><div class="la-hero-title">Brite</div><div class="la-hero-tags"><span class="la-hero-tag">4.1 ★</span><span class="la-hero-tag">126 reviews</span><span class="la-hero-tag bsr">BSR #2,353 Face Moisturizers</span></div></div><div class="la-hero-actives"><div class="la-hero-actives-lbl">Hero Actives</div><div class="la-hero-actives-primary">Growth Factors (rh-Polypeptide-22, sh-Oligopeptide-1), Tranexamic Acid, Niacinamide, Vitamin C, Arbutin</div></div></div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">47 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">Skinuva® Brite Dark Spot Treatment Cream (1 oz)</div></div><div class="la-note">Tier-1 keyword coverage in title: <span class="kw-coverage-tag miss">brightening cream for dark spots</span> <span class="kw-coverage-tag miss">txa 2.5% intensive brightening cream</span> <span class="kw-coverage-tag miss">txa brightening cream</span> <span class="kw-coverage-tag miss">brightening skincare</span> <span class="kw-coverage-tag miss">brightening cream for face</span> <span class="kw-coverage-tag miss">sun spot remover for face</span> </div></div><div class="la-card"><div class="la-card-label">Item Highlights (≤125 chars)</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Brite.</div></div></div><div class="la-card"><div class="la-card-label">Bullet Points 1–5</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Brite.</div></div></div><div class="la-card"><div class="la-card-label">Product Description / A+</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Brite.</div></div></div><div class="la-card"><div class="la-card-label">Backend Search Terms (≤249 bytes)</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Brite.</div></div></div></div>
+    
+    <div class="la-update-bar" id="update-bar-la-brite">
+      <span class="la-update-bar-label">📋 Listing audit —</span>
+      <button class="la-update-btn" onclick="markListingUpdated('la-brite','SVA0003','Brite')">✓ Mark Updated</button>
+      <select class="la-skip-select" id="skip-reason-la-brite"><option value="">— skip reason —</option>
+        <option value="waiting-approval">Waiting on brand approval</option>
+        <option value="disagree">Disagree with suggestion</option>
+        <option value="not-priority">Not a priority this week</option>
+        <option value="already-live">Already live / in review</option></select>
+      <button class="la-update-btn" style="background:var(--muted);color:#fff;" onclick="logSkipReason('la-brite','SVA0003','Brite')">Log Skip</button>
+      <span class="la-update-status" id="update-status-la-brite"></span>
+    </div>
     <div class="channel-page" id="la-bruise"><div class="la-hero"><div class="la-hero-left"><div class="la-hero-meta">SVA0005 &nbsp;·&nbsp; ASIN B0B23BB6CB &nbsp;·&nbsp; Alternative Pain Relief</div><div class="la-hero-title">Bruise</div><div class="la-hero-tags"><span class="la-hero-tag">4.4 ★</span><span class="la-hero-tag">86 reviews</span><span class="la-hero-tag bsr">BSR #203 Alternative Pain Relief</span></div></div><div class="la-hero-actives"><div class="la-hero-actives-lbl">Hero Actives</div><div class="la-hero-actives-primary">Arnica Montana 30X HPUS, Bromelain, Zinc, Vitamin C, Grape Seed Extract, Rutin</div></div></div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">37 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">Skinuva® Bruise Tablets (14 Capsules)</div></div><div class="la-note">Tier-1 keyword coverage in title: <span class="kw-coverage-tag miss">bruising cream fast healing</span> <span class="kw-coverage-tag miss">bruise cream for thin skin elderly</span> <span class="kw-coverage-tag miss">bruise remedy</span> <span class="kw-coverage-tag miss">vitamin k cream for bruises</span> <span class="kw-coverage-tag miss">vitamin k for bruising</span> <span class="kw-coverage-tag miss">bruise cream with vitamin k-moisturizing</span> </div></div><div class="la-card"><div class="la-card-label">Item Highlights (≤125 chars)</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Bruise.</div></div></div><div class="la-card"><div class="la-card-label">Bullet Points 1–5</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Bruise.</div></div></div><div class="la-card"><div class="la-card-label">Product Description / A+</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Bruise.</div></div></div><div class="la-card"><div class="la-card-label">Backend Search Terms (≤249 bytes)</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Bruise.</div></div></div></div>
+    
+    <div class="la-update-bar" id="update-bar-la-bruise">
+      <span class="la-update-bar-label">📋 Listing audit —</span>
+      <button class="la-update-btn" onclick="markListingUpdated('la-bruise','SVA0005','Bruise')">✓ Mark Updated</button>
+      <select class="la-skip-select" id="skip-reason-la-bruise"><option value="">— skip reason —</option>
+        <option value="waiting-approval">Waiting on brand approval</option>
+        <option value="disagree">Disagree with suggestion</option>
+        <option value="not-priority">Not a priority this week</option>
+        <option value="already-live">Already live / in review</option></select>
+      <button class="la-update-btn" style="background:var(--muted);color:#fff;" onclick="logSkipReason('la-bruise','SVA0005','Bruise')">Log Skip</button>
+      <span class="la-update-status" id="update-status-la-bruise"></span>
+    </div>
     <div class="channel-page" id="la-arc"><div class="la-hero"><div class="la-hero-left"><div class="la-hero-meta">— &nbsp;·&nbsp; ASIN B0F45BTSB7 &nbsp;·&nbsp; Alternative Pain Relief</div><div class="la-hero-title">ARC Cream</div><div class="la-hero-tags"><span class="la-hero-tag">3.7 ★</span><span class="la-hero-tag">40 reviews</span><span class="la-hero-tag bsr">BSR #346 Pain Relief (Homeopathic)</span></div></div><div class="la-hero-actives"><div class="la-hero-actives-lbl">Hero Actives</div><div class="la-hero-actives-primary">Arnica Montana, Vitamin K (Phytonadione Epoxide), Growth Factors (sh-Polypeptide-5/6)</div></div></div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">46 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">Skinuva® Bruise Advanced Recovery Cream (1 oz)</div></div><div class="la-note">Tier-1 keyword coverage in title: <span class="kw-coverage-tag miss">bruising cream fast healing</span> <span class="kw-coverage-tag hit">bruise cream for thin skin elderly</span> <span class="kw-coverage-tag miss">bruise remedy</span> <span class="kw-coverage-tag miss">vitamin k cream for bruises</span> <span class="kw-coverage-tag miss">vitamin k for bruising</span> <span class="kw-coverage-tag hit">bruise cream with vitamin k-moisturizing</span> </div></div><div class="la-card"><div class="la-card-label">Item Highlights (≤125 chars)</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for ARC Cream.</div></div></div><div class="la-card"><div class="la-card-label">Bullet Points 1–5</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for ARC Cream.</div></div></div><div class="la-card"><div class="la-card-label">Product Description / A+</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for ARC Cream.</div></div></div><div class="la-card"><div class="la-card-label">Backend Search Terms (≤249 bytes)</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for ARC Cream.</div></div></div></div>
+    
+    <div class="la-update-bar" id="update-bar-la-arc">
+      <span class="la-update-bar-label">📋 Listing audit —</span>
+      <button class="la-update-btn" onclick="markListingUpdated('la-arc','SVA0011','ARC Cream')">✓ Mark Updated</button>
+      <select class="la-skip-select" id="skip-reason-la-arc"><option value="">— skip reason —</option>
+        <option value="waiting-approval">Waiting on brand approval</option>
+        <option value="disagree">Disagree with suggestion</option>
+        <option value="not-priority">Not a priority this week</option>
+        <option value="already-live">Already live / in review</option></select>
+      <button class="la-update-btn" style="background:var(--muted);color:#fff;" onclick="logSkipReason('la-arc','SVA0011','ARC Cream')">Log Skip</button>
+      <span class="la-update-status" id="update-status-la-arc"></span>
+    </div>
     <div class="channel-page" id="la-duo"><div class="la-hero"><div class="la-hero-left"><div class="la-hero-meta">— &nbsp;·&nbsp; ASIN B0FRVVFPM5 &nbsp;·&nbsp; Bromelain Nutritional Supplements</div><div class="la-hero-title">Recovery Duo</div><div class="la-hero-tags"><span class="la-hero-tag">No reviews yet</span><span class="la-hero-tag">0 reviews</span><span class="la-hero-tag bsr">BSR #169 Bromelain Supplements</span></div></div><div class="la-hero-actives"><div class="la-hero-actives-lbl">Hero Actives</div><div class="la-hero-actives-primary">Capsules: Bromelain, Arnica, Zinc, Vit C, Grape Seed, Rutin · Cream: Arnica, Vitamin K, Growth Factors</div></div></div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">68 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">Skinuva® Bruise Recovery Duo – Bromelain Supplement + Recovery Cream</div></div><div class="la-note">Tier-1 keyword coverage in title: <span class="kw-coverage-tag miss">bromelain for bruising and swelling</span> <span class="kw-coverage-tag miss">bromelain tablets</span> <span class="kw-coverage-tag miss">fibrosis treatment after lipo</span> <span class="kw-coverage-tag miss">surgery recovery supplements</span> <span class="kw-coverage-tag miss">bromelain supplements</span> <span class="kw-coverage-tag miss">bromelain gel</span> </div></div><div class="la-card"><div class="la-card-label">Item Highlights (≤125 chars)</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Recovery Duo.</div></div></div><div class="la-card"><div class="la-card-label">Bullet Points 1–5</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Recovery Duo.</div></div></div><div class="la-card"><div class="la-card-label">Product Description / A+</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Recovery Duo.</div></div></div><div class="la-card"><div class="la-card-label">Backend Search Terms (≤249 bytes)</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for Recovery Duo.</div></div></div></div>
+    
+    <div class="la-update-bar" id="update-bar-la-duo">
+      <span class="la-update-bar-label">📋 Listing audit —</span>
+      <button class="la-update-btn" onclick="markListingUpdated('la-duo','SVA0012','Recovery Duo')">✓ Mark Updated</button>
+      <select class="la-skip-select" id="skip-reason-la-duo"><option value="">— skip reason —</option>
+        <option value="waiting-approval">Waiting on brand approval</option>
+        <option value="disagree">Disagree with suggestion</option>
+        <option value="not-priority">Not a priority this week</option>
+        <option value="already-live">Already live / in review</option></select>
+      <button class="la-update-btn" style="background:var(--muted);color:#fff;" onclick="logSkipReason('la-duo','SVA0012','Recovery Duo')">Log Skip</button>
+      <span class="la-update-status" id="update-status-la-duo"></span>
+    </div>
     <div class="channel-page" id="la-kit"><div class="la-hero"><div class="la-hero-left"><div class="la-hero-meta">SVA0009 &nbsp;·&nbsp; ASIN B0DHYLCML2 &nbsp;·&nbsp; Skin Care Sets &amp; Kits</div><div class="la-hero-title">24HR Scar Kit</div><div class="la-hero-tags"><span class="la-hero-tag">No reviews yet</span><span class="la-hero-tag">0 reviews</span><span class="la-hero-tag bsr">BSR #205 Facial Skin Care Sets &amp; Kits</span></div></div><div class="la-hero-actives"><div class="la-hero-actives-lbl">Hero Actives</div><div class="la-hero-actives-primary">PM: Growth Factors + silicone matrix + Vit C · AM: Scar+ SPF 30 (Zinc Oxide 10%)</div></div></div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">74 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">Skinuva® 24 Hour Care Kit – Scar Cream (PM) + Scar+ SPF 30 (AM), 1 oz each</div></div><div class="la-note">Tier-1 keyword coverage in title: <span class="kw-coverage-tag hit">skin care set</span> <span class="kw-coverage-tag miss">skincare set</span> <span class="kw-coverage-tag hit">skin care kit</span> <span class="kw-coverage-tag miss">skincare set for women</span> <span class="kw-coverage-tag miss">face care set for women</span> <span class="kw-coverage-tag miss">skincare kit</span> </div></div><div class="la-card"><div class="la-card-label">Item Highlights (≤125 chars)</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for 24HR Scar Kit.</div></div></div><div class="la-card"><div class="la-card-label">Bullet Points 1–5</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for 24HR Scar Kit.</div></div></div><div class="la-card"><div class="la-card-label">Product Description / A+</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for 24HR Scar Kit.</div></div></div><div class="la-card"><div class="la-card-label">Backend Search Terms (≤249 bytes)</div><div class="la-copy-row"><div class="la-num">·</div><div class="la-copy-block" style="color:var(--muted);font-style:italic;">Live copy not in current export — pull from Seller Central for 24HR Scar Kit.</div></div></div></div>
   </div>
   <!-- ══ PPC (internal only) ══ -->
@@ -1373,6 +1536,18 @@ As inventory availability improves, the current sales mix provides a strong foun
     <div class="channel-tabs"><button class="ch-tab active" onclick="showChannel('ppc','ppc-scar',this)">Scar</button><button class="ch-tab" onclick="showChannel('ppc','ppc-scarplus',this)">Scar+ SPF 30</button><button class="ch-tab" onclick="showChannel('ppc','ppc-brite',this)">Brite</button><button class="ch-tab" onclick="showChannel('ppc','ppc-bruise',this)">Bruise</button><button class="ch-tab" onclick="showChannel('ppc','ppc-arc',this)">ARC Cream</button><button class="ch-tab" onclick="showChannel('ppc','ppc-duo',this)">Recovery Duo</button><button class="ch-tab" onclick="showChannel('ppc','ppc-kit',this)">24HR Scar Kit</button></div>
     <div class="channel-page active" id="ppc-scar">
       <div class="ai-section-injected" id="ai-ppc-insight" style="display:none;"><div class="ai-section-injected-label">✦ AI PPC Insights — Last Upload</div><div id="ai-ppc-text"></div></div><div style="background:rgba(0,31,96,.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--muted);">ℹ Targeting plan for <strong>Scar</strong> (Scar Reducing Treatments). Run <strong>exact-match</strong> on the defend/rank tier, <strong>phrase/exact PPC</strong> to build the climbing tier, and <strong>broad/auto discovery</strong> seeding on the aspirational prizes.</div><div class="sec-lbl" style="margin-top:0;">Tier 1 — Exact-match now (rank &amp; defend)</div><div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Keyword</th><th>Vol/mo</th><th>Sugg. Bid</th><th>CPR</th><th>Title Density</th><th>Our Rank</th><th>Recommended Action</th></tr></thead><tbody><tr><td>Keyword</td><td>Search Volume</td><td>Tier Competitors Ranking (of 10)</td><td>Leaders Ranking (of 9)</td><td>Title Density</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Exact-match PPC to defend / climb</td></tr><tr><td>scar cream</td><td>68,916</td><td>3/10</td><td>8/9</td><td>18</td><td><span class="rank-pill rank-top">#4</span></td><td style="font-size:11px;color:var(--muted);">Exact-match PPC to defend / climb</td></tr><tr><td>silicone scar gel</td><td>28,862</td><td>6/10</td><td>7/9</td><td>26</td><td><span class="rank-pill rank-top">#11</span></td><td style="font-size:11px;color:var(--muted);">Exact-match PPC to defend / climb</td></tr><tr><td>scar gel</td><td>21,811</td><td>2/10</td><td>7/9</td><td>35</td><td><span class="rank-pill rank-top">#2</span></td><td style="font-size:11px;color:var(--muted);">Exact-match PPC to defend / climb</td></tr><tr><td>scar removal cream</td><td>14,443</td><td>1/10</td><td>7/9</td><td>7</td><td><span class="rank-pill rank-top">#7</span></td><td style="font-size:11px;color:var(--muted);">Exact-match PPC to defend / climb</td></tr><tr><td>acne scar treatment</td><td>14,120</td><td>1/10</td><td>7/9</td><td>1</td><td><span class="rank-pill rank-top">#17</span></td><td style="font-size:11px;color:var(--muted);">Exact-match PPC to defend / climb</td></tr><tr><td>stretch marks removal</td><td>8,833</td><td>1/10</td><td>6/9</td><td>2</td><td><span class="rank-pill rank-mid">#44</span></td><td style="font-size:11px;color:var(--muted);">Exact-match PPC to defend / climb</td></tr><tr><td>scar cream for surgical scars</td><td>7,808</td><td>2/10</td><td>8/9</td><td>4</td><td><span class="rank-pill rank-top">#3</span></td><td style="font-size:11px;color:var(--muted);">Exact-match PPC to defend / climb</td></tr></tbody></table></div><div class="sec-lbl">Tier 2 — Build with phrase + exact PPC</div><div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Keyword</th><th>Vol/mo</th><th>Sugg. Bid</th><th>CPR</th><th>Title Density</th><th>Our Rank</th><th>Recommended Action</th></tr></thead><tbody><tr><td>Keyword</td><td>Search Volume</td><td>Tier Competitors Ranking (of 10)</td><td>Leaders Ranking (of 9)</td><td>Title Density</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Phrase/exact PPC; build relevance</td></tr><tr><td>stretch mark cream</td><td>34,008</td><td>1/10</td><td>3/9</td><td>14</td><td><span class="rank-pill rank-mid">#61</span></td><td style="font-size:11px;color:var(--muted);">Phrase/exact PPC; build relevance</td></tr><tr><td>scar tape for surgical scars</td><td>15,368</td><td>2/10</td><td>6/9</td><td>5</td><td><span class="rank-pill rank-mid">#84</span></td><td style="font-size:11px;color:var(--muted);">Phrase/exact PPC; build relevance</td></tr><tr><td>silicone sheets for scars</td><td>5,654</td><td>2/10</td><td>7/9</td><td>1</td><td><span class="rank-pill rank-mid">#53</span></td><td style="font-size:11px;color:var(--muted);">Phrase/exact PPC; build relevance</td></tr><tr><td>c section scar silicone strips</td><td>5,049</td><td>1/10</td><td>7/9</td><td>2</td><td><span class="rank-pill rank-mid">#97</span></td><td style="font-size:11px;color:var(--muted);">Phrase/exact PPC; build relevance</td></tr><tr><td>scar tape for face</td><td>2,524</td><td>2/10</td><td>6/9</td><td>1</td><td><span class="rank-pill rank-mid">#82</span></td><td style="font-size:11px;color:var(--muted);">Phrase/exact PPC; build relevance</td></tr><tr><td>silicone gel sheets for scars</td><td>2,504</td><td>2/10</td><td>8/9</td><td>1</td><td><span class="rank-pill rank-mid">#33</span></td><td style="font-size:11px;color:var(--muted);">Phrase/exact PPC; build relevance</td></tr><tr><td>silicone patches for scars</td><td>1,870</td><td>1/10</td><td>7/9</td><td>0</td><td><span class="rank-pill rank-mid">#99</span></td><td style="font-size:11px;color:var(--muted);">Phrase/exact PPC; build relevance</td></tr></tbody></table></div><div class="sec-lbl">Tier 3 — Seed broad / auto (long-term)</div><div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Keyword</th><th>Vol/mo</th><th>Sugg. Bid</th><th>CPR</th><th>Title Density</th><th>Our Rank</th><th>Recommended Action</th></tr></thead><tbody><tr><td>Keyword</td><td>Search Volume</td><td>Tier Competitors Ranking (of 10)</td><td>Leaders Ranking (of 9)</td><td>Title Density</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Seed via broad/auto; chase organic as rank grows</td></tr><tr><td>silicone scar sheets</td><td>298,858</td><td>2/10</td><td>6/9</td><td>37</td><td><span class="rank-pill rank-low">#140</span></td><td style="font-size:11px;color:var(--muted);">Seed via broad/auto; chase organic as rank grows</td></tr><tr><td>scar</td><td>95,043</td><td>1/10</td><td>8/9</td><td>40</td><td><span class="rank-pill rank-top">#6</span></td><td style="font-size:11px;color:var(--muted);">Seed via broad/auto; chase organic as rank grows</td></tr><tr><td>silicone scar tape</td><td>79,823</td><td>2/10</td><td>6/9</td><td>30</td><td><span class="rank-pill rank-low">#223</span></td><td style="font-size:11px;color:var(--muted);">Seed via broad/auto; chase organic as rank grows</td></tr><tr><td>scar tape</td><td>68,950</td><td>2/10</td><td>7/9</td><td>36</td><td><span class="rank-pill rank-low">#193</span></td><td style="font-size:11px;color:var(--muted);">Seed via broad/auto; chase organic as rank grows</td></tr><tr><td>scar sheets</td><td>11,092</td><td>2/10</td><td>6/9</td><td>42</td><td><span class="rank-pill rank-mid">#58</span></td><td style="font-size:11px;color:var(--muted);">Seed via broad/auto; chase organic as rank grows</td></tr><tr><td>silicone tape</td><td>10,084</td><td>0/10</td><td>2/9</td><td>23</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Seed via broad/auto; chase organic as rank grows</td></tr><tr><td>stretch mark cream for pregnancy</td><td>8,828</td><td>1/10</td><td>1/9</td><td>5</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Seed via broad/auto; chase organic as rank grows</td></tr></tbody></table></div></div>
+    
+    <div class="la-update-bar" id="update-bar-la-kit">
+      <span class="la-update-bar-label">📋 Listing audit —</span>
+      <button class="la-update-btn" onclick="markListingUpdated('la-kit','SVA0008','24HR Scar Kit')">✓ Mark Updated</button>
+      <select class="la-skip-select" id="skip-reason-la-kit"><option value="">— skip reason —</option>
+        <option value="waiting-approval">Waiting on brand approval</option>
+        <option value="disagree">Disagree with suggestion</option>
+        <option value="not-priority">Not a priority this week</option>
+        <option value="already-live">Already live / in review</option></select>
+      <button class="la-update-btn" style="background:var(--muted);color:#fff;" onclick="logSkipReason('la-kit','SVA0008','24HR Scar Kit')">Log Skip</button>
+      <span class="la-update-status" id="update-status-la-kit"></span>
+    </div>
     <div class="channel-page" id="ppc-scarplus"><div style="background:rgba(0,31,96,.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--muted);">ℹ Targeting plan for <strong>Scar+ SPF 30</strong> (Scar Reducing Treatments). Run <strong>exact-match</strong> on the defend/rank tier, <strong>phrase/exact PPC</strong> to build the climbing tier, and <strong>broad/auto discovery</strong> seeding on the aspirational prizes. Scar+ shares the scar-category keyword universe with the flagship Scar listing; the differentiated wedge is "scar cream SPF / sunscreen for scars" intent.</div><div class="sec-lbl" style="margin-top:0;">Tier 1 — Exact-match now (rank &amp; defend)</div><div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Keyword</th><th>Vol/mo</th><th>Sugg. Bid</th><th>CPR</th><th>Title Density</th><th>Our Rank</th><th>Recommended Action</th></tr></thead><tbody><tr><td>Keyword</td><td>Search Volume</td><td>Tier Competitors Ranking (of 10)</td><td>Leaders Ranking (of 9)</td><td>Title Density</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Exact-match PPC to defend / climb</td></tr><tr><td>scar cream</td><td>68,916</td><td>3/10</td><td>8/9</td><td>18</td><td><span class="rank-pill rank-top">#4</span></td><td style="font-size:11px;color:var(--muted);">Exact-match PPC to defend / climb</td></tr><tr><td>silicone scar gel</td><td>28,862</td><td>6/10</td><td>7/9</td><td>26</td><td><span class="rank-pill rank-top">#11</span></td><td style="font-size:11px;color:var(--muted);">Exact-match PPC to defend / climb</td></tr><tr><td>scar gel</td><td>21,811</td><td>2/10</td><td>7/9</td><td>35</td><td><span class="rank-pill rank-top">#2</span></td><td style="font-size:11px;color:var(--muted);">Exact-match PPC to defend / climb</td></tr><tr><td>scar removal cream</td><td>14,443</td><td>1/10</td><td>7/9</td><td>7</td><td><span class="rank-pill rank-top">#7</span></td><td style="font-size:11px;color:var(--muted);">Exact-match PPC to defend / climb</td></tr><tr><td>acne scar treatment</td><td>14,120</td><td>1/10</td><td>7/9</td><td>1</td><td><span class="rank-pill rank-top">#17</span></td><td style="font-size:11px;color:var(--muted);">Exact-match PPC to defend / climb</td></tr><tr><td>stretch marks removal</td><td>8,833</td><td>1/10</td><td>6/9</td><td>2</td><td><span class="rank-pill rank-mid">#44</span></td><td style="font-size:11px;color:var(--muted);">Exact-match PPC to defend / climb</td></tr><tr><td>scar cream for surgical scars</td><td>7,808</td><td>2/10</td><td>8/9</td><td>4</td><td><span class="rank-pill rank-top">#3</span></td><td style="font-size:11px;color:var(--muted);">Exact-match PPC to defend / climb</td></tr></tbody></table></div><div class="sec-lbl">Tier 2 — Build with phrase + exact PPC</div><div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Keyword</th><th>Vol/mo</th><th>Sugg. Bid</th><th>CPR</th><th>Title Density</th><th>Our Rank</th><th>Recommended Action</th></tr></thead><tbody><tr><td>Keyword</td><td>Search Volume</td><td>Tier Competitors Ranking (of 10)</td><td>Leaders Ranking (of 9)</td><td>Title Density</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Phrase/exact PPC; build relevance</td></tr><tr><td>stretch mark cream</td><td>34,008</td><td>1/10</td><td>3/9</td><td>14</td><td><span class="rank-pill rank-mid">#61</span></td><td style="font-size:11px;color:var(--muted);">Phrase/exact PPC; build relevance</td></tr><tr><td>scar tape for surgical scars</td><td>15,368</td><td>2/10</td><td>6/9</td><td>5</td><td><span class="rank-pill rank-mid">#84</span></td><td style="font-size:11px;color:var(--muted);">Phrase/exact PPC; build relevance</td></tr><tr><td>silicone sheets for scars</td><td>5,654</td><td>2/10</td><td>7/9</td><td>1</td><td><span class="rank-pill rank-mid">#53</span></td><td style="font-size:11px;color:var(--muted);">Phrase/exact PPC; build relevance</td></tr><tr><td>c section scar silicone strips</td><td>5,049</td><td>1/10</td><td>7/9</td><td>2</td><td><span class="rank-pill rank-mid">#97</span></td><td style="font-size:11px;color:var(--muted);">Phrase/exact PPC; build relevance</td></tr><tr><td>scar tape for face</td><td>2,524</td><td>2/10</td><td>6/9</td><td>1</td><td><span class="rank-pill rank-mid">#82</span></td><td style="font-size:11px;color:var(--muted);">Phrase/exact PPC; build relevance</td></tr><tr><td>silicone gel sheets for scars</td><td>2,504</td><td>2/10</td><td>8/9</td><td>1</td><td><span class="rank-pill rank-mid">#33</span></td><td style="font-size:11px;color:var(--muted);">Phrase/exact PPC; build relevance</td></tr><tr><td>silicone patches for scars</td><td>1,870</td><td>1/10</td><td>7/9</td><td>0</td><td><span class="rank-pill rank-mid">#99</span></td><td style="font-size:11px;color:var(--muted);">Phrase/exact PPC; build relevance</td></tr></tbody></table></div><div class="sec-lbl">Tier 3 — Seed broad / auto (long-term)</div><div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Keyword</th><th>Vol/mo</th><th>Sugg. Bid</th><th>CPR</th><th>Title Density</th><th>Our Rank</th><th>Recommended Action</th></tr></thead><tbody><tr><td>Keyword</td><td>Search Volume</td><td>Tier Competitors Ranking (of 10)</td><td>Leaders Ranking (of 9)</td><td>Title Density</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Seed via broad/auto; chase organic as rank grows</td></tr><tr><td>silicone scar sheets</td><td>298,858</td><td>2/10</td><td>6/9</td><td>37</td><td><span class="rank-pill rank-low">#140</span></td><td style="font-size:11px;color:var(--muted);">Seed via broad/auto; chase organic as rank grows</td></tr><tr><td>scar</td><td>95,043</td><td>1/10</td><td>8/9</td><td>40</td><td><span class="rank-pill rank-top">#6</span></td><td style="font-size:11px;color:var(--muted);">Seed via broad/auto; chase organic as rank grows</td></tr><tr><td>silicone scar tape</td><td>79,823</td><td>2/10</td><td>6/9</td><td>30</td><td><span class="rank-pill rank-low">#223</span></td><td style="font-size:11px;color:var(--muted);">Seed via broad/auto; chase organic as rank grows</td></tr><tr><td>scar tape</td><td>68,950</td><td>2/10</td><td>7/9</td><td>36</td><td><span class="rank-pill rank-low">#193</span></td><td style="font-size:11px;color:var(--muted);">Seed via broad/auto; chase organic as rank grows</td></tr><tr><td>scar sheets</td><td>11,092</td><td>2/10</td><td>6/9</td><td>42</td><td><span class="rank-pill rank-mid">#58</span></td><td style="font-size:11px;color:var(--muted);">Seed via broad/auto; chase organic as rank grows</td></tr><tr><td>silicone tape</td><td>10,084</td><td>0/10</td><td>2/9</td><td>23</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Seed via broad/auto; chase organic as rank grows</td></tr><tr><td>stretch mark cream for pregnancy</td><td>8,828</td><td>1/10</td><td>1/9</td><td>5</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Seed via broad/auto; chase organic as rank grows</td></tr></tbody></table></div></div>
     <div class="channel-page" id="ppc-brite"><div style="background:rgba(0,31,96,.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--muted);">ℹ Targeting plan for <strong>Brite</strong> (Face Moisturizers). Run <strong>exact-match</strong> on the defend/rank tier, <strong>phrase/exact PPC</strong> to build the climbing tier, and <strong>broad/auto discovery</strong> seeding on the aspirational prizes.</div><div class="sec-lbl" style="margin-top:0;">Tier 1 — Exact-match now (rank &amp; defend)</div><div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Keyword</th><th>Vol/mo</th><th>Sugg. Bid</th><th>CPR</th><th>Title Density</th><th>Our Rank</th><th>Recommended Action</th></tr></thead><tbody><tr><td>brightening cream for dark spots</td><td>305</td><td>—</td><td>8</td><td>0</td><td><span class="rank-pill rank-low">#184</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #184 — optimize title/bullets + PPC to push onto page 1</td></tr><tr><td>txa 2.5% intensive brightening cream</td><td>2,213</td><td>$1.64</td><td>27</td><td>1</td><td><span class="rank-pill rank-low">#214</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #214 — optimize title/bullets + PPC to push onto page 1</td></tr><tr><td>txa brightening cream</td><td>416</td><td>—</td><td>8</td><td>0</td><td><span class="rank-pill rank-low">#245</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #245 — optimize title/bullets + PPC to push onto page 1</td></tr><tr><td>brightening skincare</td><td>438</td><td>—</td><td>8</td><td>1</td><td><span class="rank-pill rank-low">#251</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #251 — optimize title/bullets + PPC to push onto page 1</td></tr><tr><td>brightening cream for face</td><td>469</td><td>$1.91</td><td>8</td><td>1</td><td><span class="rank-pill rank-low">#264</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #264 — optimize title/bullets + PPC to push onto page 1</td></tr><tr><td>sun spot remover for face</td><td>3,131</td><td>$1.72</td><td>28</td><td>0</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Realistic mid long-tail — work into bullets/backend + PPC</td></tr><tr><td>highest rated dark spot remover</td><td>2,208</td><td>$1.57</td><td>27</td><td>0</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Low competition long-tail — strong quick-win; add to listing + exact-match PPC</td></tr><tr><td>age spot remover</td><td>2,104</td><td>$1.58</td><td>27</td><td>2</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Realistic mid long-tail — work into bullets/backend + PPC</td></tr><tr><td>intensive brightening cream</td><td>1,596</td><td>$1.60</td><td>27</td><td>2</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Realistic mid long-tail — work into bullets/backend + PPC</td></tr><tr><td>face lightening cream</td><td>977</td><td>$1.38</td><td>12</td><td>0</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Realistic mid long-tail — work into bullets/backend + PPC</td></tr></tbody></table></div><div class="sec-lbl">Tier 2 — Build with phrase + exact PPC</div><div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Keyword</th><th>Vol/mo</th><th>Sugg. Bid</th><th>CPR</th><th>Title Density</th><th>Our Rank</th><th>Recommended Action</th></tr></thead><tbody><tr><td>skin lightening</td><td>3,330</td><td>$1.24</td><td>29</td><td>4</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Mid-difficulty — test with PPC, build relevance before chasing organic</td></tr><tr><td>lightening cream</td><td>2,419</td><td>$1.30</td><td>29</td><td>7</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Mid-difficulty — test with PPC, build relevance before chasing organic</td></tr><tr><td>brightening face mask</td><td>1,598</td><td>$1.43</td><td>27</td><td>2</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Mid-difficulty — test with PPC, build relevance before chasing organic</td></tr><tr><td>brightening lotion</td><td>977</td><td>$1.44</td><td>12</td><td>6</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">A peer ranks here — winnable with optimized content + sustained PPC</td></tr><tr><td>brightening</td><td>663</td><td>$1.90</td><td>10</td><td>30</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">A peer ranks here — winnable with optimized content + sustained PPC</td></tr><tr><td>even skin tone</td><td>661</td><td>$1.71</td><td>10</td><td>5</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">A peer ranks here — winnable with optimized content + sustained PPC</td></tr><tr><td>strongest dark spot remover</td><td>649</td><td>$1.76</td><td>10</td><td>0</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Mid-difficulty — test with PPC, build relevance before chasing organic</td></tr><tr><td>brightening moisturizer</td><td>644</td><td>$1.87</td><td>10</td><td>5</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">A peer ranks here — winnable with optimized content + sustained PPC</td></tr><tr><td>daily brightening serum</td><td>644</td><td>$1.66</td><td>10</td><td>3</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">A peer ranks here — winnable with optimized content + sustained PPC</td></tr><tr><td>skin dark spot remover</td><td>637</td><td>$1.68</td><td>10</td><td>0</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Mid-difficulty — test with PPC, build relevance before chasing organic</td></tr></tbody></table></div><div class="sec-lbl">Tier 3 — Seed broad / auto (long-term)</div><div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Keyword</th><th>Vol/mo</th><th>Sugg. Bid</th><th>CPR</th><th>Title Density</th><th>Our Rank</th><th>Recommended Action</th></tr></thead><tbody><tr><td>niacinamide serum</td><td>128,503</td><td>$1.50</td><td>182</td><td>15</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Category head term — too competitive at current BSR; revisit as rank/reviews grow</td></tr><tr><td>arbutin cream</td><td>14,052</td><td>$1.23</td><td>42</td><td>4</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">High demand but low title density — best long-term prize; start early PPC seeding</td></tr><tr><td>dark spot remover</td><td>11,789</td><td>$1.37</td><td>44</td><td>17</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Category head term — too competitive at current BSR; revisit as rank/reviews grow</td></tr><tr><td>brightening serum</td><td>11,094</td><td>$1.64</td><td>42</td><td>13</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Category head term — too competitive at current BSR; revisit as rank/reviews grow</td></tr><tr><td>melasma treatment for face</td><td>11,089</td><td>$1.35</td><td>38</td><td>2</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">High demand but low title density — best long-term prize; start early PPC seeding</td></tr><tr><td>dark spot corrector</td><td>8,826</td><td>$1.36</td><td>40</td><td>17</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Category head term — too competitive at current BSR; revisit as rank/reviews grow</td></tr><tr><td>skin lightening cream</td><td>7,602</td><td>$1.33</td><td>34</td><td>3</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">High demand but low title density — best long-term prize; start early PPC seeding</td></tr><tr><td>dark spot serum</td><td>6,431</td><td>$1.55</td><td>33</td><td>5</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Category head term — too competitive at current BSR; revisit as rank/reviews grow</td></tr><tr><td>brightening cream</td><td>4,100</td><td>$1.43</td><td>34</td><td>14</td><td><span class="rank-pill rank-low">#282</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #282 — optimize title/bullets + PPC to push onto page 1</td></tr><tr><td>dark spot</td><td>4,095</td><td>$1.42</td><td>36</td><td>22</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Category head term — too competitive at current BSR; revisit as rank/reviews grow</td></tr></tbody></table></div></div>
     <div class="channel-page" id="ppc-bruise"><div style="background:rgba(0,31,96,.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--muted);">ℹ Targeting plan for <strong>Bruise</strong> (Alternative Pain Relief). Run <strong>exact-match</strong> on the defend/rank tier, <strong>phrase/exact PPC</strong> to build the climbing tier, and <strong>broad/auto discovery</strong> seeding on the aspirational prizes.</div><div class="sec-lbl" style="margin-top:0;">Tier 1 — Exact-match now (rank &amp; defend)</div><div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Keyword</th><th>Vol/mo</th><th>Sugg. Bid</th><th>CPR</th><th>Title Density</th><th>Our Rank</th><th>Recommended Action</th></tr></thead><tbody><tr><td>bruising cream fast healing</td><td>882</td><td>$1.67</td><td>12</td><td>0</td><td><span class="rank-pill rank-mid">#47</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #47 — optimize title/bullets + PPC to push toward page 1</td></tr><tr><td>bruise cream for thin skin elderly</td><td>977</td><td>$1.97</td><td>12</td><td>0</td><td><span class="rank-pill rank-mid">#80</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #80 — optimize title/bullets + PPC to push toward page 1</td></tr><tr><td>bruise remedy</td><td>731</td><td>$2.14</td><td>10</td><td>2</td><td><span class="rank-pill rank-mid">#47</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #47 — optimize title/bullets + PPC to push toward page 1</td></tr><tr><td>vitamin k cream for bruises</td><td>598</td><td>$2.08</td><td>9</td><td>2</td><td><span class="rank-pill rank-mid">#47</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #47 — optimize title/bullets + PPC to push toward page 1</td></tr><tr><td>vitamin k for bruising</td><td>527</td><td>—</td><td>9</td><td>1</td><td><span class="rank-pill rank-mid">#56</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #56 — optimize title/bullets + PPC to push toward page 1</td></tr><tr><td>bruise cream with vitamin k-moisturizing</td><td>374</td><td>—</td><td>8</td><td>1</td><td><span class="rank-pill rank-top">#9</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #9 — optimize title/bullets + PPC to push toward page 1</td></tr><tr><td>skin bruise remover</td><td>384</td><td>—</td><td>8</td><td>0</td><td><span class="rank-pill rank-top">#19</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #19 — optimize title/bullets + PPC to push toward page 1</td></tr><tr><td>anti bruise cream</td><td>593</td><td>$1.98</td><td>9</td><td>0</td><td><span class="rank-pill rank-mid">#91</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #91 — optimize title/bullets + PPC to push toward page 1</td></tr><tr><td>best bruise cream for elderly</td><td>637</td><td>$1.91</td><td>10</td><td>0</td><td><span class="rank-pill rank-low">#111</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #111 — optimize title/bullets + PPC to push toward page 1</td></tr><tr><td>highest rated bruise cream</td><td>557</td><td>$1.68</td><td>9</td><td>0</td><td><span class="rank-pill rank-mid">#95</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #95 — optimize title/bullets + PPC to push toward page 1</td></tr></tbody></table></div><div class="sec-lbl">Tier 2 — Build with phrase + exact PPC</div><div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Keyword</th><th>Vol/mo</th><th>Sugg. Bid</th><th>CPR</th><th>Title Density</th><th>Our Rank</th><th>Recommended Action</th></tr></thead><tbody><tr><td>wound healing supplement</td><td>1,244</td><td>$2.04</td><td>26</td><td>1</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Mid-difficulty — test with PPC, build relevance before chasing organic</td></tr><tr><td>swelling reducer for feet and legs</td><td>977</td><td>$1.91</td><td>12</td><td>0</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Mid-difficulty — test with PPC, build relevance before chasing organic</td></tr><tr><td>bruise gel</td><td>882</td><td>$1.97</td><td>12</td><td>6</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">A peer/leader ranks here — winnable with optimized content + sustained PPC</td></tr><tr><td>reduce swelling in legs and feet</td><td>782</td><td>$2.00</td><td>11</td><td>0</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Mid-difficulty — test with PPC, build relevance before chasing organic</td></tr><tr><td>bromelain for bruising and swelling</td><td>610</td><td>$2.56</td><td>10</td><td>1</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">A peer/leader ranks here — winnable with optimized content + sustained PPC</td></tr><tr><td>bruising cream</td><td>600</td><td>$1.85</td><td>10</td><td>0</td><td><span class="rank-pill rank-low">#298</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #298 — optimize title/bullets + PPC to push toward page 1</td></tr><tr><td>purpura bruise cream</td><td>542</td><td>$1.95</td><td>9</td><td>0</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">A peer/leader ranks here — winnable with optimized content + sustained PPC</td></tr><tr><td>hematoma cream</td><td>503</td><td>—</td><td>9</td><td>1</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">A peer/leader ranks here — winnable with optimized content + sustained PPC</td></tr><tr><td>bruise healing cream</td><td>496</td><td>$1.78</td><td>9</td><td>0</td><td><span class="rank-pill rank-low">#125</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #125 — optimize title/bullets + PPC to push toward page 1</td></tr><tr><td>bromelain cream</td><td>489</td><td>$2.23</td><td>9</td><td>0</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Mid-difficulty — test with PPC, build relevance before chasing organic</td></tr></tbody></table></div><div class="sec-lbl">Tier 3 — Seed broad / auto (long-term)</div><div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Keyword</th><th>Vol/mo</th><th>Sugg. Bid</th><th>CPR</th><th>Title Density</th><th>Our Rank</th><th>Recommended Action</th></tr></thead><tbody><tr><td>bruise cream</td><td>9,749</td><td>$1.66</td><td>43</td><td>22</td><td><span class="rank-pill rank-low">#184</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #184 — optimize title/bullets + PPC to push toward page 1</td></tr><tr><td>bruise cream extra strength fast healing thin skin</td><td>6,728</td><td>$1.50</td><td>33</td><td>2</td><td><span class="rank-pill rank-mid">#97</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #97 — optimize title/bullets + PPC to push toward page 1</td></tr><tr><td>bruise cream for seniors</td><td>3,332</td><td>$1.83</td><td>29</td><td>1</td><td><span class="rank-pill rank-low">#111</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #111 — optimize title/bullets + PPC to push toward page 1</td></tr><tr><td>vitamin k cream for bruising</td><td>3,179</td><td>$1.92</td><td>28</td><td>0</td><td><span class="rank-pill rank-mid">#92</span></td><td style="font-size:11px;color:var(--muted);">Already ranking #92 — optimize title/bullets + PPC to push toward page 1</td></tr><tr><td>inflammation relief supplement</td><td>3,133</td><td>$2.78</td><td>28</td><td>0</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Category head term — too competitive at current BSR; revisit as rank/reviews grow</td></tr><tr><td>instant bruise remover</td><td>2,516</td><td>$2.25</td><td>27</td><td>0</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">High demand but low title density — best long-term prize; start early PPC seeding</td></tr><tr><td>muscle recovery</td><td>1,870</td><td>$2.34</td><td>31</td><td>15</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Category head term — too competitive at current BSR; revisit as rank/reviews grow</td></tr><tr><td>serapeptase supplement</td><td>1,834</td><td>$2.08</td><td>26</td><td>0</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">High demand but low title density — best long-term prize; start early PPC seeding</td></tr><tr><td>ankle swelling reducer</td><td>1,159</td><td>$1.51</td><td>26</td><td>0</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Category head term — too competitive at current BSR; revisit as rank/reviews grow</td></tr><tr><td>leg swelling relief products</td><td>654</td><td>$2.59</td><td>10</td><td>0</td><td><span class="rank-pill rank-none">NR</span></td><td style="font-size:11px;color:var(--muted);">Category head term — too competitive at current BSR; revisit as rank/reviews grow</td></tr></tbody></table></div></div>
@@ -3421,7 +3596,518 @@ async function loadInsightsFromSheet() {
   } catch(e) { console.warn('Could not load insights:',e.message); }
 }
 
-document.addEventListener('DOMContentLoaded',()=>{ loadInsightsFromSheet(); });
+document.addEventListener('DOMContentLoaded', async () => {
+  loadInsightsFromSheet();
+  await loadListingsFromSheet(false);
+  await loadAuditResultsFromSheet();
+});
+
+// Proper CSV parser — handles quoted fields with embedded newlines and escaped quotes
+function parseCsvFull(text) {
+  text = (text || '').replace(/^\uFEFF/, '');
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  let i = 0;
+  while (i < text.length) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { field += '"'; i += 2; continue; }
+        inQuotes = false; i++; continue;
+      }
+      field += ch; i++; continue;
+    }
+    if (ch === '"') { inQuotes = true; i++; continue; }
+    if (ch === ',') { row.push(field.trim()); field = ''; i++; continue; }
+    if (ch === '\r' && text[i + 1] === '\n') {
+      row.push(field.trim()); rows.push(row); row = []; field = ''; i += 2; continue;
+    }
+    if (ch === '\n') {
+      row.push(field.trim()); rows.push(row); row = []; field = ''; i++; continue;
+    }
+    field += ch; i++;
+  }
+  if (field || row.length) { row.push(field.trim()); rows.push(row); }
+  return rows.filter(r => r.some(v => v));
+}
+
+function csvVals(line) {
+  return (line.match(/(".*?"|[^,]+|(?<=,)(?=,)|^(?=,)|(?<=,)$)/g)||[]).map(v=>v.replace(/^"|"$/g,'').trim());
+}
+
+function parseCsvToRows(text) {
+  const all = parseCsvFull(text);
+  if (all.length < 2) return [];
+  const headers = all[0].map(h => h.toLowerCase());
+  return all.slice(1).map(vals => {
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (vals[i] || ''); });
+    return obj;
+  }).filter(row => Object.values(row).some(v => v));
+}
+
+// Listing audit sheet IDs — Skinuva
+const LISTING_AUDIT_SHEET_ID    = '1NrCQPR7vuuHKgG6nVnh3hGnHGHD6txjXGdhrIn63w-M';
+const SHEET_LISTINGS_ID         = '142l0fEr7TnNCLfqbxfK3PoS4gREaoqfXevqjB1_dB-M';
+const SHEET_LISTINGS_GID        = '559925305';
+const LISTING_AUDIT_SKINUVA_GID = '1546261495';
+
+// LISTING AUDIT ENGINE
+// ═══════════════════════════════════════════════════════════════════
+
+// Stores last audit results for historical context in next run
+let _lastAuditResults = [];
+
+const EVOLIS_SKUS = [
+  {id:'la-evo0001',   sku:'EVO0001', name:'Reverse Activator',           travel:false},
+  {id:'la-evo0005',   sku:'EVO0005', name:'Promote Activator',           travel:false},
+  {id:'la-evo0009',   sku:'EVO0009', name:'Prevent Activator',           travel:false},
+  {id:'la-evo0002',   sku:'EVO0002', name:'Reverse Shampoo',             travel:false},
+  {id:'la-evo0006',   sku:'EVO0006', name:'Promote Shampoo',             travel:false},
+  {id:'la-evo0010',   sku:'EVO0010', name:'Prevent Shampoo',             travel:false},
+  {id:'la-evo0014',   sku:'EVO0014', name:'Reverse Shampoo Travel',      travel:true},
+  {id:'la-evo0016',   sku:'EVO0016', name:'Promote Shampoo Travel',      travel:true},
+  {id:'la-cond-evo0003', sku:'EVO0003', name:'Reverse Conditioner',      travel:false},
+  {id:'la-cond-evo0007', sku:'EVO0007', name:'Promote Conditioner',      travel:false},
+  {id:'la-cond-evo0011', sku:'EVO0011', name:'Prevent Conditioner',      travel:false},
+  {id:'la-cond-evo0015', sku:'EVO0015', name:'Reverse Conditioner Travel',travel:true},
+  {id:'la-cond-evo0017', sku:'EVO0017', name:'Promote Conditioner Travel',travel:true},
+  {id:'la-mask-evo0004', sku:'EVO0004', name:'Reverse Mask',             travel:false},
+  {id:'la-mask-evo0008', sku:'EVO0008', name:'Promote Mask',             travel:false},
+  {id:'la-mask-evo0018', sku:'EVO0018', name:'Promote Mask Travel',      travel:true},
+  {id:'la-mask-evo0019', sku:'EVO0019', name:'Reverse Mask Travel',      travel:true},
+  {id:'la-dryshampoo',   sku:'EVO0012', name:'Dry Shampoo',              travel:false},
+];
+
+// ── Extract all listing copy from the DOM ─────────────────────────
+function cleanCopy(s) {
+  if (!s) return '';
+  return s
+    .replace(/&amp;/g, 'and')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&[a-z]+;/g, ' ')
+    .replace(/&/g, 'and')
+    .replace(/[\u2018\u2019`\u00b4]/g, "'")
+    .replace(/[\u201c\u201d]/g, '"')
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/\u2026/g, '...')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+function extractAllListingCopy() {
+  const catalog = [];
+  for (const skuMeta of EVOLIS_SKUS) {
+    const el = document.getElementById(skuMeta.id);
+    if (!el) continue;
+    const copy = { sku: skuMeta.sku, name: skuMeta.name, travel: skuMeta.travel };
+
+    // Title
+    const titleCard = [...el.querySelectorAll('.la-card')].find(c => {
+      const lbl = c.querySelector('.la-card-label');
+      return lbl && lbl.textContent.includes('Active Title');
+    });
+    if (titleCard) {
+      const block = titleCard.querySelector('.la-copy-block');
+      copy.title = cleanCopy(block ? block.textContent : '');
+    }
+
+    // Item Highlights
+    const ihCard = [...el.querySelectorAll('.la-card')].find(c => {
+      const lbl = c.querySelector('.la-card-label');
+      return lbl && lbl.textContent.includes('Item Highlights');
+    });
+    if (ihCard) {
+      const block = ihCard.querySelector('.la-copy-block');
+      copy.item_highlights = cleanCopy(block ? block.textContent : '');
+    }
+
+    // Bullets 1-5
+    const bulletCards = [...el.querySelectorAll('.la-card')].filter(c => {
+      const sub = c.querySelector('.la-card-sublabel');
+      return sub && /BULLET \d/.test(sub.textContent);
+    });
+    copy.bullets = bulletCards.map(c => {
+      const block = c.querySelector('.la-copy-block');
+      return cleanCopy(block ? block.textContent : '');
+    }).filter(Boolean);
+
+    // Description
+    const descCard = [...el.querySelectorAll('.la-card')].find(c => {
+      const lbl = c.querySelector('.la-card-label');
+      return lbl && lbl.textContent.includes('Product Description');
+    });
+    if (descCard) {
+      const block = descCard.querySelector('.la-copy-block');
+      copy.description = cleanCopy(block ? block.textContent.slice(0, 600) : '');
+    }
+
+    // Backend keywords
+    const bkCard = [...el.querySelectorAll('.la-card')].find(c => {
+      const lbl = c.querySelector('.la-card-label');
+      return lbl && lbl.textContent.includes('Backend Keywords');
+    });
+    if (bkCard) {
+      const block = bkCard.querySelector('.la-backend-block');
+      copy.backend = cleanCopy(block ? block.textContent : '');
+    }
+
+    catalog.push(copy);
+  }
+  return catalog;
+}
+
+// ── Main listing audit runner ─────────────────────────────────────
+async function runListingAudit() {
+  const btn = document.getElementById('run-audit-btn');
+  const st  = document.getElementById('upload-status');
+  btn.classList.add('running'); btn.disabled = true;
+  st.textContent = 'Running listing audit — reads source sheet, writes to audit sheet. This takes 5–6 minutes…';
+  st.className = 'upload-status';
+
+  try {
+    const res = await fetch('/api/run-listing-audit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        brand:         INSIGHTS_BRAND_TAB,
+        sourceSheetId: SHEET_LISTINGS_ID,
+        auditSheetId:  LISTING_AUDIT_SHEET_ID
+      })
+    });
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      throw new Error('Listing audit error ' + res.status + ': ' + (errBody.error || JSON.stringify(errBody)));
+    }
+    const data = await res.json();
+    st.textContent = '\u2713 Audit complete \u2014 ' + (data.skuCount || 0) + ' SKUs written to audit sheet \u2014 ' + new Date().toLocaleTimeString();
+    st.className = 'upload-status success';
+
+    // Auto-reload audit results into the page
+    st.textContent += ' \u2014 Loading results\u2026';
+    await loadAuditResultsFromSheet();
+    st.textContent = '\u2713 Audit complete \u2014 ' + (data.skuCount || 0) + ' SKUs \u2014 results loaded \u2014 ' + new Date().toLocaleTimeString();
+
+  } catch(err) {
+    console.error('Listing audit error:', err);
+    st.textContent = '\u2717 ' + err.message; st.className = 'upload-status error';
+  } finally {
+    btn.classList.remove('running'); btn.disabled = false;
+  }
+}
+
+
+// ── Inject audit results below each la-card ───────────────────────
+function injectAuditResults(results) {
+  _lastAuditResults = results;
+  // Clear any previous audit zones
+  document.querySelectorAll('.la-audit-zone').forEach(z => z.remove());
+
+  for (const r of results) {
+    const pageId = SKU_TO_PAGE_ID[r.sku];
+    if (!pageId) continue;
+    const el = document.getElementById(pageId);
+    if (!el) continue;
+
+    // Update bar is always visible at bottom of each SKU sub-page — nothing to toggle
+
+    // Helper: inject an audit zone below a specific la-card
+    function injectZone(labelText, sublabelText, note, rewrite, charLimit) {
+      const card = [...el.querySelectorAll('.la-card')].find(c => {
+        // If sublabelText provided, match on sublabel alone — handles bullets 2-5
+        // whose la-card-label is empty
+        if (sublabelText) {
+          const sub = c.querySelector('.la-card-sublabel');
+          return sub && sub.textContent.trim() === sublabelText;
+        }
+        const lbl = c.querySelector('.la-card-label');
+        return lbl && lbl.textContent.includes(labelText);
+      });
+      if (!card) return;
+      if (!note && !rewrite) return;
+      const chars = rewrite ? rewrite.length : 0;
+      const isClean = !note || note.toLowerCase().startsWith('no violation');
+      const charInfo = (charLimit > 0 && rewrite)
+        ? '<div class="la-audit-chars">' + chars + ' chars ' + (chars > charLimit ? '<span class="over">OVER limit of ' + charLimit + '</span>' : '\u2714 within ' + charLimit + ' char limit') + '</div>'
+        : '';
+      const fieldLabel = sublabelText ? sublabelText : labelText;
+      const zone = document.createElement('div');
+      zone.className = 'la-audit-zone' + (isClean ? ' clean' : '');
+      // Build header
+      const hd = document.createElement('div');
+      hd.className = 'la-audit-zone-hd';
+      hd.innerHTML = '<div class="la-audit-zone-label">' + (isClean ? '\u2714 Compliant' : '\u26a0 Audit Findings') + '</div><div class="la-audit-zone-field">' + fieldLabel + '</div>';
+      zone.appendChild(hd);
+      // Notes body
+      if (note) {
+        const nb = document.createElement('div');
+        nb.className = 'la-audit-note';
+        nb.textContent = note;
+        zone.appendChild(nb);
+      }
+      // Rewrite section
+      if (rewrite) {
+        const rw = document.createElement('div');
+        rw.className = 'la-audit-rewrite';
+        const rl = document.createElement('div');
+        rl.className = 'la-audit-rewrite-label';
+        rl.textContent = '\u2192 Suggested Rewrite';
+        rw.appendChild(rl);
+        const cp = document.createElement('button');
+        cp.className = 'la-audit-copy-btn';
+        cp.textContent = 'Copy';
+        cp.addEventListener('click', function() { navigator.clipboard.writeText(rewrite); });
+        rw.appendChild(cp);
+        const p = document.createElement('p');
+        p.style.margin = '0';
+        p.textContent = rewrite;
+        rw.appendChild(p);
+        if (charInfo) {
+          const ci = document.createElement('div');
+          ci.innerHTML = charInfo;
+          rw.appendChild(ci);
+        }
+        zone.appendChild(rw);
+      }
+      card.appendChild(zone);
+    }
+
+    // Title
+    injectZone('Active Title', null, r.title_notes, r.title_rewrite, 75);
+
+    // Item Highlights
+    injectZone('Item Highlights', null, r.ih_notes, r.ih_rewrite, 125);
+
+    // Bullets — shared notes on bullet 1 card, individual rewrites on each bullet card
+    if (r.bullets_notes || r.bullet_1_rewrite) {
+      injectZone('Active Bullet Points', 'BULLET 1', r.bullets_notes, r.bullet_1_rewrite, 200);
+    }
+    if (r.bullet_2_rewrite) injectZone('Active Bullet Points', 'BULLET 2', '', r.bullet_2_rewrite, 200);
+    if (r.bullet_3_rewrite) injectZone('Active Bullet Points', 'BULLET 3', '', r.bullet_3_rewrite, 200);
+    if (r.bullet_4_rewrite) injectZone('Active Bullet Points', 'BULLET 4', '', r.bullet_4_rewrite, 200);
+    if (r.bullet_5_rewrite) injectZone('Active Bullet Points', 'BULLET 5', '', r.bullet_5_rewrite, 200);
+
+    // Description
+    injectZone('Active Product Description', null, r.desc_notes, r.desc_rewrite, 0);
+
+    // Backend
+    injectZone('Backend Keywords', null, r.backend_notes, r.backend_rewrite, 500);
+  }
+}
+
+// ── Mark listing as updated ───────────────────────────────────────
+
+// ── Collect audit suggestions from DOM for a SKU ─────────────────
+
+
+async function markListingUpdated(subId, sku, name) {
+  const statusEl = document.getElementById('update-status-' + subId);
+  statusEl.textContent = 'Saving…'; statusEl.className = 'la-update-status pending';
+  try {
+    await fetch('/api/write-listing-audit', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brand: INSIGHTS_BRAND_TAB, sheetId: LISTING_AUDIT_SHEET_ID,
+        gid: LISTING_AUDIT_SKINUVA_GID, date: new Date().toISOString().slice(0,10),
+        action: 'updated', sku, sku_name: name })
+    });
+    statusEl.textContent = '✓ Logged ' + new Date().toLocaleDateString();
+    statusEl.className = 'la-update-status saved';
+    setTimeout(() => {
+      const bar = document.getElementById('update-bar-' + subId);
+      if (bar) bar.style.background = 'rgba(36,233,163,.05)';
+    }, 1000);
+  } catch(err) { statusEl.textContent = 'Error: ' + err.message; statusEl.className = 'la-update-status'; }
+}
+
+// ── Log skip reason ───────────────────────────────────────────────
+async function logSkipReason(subId, sku, name) {
+  const select = document.getElementById('skip-reason-' + subId);
+  const reason = select ? select.value : '';
+  if (!reason) { document.getElementById('update-status-' + subId).textContent = 'Select a skip reason first.'; return; }
+  const statusEl = document.getElementById('update-status-' + subId);
+  statusEl.textContent = 'Saving…'; statusEl.className = 'la-update-status pending';
+  try {
+    await fetch('/api/write-listing-audit', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brand: INSIGHTS_BRAND_TAB, sheetId: LISTING_AUDIT_SHEET_ID,
+        gid: LISTING_AUDIT_SKINUVA_GID, date: new Date().toISOString().slice(0,10),
+        action: 'skipped', sku, sku_name: name, skip_reason: reason })
+    });
+    statusEl.textContent = '✓ Skip logged — ' + reason.replace(/-/g,' ');
+    statusEl.className = 'la-update-status saved';
+  } catch(err) { statusEl.textContent = 'Error: ' + err.message; statusEl.className = 'la-update-status'; }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// LIVE LISTING CONTENT — reads from SHEET_LISTINGS (weekly cron)
+// ═══════════════════════════════════════════════════════════════════
+
+// Maps SKU → sub-page id
+const SKU_TO_PAGE_ID = {
+  'SVA0001':'la-scar',    'SVA0002':'la-scar',    'SVA0004':'la-scar',   'SVA0010':'la-scar',
+  'SVA0006':'la-scarplus','SVA0007':'la-scarplus',
+  'SVA0003':'la-brite',
+  'SVA0005':'la-bruise',
+  'SVA0011':'la-arc',
+  'SVA0012':'la-duo',
+  'SVA0008':'la-kit',     'SVA0009':'la-kit'
+};
+
+async function loadListingsFromSheet(forceRefresh) {
+  const badge = document.getElementById('listings-sync-badge');
+  try {
+    if (badge) badge.textContent = 'Loading live copy...';
+    const url = 'https://docs.google.com/spreadsheets/d/' + SHEET_LISTINGS_ID +
+      '/export?format=csv&gid=' + SHEET_LISTINGS_GID + '&_cb=' + Date.now();
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Sheet fetch failed: ' + res.status);
+    const text = await res.text();
+    const rows = parseCsvToRows(text);
+    if (!rows.length) throw new Error('No data in listings sheet');
+
+    let updated = 0;
+    let lastSynced = '';
+
+    for (const row of rows) {
+      const sku = (row['sku'] || '').trim();
+      if (!sku) continue;
+      const pageId = SKU_TO_PAGE_ID[sku];
+      if (!pageId) continue;
+      const el = document.getElementById(pageId);
+      if (!el) continue;
+
+      // Update title
+      if (row['title']) updateCard(el, 'Active Title', null, row['title']);
+
+      // Update Item Highlights (only if sheet has a value — cron leaves blank)
+      if (row['item_highlights']) updateCard(el, 'Item Highlights', null, row['item_highlights']);
+
+      // Update bullets 1–5
+      for (let i = 1; i <= 5; i++) {
+        const val = row['bullet_' + i];
+        if (val) updateCard(el, 'Active Bullet Points', 'BULLET ' + i, val);
+      }
+
+      // Update description
+      if (row['description']) updateCard(el, 'Active Product Description', null, row['description']);
+
+      // Update backend keywords
+      if (row['backend_keywords']) {
+        const bk = el.querySelector('.la-backend-block');
+        if (bk) bk.textContent = row['backend_keywords'];
+      }
+
+      // Update char pills
+      el.querySelectorAll('.la-char-info').forEach(info => {
+        const card = info.closest('.la-card');
+        if (!card) return;
+        const copy = card.querySelector('.la-copy-block');
+        const pill = info.querySelector('.char-pill');
+        if (!copy || !pill) return;
+        const len = copy.textContent.trim().length;
+        const limitMatch = info.textContent.match(/≤(\d+)/);
+        if (!limitMatch) return;
+        const limit = parseInt(limitMatch[1]);
+        pill.textContent = len + ' chars used';
+        pill.className = 'char-pill ' + (len > limit ? 'error' : len > limit * 0.85 ? 'warn' : 'ok');
+      });
+
+      if (row['last_synced'] && (!lastSynced || row['last_synced'] > lastSynced)) {
+        lastSynced = row['last_synced'];
+      }
+      updated++;
+    }
+
+    const syncTime = lastSynced ? new Date(lastSynced).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : 'unknown';
+    if (badge) badge.textContent = '✓ Live copy — synced ' + syncTime + ' · ' + updated + ' SKUs';
+
+  } catch(err) {
+    console.warn('[listings] Could not load live copy:', err.message);
+    if (badge) badge.textContent = 'Could not load live copy';
+  }
+}
+
+// Update a specific la-card's copy block
+function updateCard(pageEl, labelText, sublabelText, newValue) {
+  const cards = pageEl.querySelectorAll('.la-card');
+  for (const card of cards) {
+    const label = card.querySelector('.la-card-label');
+    if (!label || !label.textContent.includes(labelText)) continue;
+    if (sublabelText) {
+      const sub = card.querySelector('.la-card-sublabel');
+      if (!sub || !sub.textContent.includes(sublabelText)) continue;
+    }
+    const copy = card.querySelector('.la-copy-block');
+    if (copy) {
+      copy.textContent = newValue;
+      // Reset status class — audit will re-evaluate on next run
+      copy.className = 'la-copy-block ok';
+    }
+    break;
+  }
+}
+
+// Auto-load on DOMContentLoaded (already have one listener — add to existing)
+
+// ── Load most recent audit results from sheet and re-inject ───────
+async function loadAuditResultsFromSheet() {
+  try {
+    const url = 'https://docs.google.com/spreadsheets/d/' + LISTING_AUDIT_SHEET_ID +
+      '/export?format=csv&gid=' + LISTING_AUDIT_SKINUVA_GID + '&_cb=' + Date.now();
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const rows = parseCsvToRows(await res.text());
+    if (!rows.length) return;
+
+    console.log('[audit-debug] total rows from sheet:', rows.length);
+    console.log('[audit-debug] first row keys:', rows.length ? Object.keys(rows[0]) : 'none');
+    console.log('[audit-debug] first row action:', rows.length ? rows[0]['action'] : 'none');
+    // Only use audit_run rows with a SKU
+    const auditRows = rows.filter(r => r['action'] === 'audit_run' && r['sku']);
+    console.log('[audit-debug] auditRows found:', auditRows.length);
+    if (!auditRows.length) return;
+
+    // For each SKU, keep only the row with the most recent audited_at (col T)
+    const latestBySku = {};
+    for (const r of auditRows) {
+      const sku = r['sku'];
+      const ts  = r['audited_at'] || '';
+      if (!latestBySku[sku] || ts > latestBySku[sku]['audited_at']) {
+        latestBySku[sku] = r;
+      }
+    }
+
+    const results = Object.values(latestBySku).map(r => ({
+      sku:              r['sku']              || '',
+      title_notes:      r['title_notes']      || '',
+      title_rewrite:    r['title_rewrite']    || '',
+      ih_notes:         r['ih_notes']         || '',
+      ih_rewrite:       r['ih_rewrite']       || '',
+      bullets_notes:    r['bullets_notes']    || '',
+      bullet_1_rewrite: r['bullet_1_rewrite'] || '',
+      bullet_2_rewrite: r['bullet_2_rewrite'] || '',
+      bullet_3_rewrite: r['bullet_3_rewrite'] || '',
+      bullet_4_rewrite: r['bullet_4_rewrite'] || '',
+      bullet_5_rewrite: r['bullet_5_rewrite'] || '',
+      desc_notes:       r['desc_notes']       || '',
+      desc_rewrite:     r['desc_rewrite']     || '',
+      backend_notes:    r['backend_notes']    || '',
+      backend_rewrite:  r['backend_rewrite']  || '',
+    }));
+
+    if (results.length) {
+      console.log('[audit-debug] results[0]:', JSON.stringify(results[0]));
+      console.log('[audit-debug] SKU_TO_PAGE_ID keys:', Object.keys(SKU_TO_PAGE_ID));
+      console.log('[audit-debug] el for EVO0001:', document.getElementById(SKU_TO_PAGE_ID['EVO0001']));
+      injectAuditResults(results);
+      console.log('[listings] Loaded audit results for', results.length, 'SKUs (most recent per SKU by audited_at)');
+    }
+  } catch(err) {
+    console.warn('[listings] Could not load audit results:', err.message);
+  }
+}
 </script>
 </body>
 </html>
