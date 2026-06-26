@@ -40,19 +40,18 @@ const HEADERS = [
 
 // All active Skinuva SKUs — must match exactly what's in Seller Central
 const SKINUVA_SKUS = [
-  { sku: 'SVA0001-stickerless', asin: 'B07RCJDFN4',  name: 'Scar 30ml' },
-  { sku: 'SVA0002',             asin: 'B07RCYZWNH',  name: 'Scar 50ml' },
-  { sku: 'SVA0003-stickerless', asin: 'B0861CGWLF',  name: 'Brite' },
-  { sku: 'SVA0003.2pk',         asin: 'B0D1W1WSFH',  name: 'Brite 2-pack' },
-  { sku: 'SVA0004',             asin: 'B09FQJMLPZ',  name: 'Scar 15ml' },
-  { sku: 'SVA0005',             asin: 'B0B23BB6CB',  name: 'Bruise' },
-  { sku: 'SVA0006',             asin: 'B0BRNWSQ8H',  name: 'Scar+ 30ml' },
-  { sku: 'SVA0007',             asin: 'B0BRNVTD7T',  name: 'Scar+ 15ml' },
-  { sku: 'SVA0008',             asin: 'B0DHYLCML2',  name: '24HR Scar Kit 30ml' },
-  { sku: 'SVA0009',             asin: 'B0DHYJLHW1',  name: '24HR Scar Kit 15ml' },
-  { sku: 'SVA0010',             asin: 'B0DXVVVVPR',  name: 'Scar 75ml' },
-  { sku: 'SVA0011',             asin: 'B0F45BTSB7',  name: 'Advanced Recovery Cream' },
-  { sku: 'SVA0012',             asin: 'B0FRVVFPM5',  name: 'Bruise Recovery Duo' },
+  { sku: 'SVA0001', asin: 'B07RCJDFN4',  name: 'Scar 30ml' },
+  { sku: 'SVA0002', asin: 'B07RCYZWNH',  name: 'Scar 50ml' },
+  { sku: 'SVA0003', asin: 'B0861CGWLF',  name: 'Brite' },
+  { sku: 'SVA0004', asin: 'B09FQJMLPZ',  name: 'Scar 15ml' },
+  { sku: 'SVA0005', asin: 'B0B23BB6CB',  name: 'Bruise' },
+  { sku: 'SVA0006', asin: 'B0BRNWSQ8H',  name: 'Scar+ 30ml' },
+  { sku: 'SVA0007', asin: 'B0BRNVTD7T',  name: 'Scar+ 15ml' },
+  { sku: 'SVA0008', asin: 'B0DHYLCML2',  name: '24HR Scar Kit 30ml' },
+  { sku: 'SVA0009', asin: 'B0DHYJLHW1',  name: '24HR Scar Kit 15ml' },
+  { sku: 'SVA0010', asin: 'B0DXVVVVPR',  name: 'Scar 75ml' },
+  { sku: 'SVA0011', asin: 'B0F45BTSB7',  name: 'Advanced Recovery Cream' },
+  { sku: 'SVA0012', asin: 'B0FRVVFPM5',  name: 'Bruise Recovery Duo' },
 ];
 
 module.exports = async (req, res) => {
@@ -178,8 +177,9 @@ function getAttr(attrs, fieldName) {
 }
 
 function getItemHighlights(attrs) {
-  // Try the fields SP-API returns for item highlights across different product types
-  for (const field of ['item_overview', 'product_overview', 'item_type_keyword']) {
+  // Skinuva uses 'title_differentiation' for Item Highlights
+  // Also try item_overview and product_overview as fallbacks for other product types
+  for (const field of ['title_differentiation', 'item_overview', 'product_overview']) {
     const val = getAttr(attrs, field);
     if (val) return val;
   }
@@ -195,4 +195,3 @@ function getBullets(attrs) {
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
- 
