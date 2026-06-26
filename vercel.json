@@ -1,9 +1,22 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "index.html", "use": "@vercel/static" }
+  "outputDirectory": "public",
+  "crons": [
+    {
+      "path": "/api/cron/sync-listings",
+      "schedule": "0 2 * * 0"
+    }
   ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/index.html" }
-  ]
+  "functions": {
+    "api/cron/sync-listings.js": { "maxDuration": 300 },
+    "api/run-listing-audit.js":  { "maxDuration": 300 },
+    "api/write-listing-audit.js":{ "maxDuration": 300 },
+    "api/run-insight-analysis.js":{ "maxDuration": 300 },
+    "api/write-insights.js":     { "maxDuration": 300 },
+    "api/write-uploads.js":      { "maxDuration": 300 }
+  }
 }
+
+
+
+
+
