@@ -35,14 +35,14 @@ const HEADERS = [
   'title', 'item_highlights',
   'bullet_1', 'bullet_2', 'bullet_3', 'bullet_4', 'bullet_5',
   'description', 'backend_keywords',
-  'issues', 'last_synced'
+  'ingredients', 'issues', 'last_synced'
 ];
 
 // All active Skinuva SKUs — must match exactly what's in Seller Central
 const SKINUVA_SKUS = [
-  { sku: 'SVA0001', asin: 'B07RCJDFN4',  name: 'Scar 30ml' },
-  { sku: 'SVA0002', asin: 'B07RCYZWNH',  name: 'Scar 50ml' },
-  { sku: 'SVA0003', asin: 'B0861CGWLF',  name: 'Brite' },
+  { sku: 'SVA0001-stickerless', asin: 'B07RCJDFN4',  name: 'Scar 30ml' },
+  { sku: 'SVA0002',             asin: 'B07RCYZWNH',  name: 'Scar 50ml' },
+  { sku: 'SVA0003-stickerless', asin: 'B0861CGWLF',  name: 'Brite' },
   { sku: 'SVA0004', asin: 'B09FQJMLPZ',  name: 'Scar 15ml' },
   { sku: 'SVA0005', asin: 'B0B23BB6CB',  name: 'Bruise' },
   { sku: 'SVA0006', asin: 'B0BRNWSQ8H',  name: 'Scar+ 30ml' },
@@ -99,7 +99,8 @@ module.exports = async (req, res) => {
       const ih          = getItemHighlights(attrs);
       const bullets     = getBullets(attrs);
       const description = getAttr(attrs, 'product_description');
-      const backend     = getAttr(attrs, 'generic_keyword');
+      const backend      = getAttr(attrs, 'generic_keyword');
+      const ingredients  = getAttr(attrs, 'ingredients');
       const status      = Array.isArray(summary.status)
         ? summary.status.join(', ')
         : (summary.status || 'UNKNOWN');
@@ -119,6 +120,7 @@ module.exports = async (req, res) => {
         bullets[4] || '',
         description,
         backend,
+        ingredients,
         issuesList,
         now,
       ]);
@@ -131,7 +133,7 @@ module.exports = async (req, res) => {
       errors.push({ sku: skuMeta.sku, error: err.message });
       rows.push([
         skuMeta.sku, skuMeta.asin, skuMeta.name,
-        'ERROR', '', '', '', '', '', '', '', '', '',
+        'ERROR', '', '', '', '', '', '', '', '', '', '',
         err.message.slice(0, 200), now
       ]);
     }
