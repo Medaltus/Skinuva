@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/cron/sync-listings",
-      "schedule": "0 2 * * 0"
+      "schedule": "0 2 */2 * *"
     }
   ],
   "functions": {
@@ -14,9 +14,4 @@
     "api/write-insights.js":      { "maxDuration": 300 },
     "api/write-uploads.js":       { "maxDuration": 300 }
   }
-} 
-
-
-
-
-
+}
