@@ -6439,7 +6439,22 @@ async function initSns() {
     }
 
     // Load product name lookup — col B = SKU, col C = Name
+    // Keyed by BOTH the raw sku string AND its "root" pattern (leading
+    // letters+digits, e.g. "SVA0001" out of "SVA0001-stickerless" or
+    // "SVA0001.1-CA") — confirmed 2026-08-10 per Jaclyn: Amazon carries
+    // many suffix variations of the same base product (-stickerless for
+    // Walmart-style listings, .1-CA/-UK for other marketplaces, .2pk for
+    // multipacks), and there's often no bare unsuffixed row at all (e.g.
+    // SVA0001's own Amazon row is literally "SVA0001-stickerless", not
+    // "SVA0001") — but all suffix variations of the same root share the
+    // same product name, so keying by root lets the Physician/
+    // International lookup below match against whichever Amazon-side
+    // variation happens to exist, not just an exact bare-SKU string.
     const skuNameMap = {};
+    function rootSku(s) {
+      const m = s.match(/^[A-Z]+\d+/);
+      return m ? m[0] : s;
+    }
     try {
       const namesCsv = await fetch(sheetCsvUrl(PRODUCT_NAMES_SHEET_ID, PRODUCT_NAMES_GID) + `&_cb=${Date.now()}`)
         .then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), ''));
@@ -6449,7 +6464,11 @@ async function initSns() {
           const cols = parseCsvLine(lines[i]);
           const sku  = (cols[1] || '').replace(/^\"|"$/g,'').trim().toUpperCase().replace(/-SF$/i,'');
           const name = (cols[2] || '').replace(/^\"|"$/g,'').trim();
-          if (sku && name) skuNameMap[sku] = name;
+          if (sku && name) {
+            skuNameMap[sku] = name;
+            const root = rootSku(sku);
+            if (root && !skuNameMap[root]) skuNameMap[root] = name;
+          }
         }
         console.log('[WebTopProducts:'+idPrefix+'] Loaded', Object.keys(skuNameMap).length, 'SKU→name mappings');
       }
@@ -6471,7 +6490,14 @@ async function initSns() {
 
     tbody.innerHTML = '';
     sorted.forEach(([sku, units], idx) => {
-      const name       = skuNameMap[sku] || sku;
+      // Strip the order-type prefix (C-/P-/I-/S-) before the name lookup --
+      // the master Product Short Name sheet only carries base SKUs (e.g.
+      // "SVA0001") plus a Shopify-Customer "C-" variant; it has no
+      // separate "P-"/"I-" rows, so looking up the raw prefixed SKU
+      // directly always missed and silently fell back to showing the raw
+      // SKU string instead of the real product name. Added 2026-08-10.
+      const baseSku    = sku.replace(/^[CPIS]-/, '');
+      const name       = skuNameMap[sku] || skuNameMap[baseSku] || skuNameMap[rootSku(baseSku)] || sku;
       const prevUnits  = skuUnitsPrev[sku] || 0;
       // "—" means this SKU has no Shopping-campaign data at all this month
       // (never advertised via Shopping/PMax, or no order yet to resolve it
