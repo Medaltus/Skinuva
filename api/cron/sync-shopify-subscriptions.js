@@ -1,47 +1,69 @@
 /**
  * api/cron/sync-shopify-subscriptions.js
- * Daily — counts ACTIVE subscription contracts via Shopify's native GraphQL
- * Admin API (subscriptionContracts connection) and writes that single
- * number into column L ("website_subscriptions") of the current month's
- * row on the Stewardship Summary sheet.
+ * Daily — counts ACTIVE subscriptions via Seal Subscriptions' own REST API
+ * and writes that single number into column L ("website_subscriptions") of
+ * the current month's row on the Stewardship Summary sheet.
  *
- * IMPORTANT SCOPE: this cron writes to EXACTLY ONE cell — column L of the
- * row matching the current year/month. It never touches columns A-K, and
- * never touches any other row. If that row doesn't exist yet (shouldn't
- * happen in practice, since sync-stewardship-summary.js creates it first),
- * this cron creates a new row with A-K blank and only L filled in, rather
- * than guessing at any other column's value.
+ * REWRITTEN for Skinuva (2026-08-10) — évolis's original version queries
+ * Shopify's native GraphQL `subscriptionContracts` connection, which works
+ * for évolis because its subscriptions app (Appstle) is built directly on
+ * top of Shopify's native Subscription Contract objects. Skinuva uses a
+ * DIFFERENT app — Seal Subscriptions — which maintains its own entirely
+ * separate data model, exposed only through Seal's own dedicated REST API
+ * (app.sealsubscriptions.com), never through Shopify's native GraphQL
+ * objects at all. CONFIRMED REAL INCIDENT: running évolis's original
+ * GraphQL-based version against Skinuva returned 0 active subscriptions
+ * every time, even though Seal's own dashboard showed 83 active — not a
+ * status-filtering bug, just querying the wrong API entirely.
  *
- * Reuses the exact same Shopify auth pattern as sync-shopify-orders.js
- * (client_credentials grant, same env vars) — no separate Appstle API key
- * needed, since Appstle Subscriptions is built directly on top of
- * Shopify's own native Subscription Contract objects.
+ * Auth: Seal's API uses its own token, sent as the X-Seal-Token header.
+ * Found in Shopify Admin → Apps → Seal Subscriptions → Settings → General
+ * Settings → API. This is a SEPARATE credential from
+ * SHOPIFY_CLIENT_ID/SHOPIFY_CLIENT_SECRET — Seal's API lives on Seal's own
+ * servers, not Shopify's, so Shopify's own app credentials don't apply.
  *
- * Shopify's GraphQL connections don't expose a plain "total count" field —
- * this pages through every ACTIVE contract and counts them.
+ * IMPORTANT — RESPONSE SHAPE NOT YET VERIFIED AGAINST REAL DATA: built
+ * from Seal's published docs (sealsubscriptions.com/articles/
+ * merchant-api-documentation), which show a full sample response for the
+ * single-subscription endpoint (GET /subscription?id=...) but not the
+ * *list* endpoint (GET /subscriptions) used here. Assumed shape:
+ * { success: true, payload: [ {...}, ... ] }, each item carrying at least
+ * an `id` field (used only to count array length, not any other field).
+ * The response this endpoint returns includes `sampleFirstItem` — the
+ * first real subscription object fetched — specifically so this can be
+ * verified against Skinuva's actual data on the first real run. Remove
+ * that field from the response once confirmed correct.
+ *
+ * Paginates with ?active-only=true&page=N, 50 results per page per Seal's
+ * docs, stopping when a page comes back with fewer than 50 (last page).
+ * Sequential requests only (never more than 1 in flight) — Seal's stated
+ * rate limit is 10 concurrent requests per token, so this comfortably
+ * stays under that regardless of how many subscriptions exist.
+ *
+ * Everything else — writing ONLY column L of the current month's row,
+ * never touching columns A-K or any other row — is unchanged from
+ * évolis's version. See that file's own comments for why this cron is
+ * scoped so narrowly.
  *
  * Sheet: SHEET_STEWARDSHIP_SUMMARY (16QNnDh7-dTDzI-O7UI-WlzMtOmovssV23nd-quiYPR0)
  *   — same shared, multi-brand file every brand's dashboard already reads
- *   from (NOT a new Skinuva-specific sheet, unlike the orders/revenue/
- *   returns sheet used by the other 3 Shopify crons in this set).
- * Tab: brand.tabName ('skinuva')
- * Schedule: daily, e.g. "30 7 * * *" — after sync-shopify-orders (7:00) so
- * both Shopify-sourced crons don't hit the API in the same instant.
+ *   from, NOT a new Skinuva-specific sheet.
+ * Tab: 'skinuva'
+ * Schedule: daily, "30 7 * * *" — same stagger as Skinuva's other 3
+ *   Shopify crons (orders 7:00, revenue 7:07, returns 7:22 UTC).
  */
 
 const { ensureTab, readRows, replaceRows } = require('../config/_sheets_client');
 
-const STORE_DOMAIN  = process.env.SHOPIFY_STORE_DOMAIN;
-const CLIENT_ID     = process.env.SHOPIFY_CLIENT_ID;
-const CLIENT_SECRET = process.env.SHOPIFY_CLIENT_SECRET;
-const API_VERSION   = '2025-01';
+const SEAL_API_TOKEN = process.env.SEAL_API_TOKEN;
+const SEAL_API_BASE  = 'https://app.sealsubscriptions.com/shopify/merchant/api';
 
 const SUMMARY_SHEET_ID = process.env.SHEET_STEWARDSHIP_SUMMARY;
-const TAB_NAME          = 'skinuva'; // matches brand.tabName used by sync-stewardship-summary.js — this is the SAME shared multi-brand Stewardship Summary file every brand uses, just Skinuva's own tab within it
+const TAB_NAME          = 'skinuva'; // matches brand.tabName used by sync-stewardship-summary.js — the SAME shared multi-brand Stewardship Summary file every brand uses, just Skinuva's own tab within it
 
-// Full header list INCLUDING the new column L. Must match exactly what
-// sync-stewardship-summary.js uses (also updated to include this column),
-// or the two crons will disagree about which column index is which.
+// Full header list INCLUDING column L. Must match exactly what
+// sync-stewardship-summary.js uses, or the two crons will disagree about
+// which column index is which.
 const HEADERS = [
   'year', 'month',
   'ads_spend', 'impressions', 'clicks', 'ad_units',
@@ -56,55 +78,47 @@ module.exports = async (req, res) => {
   if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-  if (!STORE_DOMAIN || !CLIENT_ID || !CLIENT_SECRET) {
-    return res.status(500).json({ error: 'Shopify env vars not set' });
+  if (!SEAL_API_TOKEN) {
+    return res.status(500).json({ error: 'SEAL_API_TOKEN not set' });
   }
   if (!SUMMARY_SHEET_ID) {
     return res.status(500).json({ error: 'SHEET_STEWARDSHIP_SUMMARY not set' });
   }
 
-  let accessToken;
-  try {
-    accessToken = await getShopifyToken();
-  } catch (err) {
-    console.error('[sync-shopify-subscriptions] token failed:', err.message);
-    return res.status(500).json({ error: 'Token request failed', detail: err.message });
-  }
-
-  // ── Count ACTIVE subscription contracts, paging through all of them ──────
+  // ── Count ACTIVE subscriptions, paging through Seal's REST API ───────────
   let activeCount = 0;
-  let cursor = null;
   let page = 0;
-
-  const query = `
-    query GetActiveSubscriptions($first: Int!, $after: String) {
-      subscriptionContracts(first: $first, after: $after, query: "status:ACTIVE") {
-        edges { cursor node { id } }
-        pageInfo { hasNextPage }
-      }
-    }
-  `;
+  let sampleFirstItem = null;
 
   do {
     page++;
+    let resp, data;
     try {
-      const resp = await shopifyGraphQL(accessToken, query, { first: 250, after: cursor });
-      const edges = resp?.subscriptionContracts?.edges || [];
-      activeCount += edges.length;
-      if (edges.length) cursor = edges[edges.length - 1].cursor;
-
-      const hasNextPage = resp?.subscriptionContracts?.pageInfo?.hasNextPage;
-      console.log(`[sync-shopify-subscriptions] page ${page}: +${edges.length} (running total: ${activeCount})`);
-
-      if (!hasNextPage) break;
-      if (page >= 100) { console.warn('[sync-shopify-subscriptions] hit page cap'); break; }
+      resp = await fetch(`${SEAL_API_BASE}/subscriptions?active-only=true&page=${page}`, {
+        headers: { 'Content-Type': 'application/json', 'X-Seal-Token': SEAL_API_TOKEN },
+      });
+      data = await resp.json();
     } catch (err) {
-      console.error(`[sync-shopify-subscriptions] page ${page} failed:`, err.message);
-      return res.status(500).json({ error: 'GraphQL fetch failed', detail: err.message });
+      console.error(`[sync-shopify-subscriptions] page ${page} request failed:`, err.message);
+      return res.status(500).json({ error: 'Seal API request failed', detail: err.message, page });
     }
+
+    if (!resp.ok || data?.success === false) {
+      console.error(`[sync-shopify-subscriptions] page ${page} error:`, resp.status, JSON.stringify(data));
+      return res.status(500).json({ error: 'Seal API returned an error', status: resp.status, detail: data, page });
+    }
+
+    const items = Array.isArray(data?.payload) ? data.payload : [];
+    if (page === 1 && items.length) sampleFirstItem = items[0];
+
+    activeCount += items.length;
+    console.log(`[sync-shopify-subscriptions] page ${page}: +${items.length} (running total: ${activeCount})`);
+
+    if (items.length < 50) break; // fewer than a full page — this was the last one
+    if (page >= 200) { console.warn('[sync-shopify-subscriptions] hit page cap'); break; }
   } while (true);
 
-  console.log(`[sync-shopify-subscriptions] total ACTIVE contracts: ${activeCount}`);
+  console.log(`[sync-shopify-subscriptions] total ACTIVE subscriptions: ${activeCount}`);
 
   // ── Write ONLY column L for the current year/month row ────────────────────
   const now = new Date();
@@ -126,10 +140,9 @@ module.exports = async (req, res) => {
     });
 
     if (!found) {
-      // No row for this month yet (shouldn't normally happen, since
-      // sync-stewardship-summary.js creates the month's row first) —
-      // add a new row with ONLY year/month/website_subscriptions filled,
-      // everything else blank rather than guessed at.
+      // No row for this month yet — add one with ONLY
+      // year/month/website_subscriptions filled, everything else blank
+      // rather than guessed at.
       const blankRow = {};
       HEADERS.forEach(h => { blankRow[h] = ''; });
       blankRow.year = year;
@@ -146,6 +159,8 @@ module.exports = async (req, res) => {
       activeSubscriptions: activeCount,
       year, month,
       rowFoundExisting: found,
+      pagesFetched: page,
+      sampleFirstItem, // TEMPORARY — verify this matches real Seal data, then remove
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
@@ -153,39 +168,3 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'Sheet write failed', detail: err.message });
   }
 };
-
-// ── Shopify auth (identical pattern to sync-shopify-orders.js) ────────────
-
-async function getShopifyToken() {
-  const resp = await fetch(`https://${STORE_DOMAIN}/admin/oauth/access_token`, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body:    new URLSearchParams({
-      grant_type:    'client_credentials',
-      client_id:     CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-    }),
-  });
-  if (!resp.ok) throw new Error(`Token request failed: ${resp.status}`);
-  const { access_token } = await resp.json();
-  if (!access_token) throw new Error('No access_token in response');
-  return access_token;
-}
-
-async function shopifyGraphQL(token, query, variables = {}) {
-  const resp = await fetch(
-    `https://${STORE_DOMAIN}/admin/api/${API_VERSION}/graphql.json`,
-    {
-      method:  'POST',
-      headers: {
-        'Content-Type':          'application/json',
-        'X-Shopify-Access-Token': token,
-      },
-      body: JSON.stringify({ query, variables }),
-    }
-  );
-  if (!resp.ok) throw new Error(`GraphQL request failed: ${resp.status}`);
-  const { data, errors } = await resp.json();
-  if (errors?.length) throw new Error(`GraphQL errors: ${JSON.stringify(errors)}`);
-  return data;
-}
