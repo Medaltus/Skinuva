@@ -1129,7 +1129,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
              anyone who doesn't touch these gets today's existing behavior
              (all three Sales channels always included). -->
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-amazon" checked style="margin:0;"> Amazon</label>
-        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-website" checked style="margin:0;"> Website</label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-website" checked style="margin:0;"> Website (Customer)</label>
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-walmart" checked style="margin:0;"> Walmart</label>
         <!-- Marketing pages — same default-checked reasoning as Sales above. -->
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-fulfillment" checked style="margin:0;"> Fulfillment &amp; CS</label>
@@ -1625,46 +1625,119 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 
     <div class="channel-page" id="s-website">
       <div class="channel-hdr">
-        <span style="font-size:16px;font-weight:600;color:var(--navy);">WEB — evolisproducts.com</span>
+        <span style="font-size:16px;font-weight:600;color:var(--navy);">WEB — skinuva.com</span>
         <span id="web-hdr-date" style="font-size:11px;color:var(--muted);">📅 Loading…</span>
       </div>
-      <div class="kpi-row">
-        <div class="kpi-card" id="web-kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-        <div class="kpi-card" id="web-kpi-total-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-        <div class="kpi-card" id="web-kpi-avg-order"><div class="kpi-label">Average Order</div><div class="kpi-value sm">—</div><div class="kpi-mom flat">Loading…</div></div>
-        <div class="kpi-card" id="web-kpi-units-ads"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-        <div class="kpi-card" id="web-kpi-units-organic"><div class="kpi-label">Units (Organic)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+
+      <!-- Order-type sub-tabs — Skinuva-specific (2026-08-10, per Jaclyn):
+           website order data is split by SKU prefix into Customer (C-),
+           Physician (P-), and International (I-) order types. Samples
+           (S-) are deliberately excluded/ignored for now, per Jaclyn.
+           Customer is the default/primary tab — it keeps all the original
+           element IDs (web-kpi-*, chart-web, web-tp-tbody, etc.) so the
+           PDF export (which only ever reads those IDs) picks up Customer
+           data automatically without any export-side changes. This
+           sub-tab split is Skinuva-specific and should NOT be replicated
+           to other brands by default. -->
+      <div class="sub-tabs" style="margin-bottom:16px;">
+        <button class="sub-tab active" onclick="showWebOrderType('customer', this)">Customer</button>
+        <button class="sub-tab" onclick="showWebOrderType('physician', this)">Physician</button>
+        <button class="sub-tab" onclick="showWebOrderType('international', this)">International</button>
       </div>
-      <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <div class="card-title" style="margin-bottom:0;">Sales Revenue by Month</div>
-          <div id="legend-web" style="display:flex;align-items:center;"></div>
+
+      <div class="web-order-type-page active" id="web-ordertype-customer">
+        <div class="kpi-row">
+          <div class="kpi-card" id="web-kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="web-kpi-total-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="web-kpi-avg-order"><div class="kpi-label">Average Order</div><div class="kpi-value sm">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="web-kpi-units-ads"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="web-kpi-units-organic"><div class="kpi-label">Units (Organic)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
         </div>
-        <div style="position:relative;height:320px;"><canvas id="chart-web"></canvas></div>
-      </div>
-      <div class="card" id="web-top-products-card">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px;">
-          <span class="card-title" style="margin-bottom:0;">Top Selling Products <span style="font-size:11px;color:var(--muted);font-weight:400;">(by Units)</span></span>
-          <span id="web-products-source" style="font-size:10px;color:var(--muted);"></span>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div class="card-title" style="margin-bottom:0;">Sales Revenue by Month</div>
+            <div id="legend-web" style="display:flex;align-items:center;"></div>
+          </div>
+          <div style="position:relative;height:320px;"><canvas id="chart-web"></canvas></div>
         </div>
-        <table class="data-table" id="web-top-sellers">
-          <thead><tr><th style="width:32px;">#</th><th>Product</th><th>Units</th><th>Units (Ads)</th><th>Units (Organic)</th></tr></thead>
-          <tbody id="web-tp-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Loading…</td></tr></tbody>
-        </table>
-      </div>
-      <div class="insight-bar">
-        <strong>Key Insight:</strong>
-        <span class="insight-text" id="web-insight-text">Loading…</span>
-        <div class="insight-actions">
-          <button class="btn-edit" id="web-insight-edit-btn">✏️ Edit</button>
+        <div class="card" id="web-top-products-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px;">
+            <span class="card-title" style="margin-bottom:0;">Top Selling Products <span style="font-size:11px;color:var(--muted);font-weight:400;">(by Units)</span></span>
+            <span id="web-products-source" style="font-size:10px;color:var(--muted);"></span>
+          </div>
+          <table class="data-table" id="web-top-sellers">
+            <thead><tr><th style="width:32px;">#</th><th>Product</th><th>Units</th><th>Units (Ads)</th><th>Units (Organic)</th></tr></thead>
+            <tbody id="web-tp-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Loading…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="insight-bar">
+          <strong>Key Insight:</strong>
+          <span class="insight-text" id="web-insight-text">Loading…</span>
+          <div class="insight-actions">
+            <button class="btn-edit" id="web-insight-edit-btn">✏️ Edit</button>
+          </div>
+        </div>
+        <div class="insight-editor" id="web-insight-editor">
+          <textarea id="web-insight-textarea"></textarea>
+          <div class="editor-footer">
+            <span class="editor-note">Saves directly to the report sheet as a draft.</span>
+            <button class="btn-cancel" id="web-insight-cancel">Cancel</button>
+            <button class="btn-save-stage" id="web-insight-save">Save</button>
+          </div>
         </div>
       </div>
-      <div class="insight-editor" id="web-insight-editor">
-        <textarea id="web-insight-textarea"></textarea>
-        <div class="editor-footer">
-          <span class="editor-note">Saves directly to the report sheet as a draft.</span>
-          <button class="btn-cancel" id="web-insight-cancel">Cancel</button>
-          <button class="btn-save-stage" id="web-insight-save">Save</button>
+
+      <div class="web-order-type-page" id="web-ordertype-physician" style="display:none;">
+        <div class="kpi-row">
+          <div class="kpi-card" id="webphys-kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="webphys-kpi-total-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="webphys-kpi-avg-order"><div class="kpi-label">Average Order</div><div class="kpi-value sm">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="webphys-kpi-units-ads"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="webphys-kpi-units-organic"><div class="kpi-label">Units (Organic)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div class="card-title" style="margin-bottom:0;">Sales Revenue by Month</div>
+            <div id="legend-webphys" style="display:flex;align-items:center;"></div>
+          </div>
+          <div style="position:relative;height:320px;"><canvas id="chart-webphys"></canvas></div>
+        </div>
+        <div class="card" id="webphys-top-products-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px;">
+            <span class="card-title" style="margin-bottom:0;">Top Selling Products <span style="font-size:11px;color:var(--muted);font-weight:400;">(by Units)</span></span>
+            <span id="webphys-products-source" style="font-size:10px;color:var(--muted);"></span>
+          </div>
+          <table class="data-table" id="webphys-top-sellers">
+            <thead><tr><th style="width:32px;">#</th><th>Product</th><th>Units</th><th>Units (Ads)</th><th>Units (Organic)</th></tr></thead>
+            <tbody id="webphys-tp-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="web-order-type-page" id="web-ordertype-international" style="display:none;">
+        <div class="kpi-row">
+          <div class="kpi-card" id="webintl-kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="webintl-kpi-total-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="webintl-kpi-avg-order"><div class="kpi-label">Average Order</div><div class="kpi-value sm">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="webintl-kpi-units-ads"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="webintl-kpi-units-organic"><div class="kpi-label">Units (Organic)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div class="card-title" style="margin-bottom:0;">Sales Revenue by Month</div>
+            <div id="legend-webintl" style="display:flex;align-items:center;"></div>
+          </div>
+          <div style="position:relative;height:320px;"><canvas id="chart-webintl"></canvas></div>
+        </div>
+        <div class="card" id="webintl-top-products-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px;">
+            <span class="card-title" style="margin-bottom:0;">Top Selling Products <span style="font-size:11px;color:var(--muted);font-weight:400;">(by Units)</span></span>
+            <span id="webintl-products-source" style="font-size:10px;color:var(--muted);"></span>
+          </div>
+          <table class="data-table" id="webintl-top-sellers">
+            <thead><tr><th style="width:32px;">#</th><th>Product</th><th>Units</th><th>Units (Ads)</th><th>Units (Organic)</th></tr></thead>
+            <tbody id="webintl-tp-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Loading…</td></tr></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -4702,7 +4775,25 @@ function showChannel(page, channelId, btn) {
     }
   }
 
-  // ── Sub-tab navigation (nested product/variation tabs) ──
+  // Skinuva-specific (2026-08-10): switches between the Website channel's
+  // Customer/Physician/International order-type tabs. Physician and
+  // International lazy-load on first click only, same idempotent-promise
+  // pattern as initWebLive itself — repeat clicks are a cheap no-op, not
+  // a re-fetch.
+  function showWebOrderType(type, btn) {
+    const parent = document.getElementById('s-website');
+    if (!parent) return;
+    parent.querySelectorAll('.web-order-type-page').forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
+    parent.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+    const target = document.getElementById('web-ordertype-' + type);
+    if (target) { target.classList.add('active'); target.style.display = ''; }
+    btn.classList.add('active');
+
+    if (type === 'physician' && typeof window.initWebPhysicianLive === 'function') window.initWebPhysicianLive();
+    if (type === 'international' && typeof window.initWebInternationalLive === 'function') window.initWebInternationalLive();
+  }
+
+
   // Closes any open .sheet-link-dropdown when clicking outside its
   // .sheet-link-menu wrapper — added 2026-08-07 alongside the internal
   // "Source Sheets" link menu on the Overview page.
@@ -5896,11 +5987,18 @@ async function initSns() {
   }
 
   // Aggregate KPIs for a given year-month from all rows
-  function aggregateMonth(rows, year, month) {
+  // Aggregate KPIs for a given year-month from all rows
+  // skuPrefix (added 2026-08-10, Skinuva-specific): if given, only rows
+  // whose sku starts with this prefix count -- used to split Customer
+  // (C-), Physician (P-), and International (I-) order types apart.
+  // Undefined/omitted = no filter (kept for any other call site).
+  function aggregateMonth(rows, year, month, skuPrefix) {
     const prefix = `${year}-${String(month).padStart(2,'0')}`;
     const filtered = rows.filter(r => {
       const d = normalizeDate(r.date).substring(0, 7);
-      return d === prefix && isValidRow(r);
+      if (d !== prefix || !isValidRow(r)) return false;
+      if (skuPrefix && !(r.sku || '').trim().toUpperCase().startsWith(skuPrefix)) return false;
+      return true;
     });
     if (!filtered.length) return null;
 
@@ -5958,59 +6056,72 @@ async function initSns() {
     return { totalConversions: Math.round(totalConversions), prevConversions: Math.round(prevConversions) };
   }
 
-  window.initWebLive = function () {
-    if (window._webLivePromise) return window._webLivePromise;
-    window._webLivePromise = (async function () {
-    console.log('[Evolis] initWebLive() called');
-
+  // ── Generic order-type loader — Skinuva-specific (2026-08-10) ────────────
+  // Customer/Physician/International tabs all share this same logic, just
+  // filtered to a different SKU prefix and writing to different element
+  // IDs. idPrefix: 'web' (Customer, original unchanged IDs so PDF export
+  // keeps working untouched), 'webphys' (Physician), 'webintl'
+  // (International). skuPrefix: 'C-', 'P-', 'I-' respectively.
+  async function loadWebOrderTypeTab(skuPrefix, idPrefix) {
     const { year, month } = getLastFullMonth();
     let prevMonth = month - 1, prevYear = year;
     if (prevMonth === 0) { prevMonth = 12; prevYear--; }
 
-    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const hdrEl = document.getElementById('web-hdr-date');
-    if (hdrEl) {
-      const lastDay = new Date(year, month, 0).getDate();
-      hdrEl.textContent = `📅 ${monthNames[month-1]} 1, ${year} – ${monthNames[month-1]} ${lastDay}, ${year}`;
-      hdrEl.style.display = 'none'; // duplicated page-sub above; kept in DOM for PDF export only
+    if (idPrefix === 'web') {
+      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const hdrEl = document.getElementById('web-hdr-date');
+      if (hdrEl) {
+        const lastDay = new Date(year, month, 0).getDate();
+        hdrEl.textContent = `📅 ${monthNames[month-1]} 1, ${year} – ${monthNames[month-1]} ${lastDay}, ${year}`;
+        hdrEl.style.display = 'none'; // duplicated page-sub above; kept in DOM for PDF export only
+      }
     }
 
+    const tbodyId = idPrefix + (idPrefix === 'web' ? '-tp-tbody' : '-tp-tbody');
+
     try {
-      // Fetch orders, ads (campaign-level, still the KPI's source), and
-      // shopping (per-SKU, new 2026-07-28) data in parallel
       const [csv, adsCsv, shoppingCsv] = await Promise.all([
         fetch(sheetCsvUrl(SHOPIFY_SHEET_ID, SHOPIFY_SHEET_GID) + `&_cb=${Date.now()}`)
-          .then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), '')),
+          .then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
         fetch(sheetCsvUrl(SHOPIFY_SHEET_ID, SHOPIFY_ADS_GID) + `&_cb=${Date.now()}`)
-          .then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), '')),
+          .then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
         fetch(sheetCsvUrl(SHOPIFY_SHEET_ID, SHOPIFY_SHOPPING_GID) + `&_cb=${Date.now()}`)
-          .then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), '')),
+          .then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
       ]);
 
       if (!isCsv(csv)) {
-        showWebError('Could not load website data. Check sheet permissions.');
+        showWebError(`Could not load website data. Check sheet permissions.`, tbodyId);
         return;
       }
 
       const allRows = parseCsv(csv);
       const adsRows = isCsv(adsCsv) ? parseCsv(adsCsv) : [];
       const shoppingRows = isCsv(shoppingCsv) ? parseCsv(shoppingCsv) : [];
-      const curr    = aggregateMonth(allRows, year, month);
-      const prev    = aggregateMonth(allRows, prevYear, prevMonth);
+      const curr    = aggregateMonth(allRows, year, month, skuPrefix);
+      const prev    = aggregateMonth(allRows, prevYear, prevMonth, skuPrefix);
+      // Ad conversions (Units Ads KPI source) are campaign-level, not
+      // resolvable to a specific order-type SKU prefix — same figure
+      // shown on all three tabs. Only the Shopping-tab-based per-SKU ad
+      // breakdown used in the product table can actually be prefix-split.
       const ads     = aggregateAdMonth(adsRows, year, month);
 
       const fmt  = n => (n ?? 0).toLocaleString();
       const fmt2 = n => parseFloat(n ?? 0).toFixed(2);
 
       if (!curr) {
-        setKpiValue('web-kpi-total-units',   '0');
-        setKpiValue('web-kpi-total-orders',  '0');
-        setKpiValue('web-kpi-avg-order',     '$0.00');
-        setKpiValue('web-kpi-units-ads',     '—');
-        setKpiValue('web-kpi-units-organic', '0');
-        document.getElementById('web-tp-tbody').innerHTML =
+        setKpiValue(idPrefix + '-kpi-total-units',   '0');
+        setKpiValue(idPrefix + '-kpi-total-orders',  '0');
+        setKpiValue(idPrefix + '-kpi-avg-order',     '$0.00');
+        setKpiValue(idPrefix + '-kpi-units-ads',     '—');
+        setKpiValue(idPrefix + '-kpi-units-organic', '0');
+        const tb = document.getElementById(tbodyId);
+        if (tb) tb.innerHTML =
           '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--slate);font-style:italic;font-size:12px;">No data for this period.</td></tr>';
-        buildWebChart(year).catch(e => console.warn('[WebChart] failed:', e.message));
+        if (idPrefix === 'web') {
+          buildWebChart(year).catch(e => console.warn('[WebChart] failed:', e.message));
+        } else {
+          buildWebChartFromOrders(allRows, year, skuPrefix, idPrefix).catch(e => console.warn('[WebChart:'+idPrefix+'] failed:', e.message));
+        }
         return;
       }
 
@@ -6019,32 +6130,52 @@ async function initSns() {
       const orgUnits     = Math.max(0, curr.totalUnits - adUnits);
       const prevOrgUnits = Math.max(0, (prev ? prev.totalUnits : 0) - prevAdUnits);
 
-      // KPIs
-      setKpiValue('web-kpi-total-units', fmt(curr.totalUnits));
-      setBadgeWeb('web-kpi-total-units', '.kpi-mom', prev ? pct(curr.totalUnits, prev.totalUnits) : null, 'MOM');
+      setKpiValue(idPrefix + '-kpi-total-units', fmt(curr.totalUnits));
+      setBadgeWeb(idPrefix + '-kpi-total-units', '.kpi-mom', prev ? pct(curr.totalUnits, prev.totalUnits) : null, 'MOM');
 
-      setKpiValue('web-kpi-total-orders', fmt(curr.totalOrders));
-      setBadgeWeb('web-kpi-total-orders', '.kpi-mom', prev ? pct(curr.totalOrders, prev.totalOrders) : null, 'MOM');
+      setKpiValue(idPrefix + '-kpi-total-orders', fmt(curr.totalOrders));
+      setBadgeWeb(idPrefix + '-kpi-total-orders', '.kpi-mom', prev ? pct(curr.totalOrders, prev.totalOrders) : null, 'MOM');
 
-      setKpiValue('web-kpi-avg-order', '$' + fmt2(curr.avgOrder));
-      setBadgeWeb('web-kpi-avg-order', '.kpi-mom', prev ? pct(Math.round(curr.avgOrder * 100), Math.round(prev.avgOrder * 100)) : null, 'MOM');
+      setKpiValue(idPrefix + '-kpi-avg-order', '$' + fmt2(curr.avgOrder));
+      setBadgeWeb(idPrefix + '-kpi-avg-order', '.kpi-mom', prev ? pct(Math.round(curr.avgOrder * 100), Math.round(prev.avgOrder * 100)) : null, 'MOM');
 
-      setKpiValue('web-kpi-units-ads', adUnits > 0 ? fmt(adUnits) : '—');
-      setBadgeWeb('web-kpi-units-ads', '.kpi-mom', adUnits > 0 && prev ? pct(adUnits, prevAdUnits) : null, 'MOM');
+      setKpiValue(idPrefix + '-kpi-units-ads', adUnits > 0 ? fmt(adUnits) : '—');
+      setBadgeWeb(idPrefix + '-kpi-units-ads', '.kpi-mom', adUnits > 0 && prev ? pct(adUnits, prevAdUnits) : null, 'MOM');
 
-      setKpiValue('web-kpi-units-organic', fmt(orgUnits));
-      setBadgeWeb('web-kpi-units-organic', '.kpi-mom', prev ? pct(orgUnits, prevOrgUnits) : null, 'MOM');
+      setKpiValue(idPrefix + '-kpi-units-organic', fmt(orgUnits));
+      setBadgeWeb(idPrefix + '-kpi-units-organic', '.kpi-mom', prev ? pct(orgUnits, prevOrgUnits) : null, 'MOM');
 
-      buildWebChart(year).catch(e => console.warn('[WebChart] failed:', e.message));
-      buildWebTopProducts(allRows, adsRows, shoppingRows, year, month, prevYear, prevMonth);
+      if (idPrefix === 'web') {
+        buildWebChart(year).catch(e => console.warn('[WebChart] failed:', e.message));
+      } else {
+        buildWebChartFromOrders(allRows, year, skuPrefix, idPrefix).catch(e => console.warn('[WebChart:'+idPrefix+'] failed:', e.message));
+      }
+      buildWebTopProducts(allRows, adsRows, shoppingRows, year, month, prevYear, prevMonth, skuPrefix, idPrefix);
 
     } catch (err) {
-      console.error('[WebLive]', err.message);
-      showWebError(`Error: ${err.message}`);
+      console.error('[WebLive:'+idPrefix+']', err.message);
+      showWebError(`Error: ${err.message}`, tbodyId);
     }
-    })();
+  }
+
+  window.initWebLive = function () {
+    if (window._webLivePromise) return window._webLivePromise;
+    window._webLivePromise = loadWebOrderTypeTab('C-', 'web');
     return window._webLivePromise;
   };
+
+  window.initWebPhysicianLive = function () {
+    if (window._webPhysLivePromise) return window._webPhysLivePromise;
+    window._webPhysLivePromise = loadWebOrderTypeTab('P-', 'webphys');
+    return window._webPhysLivePromise;
+  };
+
+  window.initWebInternationalLive = function () {
+    if (window._webIntlLivePromise) return window._webIntlLivePromise;
+    window._webIntlLivePromise = loadWebOrderTypeTab('I-', 'webintl');
+    return window._webIntlLivePromise;
+  };
+
 
   // ── Revenue chart — computed from orders sheet ────────────────────────────
   // ── Website revenue chart — reads from revenue tab (mirrors Amazon/Walmart) ─
@@ -6138,6 +6269,92 @@ async function initSns() {
     window.renderExternalLegend(window._webChart, 'legend-web');
   }
 
+  // Added 2026-08-10, Skinuva-specific: Physician/International tabs have
+  // no pre-aggregated per-order-type Revenue tab to read from (the
+  // Revenue tab only ever tracked ONE combined monthly total, with no
+  // Customer/Physician/International breakdown) — building a proper
+  // write-time breakdown would mean changing sync-shopify-revenue.js,
+  // which is a separate follow-up, not bundled into this pass. Computes
+  // the same monthly trend live from the already-fetched raw orders rows
+  // instead, filtered by SKU prefix. Caveat: only covers however far back
+  // the Orders sheet itself retains history — if that's shorter than the
+  // Revenue tab's full history (which the Customer tab's chart still
+  // uses, unchanged), these two tabs' charts will show a shorter range.
+  async function buildWebChartFromOrders(allRows, currentYear, skuPrefix, idPrefix) {
+    const canvasId = 'chart-' + idPrefix;
+    const legendId = 'legend-' + idPrefix;
+    const canvasEl = document.getElementById(canvasId);
+    if (!canvasEl) return;
+
+    const monthly = {}; // 'YYYY-M' -> revenue
+    const orderTotals = {}; // order_id -> {month key, total} to dedupe multi-line orders
+    allRows.forEach(r => {
+      if (!isValidRow(r)) return;
+      if (!(r.sku || '').trim().toUpperCase().startsWith(skuPrefix)) return;
+      const d = normalizeDate(r.date);
+      if (!d) return;
+      const key = d.substring(0, 7); // YYYY-MM
+      const orderKey = r.order_id || (key + '||' + Math.random()); // no order_id -> treat as its own line
+      if (!orderTotals[orderKey]) orderTotals[orderKey] = { key, total: 0 };
+      orderTotals[orderKey].total += parseAmt(r.item_price);
+    });
+    Object.values(orderTotals).forEach(({ key, total }) => {
+      monthly[key] = (monthly[key] || 0) + total;
+    });
+
+    const now       = new Date();
+    const stopYear  = now.getFullYear();
+    const stopMonth = now.getMonth();
+
+    const COLORS = {
+      0: { border: '#24e9a3', bg: 'rgba(36,233,163,0.08)', fill: true  },
+      1: { border: '#001f60', bg: 'transparent',           fill: false },
+      2: { border: '#f4dfd0', bg: 'transparent',           fill: false },
+      3: { border: '#ccd3d5', bg: 'transparent',           fill: false },
+    };
+
+    const datasets = [];
+    for (let offset = 0; offset <= 3; offset++) {
+      const yr    = currentYear - offset;
+      const color = COLORS[offset];
+      const data  = months12.map((_, idx) => {
+        const mo = idx + 1;
+        if (yr === stopYear && mo > stopMonth) return null;
+        const key = `${yr}-${String(mo).padStart(2,'0')}`;
+        return Object.prototype.hasOwnProperty.call(monthly, key) ? monthly[key] : null;
+      });
+      if (data.every(v => v === null)) continue;
+      datasets.push({
+        label: String(yr), data,
+        borderColor: color.border, backgroundColor: color.bg,
+        fill: color.fill, ...lineDefaults,
+      });
+    }
+
+    if (datasets.length === 0) return;
+
+    const fmtDollar = v => v == null ? '' : '$' + (v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toFixed(0));
+    const chartVarName = '_webChart_' + idPrefix;
+
+    if (window[chartVarName]) window[chartVarName].destroy();
+    window[chartVarName] = new Chart(canvasEl, {
+      type: 'line',
+      data: { labels: months12, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtDollar(ctx.parsed.y)}` } },
+        },
+        scales: {
+          x: { grid: { color:'rgba(0,0,0,0.04)' } },
+          y: { grid: { color:'rgba(0,0,0,0.04)' }, ticks: { callback: fmtDollar } },
+        },
+      },
+    });
+    if (document.getElementById(legendId)) window.renderExternalLegend(window[chartVarName], legendId);
+  }
+
   // Looks up a field by name ignoring case — protects against a hand-typed
   // sheet header ("SKU" vs "sku" etc.) silently breaking a lookup the way
   // it just did on the shopping tab's sku column. Only needed for fields
@@ -6153,13 +6370,18 @@ async function initSns() {
   }
 
   // ── Top products table ────────────────────────────────────────────────────
-  async function buildWebTopProducts(allRows, adsRows, shoppingRows, targetYear, targetMonth, prevYear, prevMonth) {
+  // skuPrefix/idPrefix added 2026-08-10, Skinuva-specific — filters rows to
+  // one order type (Customer/Physician/International) and targets that
+  // tab's own tbody + source-label element IDs.
+  async function buildWebTopProducts(allRows, adsRows, shoppingRows, targetYear, targetMonth, prevYear, prevMonth, skuPrefix, idPrefix) {
     const prefix = `${targetYear}-${String(targetMonth).padStart(2,'0')}`;
-    const tbody  = document.getElementById('web-tp-tbody');
+    const tbody  = document.getElementById(idPrefix + '-tp-tbody');
+
+    const matchesPrefix = r => !skuPrefix || (r.sku || '').trim().toUpperCase().startsWith(skuPrefix);
 
     const monthRows = allRows.filter(r => {
       const d = normalizeDate(r.date).substring(0, 7);
-      return d === prefix && isValidRow(r);
+      return d === prefix && isValidRow(r) && matchesPrefix(r);
     });
 
     if (!monthRows.length) {
@@ -6178,13 +6400,10 @@ async function initSns() {
     }
 
     // Real per-SKU ad conversions from the shopping tab (Shopping/PMax
-    // campaigns only, sku resolved server-side by sync-google-ads.js as of
-    // 2026-07-28) — replaces the old site-wide-percentage estimate that
-    // applied the same ratio to every product regardless of whether that
-    // product was ever actually advertised. Note this only ever covers
-    // Shopping-campaign activity, not Search/Brand/Display — the top KPI
-    // card intentionally stays on the broader campaign-level source; see
-    // web-products-source note below the table.
+    // campaigns only, sku resolved server-side by sync-google-ads.js).
+    // NOTE: the shopping tab has no order-type distinction of its own —
+    // ad conversions can't be split by Customer/Physician/International,
+    // so this stays the same across all three tabs' product tables.
     const skuAdConversions = {};
     (shoppingRows || [])
       .filter(r => (r.date || '').substring(0,7) === prefix)
@@ -6199,7 +6418,7 @@ async function initSns() {
     const skuUnitsPrev = {};
     if (prevYear && prevMonth) {
       const prevPrefix = `${prevYear}-${String(prevMonth).padStart(2,'0')}`;
-      allRows.filter(r => normalizeDate(r.date).substring(0,7) === prevPrefix && isValidRow(r))
+      allRows.filter(r => normalizeDate(r.date).substring(0,7) === prevPrefix && isValidRow(r) && matchesPrefix(r))
              .forEach(r => {
                const sku = (r.sku || '').trim().toUpperCase();
                if (!sku) return;
@@ -6223,7 +6442,7 @@ async function initSns() {
     const skuNameMap = {};
     try {
       const namesCsv = await fetch(sheetCsvUrl(PRODUCT_NAMES_SHEET_ID, PRODUCT_NAMES_GID) + `&_cb=${Date.now()}`)
-        .then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), ''));
+        .then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), ''));
       if (isCsv(namesCsv)) {
         const lines = namesCsv.trim().split('\n');
         for (let i = 1; i < lines.length; i++) {
@@ -6232,10 +6451,10 @@ async function initSns() {
           const name = (cols[2] || '').replace(/^\"|"$/g,'').trim();
           if (sku && name) skuNameMap[sku] = name;
         }
-        console.log('[WebTopProducts] Loaded', Object.keys(skuNameMap).length, 'SKU→name mappings');
+        console.log('[WebTopProducts:'+idPrefix+'] Loaded', Object.keys(skuNameMap).length, 'SKU→name mappings');
       }
     } catch (e) {
-      console.warn('[WebTopProducts] Name lookup failed:', e.message);
+      console.warn('[WebTopProducts:'+idPrefix+'] Name lookup failed:', e.message);
     }
 
     function momSpan(curr, prev) {
@@ -6275,12 +6494,13 @@ async function initSns() {
     });
 
     const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const srcEl = document.getElementById('web-products-source');
-    if (srcEl) srcEl.textContent = `Google Sheets cache · Évolis · ${monthNames[targetMonth-1]} ${targetYear} · Ads column = Shopping-campaign conversions only, may be blank where a SKU has no Shopping-campaign data yet`;
+    const srcEl = document.getElementById(idPrefix + '-products-source');
+    if (srcEl) srcEl.textContent = `Google Sheets cache · Skinuva · ${monthNames[targetMonth-1]} ${targetYear} · Ads column = Shopping-campaign conversions only, may be blank where a SKU has no Shopping-campaign data yet`;
   }
 
-  function showWebError(msg) {
-    const tbody = document.getElementById('web-tp-tbody');
+  // tbodyId added 2026-08-10 — each order-type tab has its own tbody now.
+  function showWebError(msg, tbodyId) {
+    const tbody = document.getElementById(tbodyId || 'web-tp-tbody');
     if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:#c0392b;font-size:12px;">${msg}</td></tr>`;
   }
 
@@ -18461,7 +18681,14 @@ async function loadAuditResultsFromSheet() {
       ]);
 
       const amzRows = isCsv(amzCsv) ? parseCsv(amzCsv).filter(isEvolisRow) : [];
-      const webRows = isCsv(webCsv) ? parseCsv(webCsv) : [];
+      // Customer-only (C-) filter added 2026-08-10 per Jaclyn — Skinuva's
+      // website orders also include Physician (P-), International (I-),
+      // and Sample (S-) order types mixed into the same sheet. Overview
+      // page revenue/units/Active SKUs should only ever reflect Customer
+      // orders, matching the same scope as the Sales > Website > Customer
+      // tab and the PDF export's "Website (Customer)" checkbox. This is
+      // Skinuva-specific — do not replicate to other brands by default.
+      const webRows = isCsv(webCsv) ? parseCsv(webCsv).filter(r => (r.sku || '').trim().toUpperCase().startsWith('C-')) : [];
       const wmtRows = isCsv(wmtCsv) ? parseCsv(wmtCsv) : [];
       console.log('[Evolis][overview] row counts \u2014 amazon:', amzRows.length, 'web:', webRows.length, 'walmart:', wmtRows.length, '\u2014 MTD range:', mtdStartStr, 'to', mtdEndStr);
 
@@ -18604,6 +18831,7 @@ async function loadAuditResultsFromSheet() {
         if (!isCsv(csv)) return { totalQty: 0, totalAmt: 0, byAsin: {} };
         const filtered = parseCsv(csv).filter(r => {
           if (!isEvolisRow(r)) return false;
+          if (opts.skuPrefix && !(r.sku || '').trim().toUpperCase().startsWith(opts.skuPrefix)) return false;
           const d = normalizeDate(r[dateField]);
           return d && d >= startStr && d <= endStr;
         });
@@ -18627,8 +18855,8 @@ async function loadAuditResultsFromSheet() {
       const amzReturnsPrev = aggregateReturnsRange(amzReturnsCsv, prevStartStr, prevEndStr, 'return_date', { useAsinPrice: true });
       const wmtReturnsMtd  = aggregateReturnsRange(wmtReturnsCsv, mtdStartStr, mtdEndStr, 'return_date');
       const wmtReturnsPrev = aggregateReturnsRange(wmtReturnsCsv, prevStartStr, prevEndStr, 'return_date');
-      const webReturnsMtd  = aggregateReturnsRange(webReturnsCsv, mtdStartStr, mtdEndStr, 'refund_date');
-      const webReturnsPrev = aggregateReturnsRange(webReturnsCsv, prevStartStr, prevEndStr, 'refund_date');
+      const webReturnsMtd  = aggregateReturnsRange(webReturnsCsv, mtdStartStr, mtdEndStr, 'refund_date', { skuPrefix: 'C-' });
+      const webReturnsPrev = aggregateReturnsRange(webReturnsCsv, prevStartStr, prevEndStr, 'refund_date', { skuPrefix: 'C-' });
       console.log('[Evolis][overview] returns this MTD \u2014 amazon:', amzReturnsMtd, 'walmart:', wmtReturnsMtd, 'website:', webReturnsMtd);
 
       const amzMtd = aggregateRange(amzRows, mtdStartStr, mtdEndStr, isValidAmazonRow);
