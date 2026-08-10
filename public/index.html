@@ -9949,7 +9949,6 @@ async function initSnsExternal() {
   let _skuStatusMap = {}; // SKU (base, no -SF) -> 'LIVE' | 'DELETED', col H of the same master sheet
   let _inboundBySku = {}; // SKU -> summed Expected Qty across all *Open* ASNs
 
-  let _skuTypeMap = {};    // SKU (base) -> 'CATALOG' | 'BUNDLE', from the same master sheet
   let _shopifySkus = new Set(); // base SKUs that have a Channel=Shopify row on the master sheet
 
   // REWRITTEN 2026-08-10 per Jaclyn: switched from manual column-index
@@ -9957,14 +9956,14 @@ async function initSnsExternal() {
   // parseCsvRows(), the same pattern already used for the Consignment and
   // Tracker sheets below — column-position parsing is exactly the bug
   // class that's bitten this codebase before if the sheet ever gets a
-  // column inserted/reordered. Also now captures SKU Type (CATALOG vs
-  // BUNDLE) and Channel, needed by loadStockLevelsExternal below to scope
-  // this page to Shopify catalog SKUs only. The sheet carries one row per
-  // (SKU, Channel) combination — the Shopify row for a given product uses
-  // a "C-"-prefixed SKU string distinct from that same product's Amazon
-  // row (e.g. "C-SVA0001" vs "SVA0001") — so the "C-" prefix is stripped
-  // here too, not just "-SF", to land on the same base-SKU key the
-  // Consignment sheet itself uses.
+  // column inserted/reordered. Also now captures Channel, needed by
+  // loadStockLevelsExternal below to scope this page to Shopify SKUs only
+  // (no separate bundle filter needed — Shopify never lists bundle SKUs).
+  // The sheet carries one row per (SKU, Channel) combination — the
+  // Shopify row for a given product uses a "C-"-prefixed SKU string
+  // distinct from that same product's Amazon row (e.g. "C-SVA0001" vs
+  // "SVA0001") — so the "C-" prefix is stripped here too, not just "-SF",
+  // to land on the same base-SKU key the Consignment sheet itself uses.
   async function loadSkuNameMap() {
     try {
       const csv = await fetch(fileCsvUrl(PRODUCT_NAMES_SHEET_ID, PRODUCT_NAMES_GID)).then(r => r.ok ? r.text() : '').catch(() => '');
@@ -9973,11 +9972,9 @@ async function initSnsExternal() {
         const sku    = (r.sku || '').trim().toUpperCase().replace(/-SF$/i, '').replace(/^C-/, '');
         const name   = (r.productshortname || '').trim();
         const status = (r.status || '').trim().toUpperCase();
-        const skuType = (r.skutype || '').trim().toUpperCase();
         const channel = (r.channel || '').trim().toUpperCase();
         if (sku && name) _skuNameMap[sku] = name;
         if (sku && status) _skuStatusMap[sku] = status;
-        if (sku && skuType) _skuTypeMap[sku] = skuType;
         if (sku && channel === 'SHOPIFY') _shopifySkus.add(sku);
       });
     } catch (e) {
@@ -10019,15 +10016,13 @@ async function initSnsExternal() {
         };
       });
 
-      // Scoped to Shopify-channel, catalog-type SKUs only — confirmed via
-      // the master sheet's own Channel column (2026-08-10, screenshot from
-      // Jaclyn): SKUs are listed per (SKU, Channel) row, and this page is
+      // Scoped to Shopify-channel SKUs only — confirmed via the master
+      // sheet's own Channel column (2026-08-10, screenshots from Jaclyn):
+      // SKUs are listed per (SKU, Channel) row, and this page is
       // specifically about Shopify-fulfilled 3PL consignment stock, not
-      // Amazon/Walmart. Excludes bundles via SKU Type = CATALOG, same as
-      // the Total SKUs KPI fix.
-      const skuSet = new Set(
-        [..._shopifySkus].filter(sku => _skuTypeMap[sku] === 'CATALOG')
-      );
+      // Amazon/Walmart. No separate CATALOG/BUNDLE type filter needed —
+      // per Jaclyn, Shopify only ever lists catalog SKUs, never bundles.
+      const skuSet = _shopifySkus;
 
       _stockRows = [...skuSet].map(sku => {
         const c = consignMap[sku] || { onHand: 0, available: 0, lastUpdated: '' };
