@@ -5467,8 +5467,18 @@ async function initSns() {
       const syncRows = isCsv(syncCsv) ? filterRows(parseCsv(syncCsv)) : [];
       const histRows = isCsv(histCsv) ? filterRows(parseCsv(histCsv)) : [];
 
-      // Combine all rows (sync is more up-to-date; for dedup we rely on order_id coverage being correct per sheet)
-      const allRows = [...syncRows, ...histRows];
+      // Combine all rows, DEDUPLICATED by order_id+sku. Originally this
+      // just concatenated syncRows + histRows, assuming the two sheets
+      // never cover the same date range — confirmed wrong for Skinuva
+      // (2026-08-10): the "historical" sheet isn't strictly prior-years-
+      // only, so overlapping rows were being summed twice, roughly
+      // doubling every KPI on this page. Sync wins on conflict since it's
+      // the more frequently-updated source.
+      const rowKey = r => `${r.order_id}||${(r.sku || r.asin || '').toUpperCase()}`;
+      const dedupMap = new Map();
+      histRows.forEach(r => dedupMap.set(rowKey(r), r));
+      syncRows.forEach(r => dedupMap.set(rowKey(r), r));
+      const allRows = Array.from(dedupMap.values());
 
       // Amazon returns — dated by return_date (when the return happened),
       // not the original order date, same convention as the Overview
@@ -7349,8 +7359,18 @@ async function initSns() {
       const syncRows = isCsv(syncCsv) ? filterRows(parseCsv(syncCsv)) : [];
       const histRows = isCsv(histCsv) ? filterRows(parseCsv(histCsv)) : [];
 
-      // Combine all rows (sync is more up-to-date; for dedup we rely on order_id coverage being correct per sheet)
-      const allRows = [...syncRows, ...histRows];
+      // Combine all rows, DEDUPLICATED by order_id+sku. Originally this
+      // just concatenated syncRows + histRows, assuming the two sheets
+      // never cover the same date range — confirmed wrong for Skinuva
+      // (2026-08-10): the "historical" sheet isn't strictly prior-years-
+      // only, so overlapping rows were being summed twice, roughly
+      // doubling every KPI on this page. Sync wins on conflict since it's
+      // the more frequently-updated source.
+      const rowKey = r => `${r.order_id}||${(r.sku || r.asin || '').toUpperCase()}`;
+      const dedupMap = new Map();
+      histRows.forEach(r => dedupMap.set(rowKey(r), r));
+      syncRows.forEach(r => dedupMap.set(rowKey(r), r));
+      const allRows = Array.from(dedupMap.values());
 
       // Amazon returns — dated by return_date (when the return happened),
       // not the original order date, same convention as Overview and the
