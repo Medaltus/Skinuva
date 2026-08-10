@@ -5467,18 +5467,17 @@ async function initSns() {
       const syncRows = isCsv(syncCsv) ? filterRows(parseCsv(syncCsv)) : [];
       const histRows = isCsv(histCsv) ? filterRows(parseCsv(histCsv)) : [];
 
-      // Combine all rows, DEDUPLICATED by order_id+sku. Originally this
-      // just concatenated syncRows + histRows, assuming the two sheets
-      // never cover the same date range — confirmed wrong for Skinuva
-      // (2026-08-10): the "historical" sheet isn't strictly prior-years-
-      // only, so overlapping rows were being summed twice, roughly
-      // doubling every KPI on this page. Sync wins on conflict since it's
-      // the more frequently-updated source.
-      const rowKey = r => `${r.order_id}||${(r.sku || r.asin || '').toUpperCase()}`;
-      const dedupMap = new Map();
-      histRows.forEach(r => dedupMap.set(rowKey(r), r));
-      syncRows.forEach(r => dedupMap.set(rowKey(r), r));
-      const allRows = Array.from(dedupMap.values());
+      // Current/previous month come from syncRows ONLY — never the
+      // historical sheet. Originally this concatenated syncRows +
+      // histRows for curr/prev, assuming the two sheets never cover the
+      // same date range — confirmed wrong for Skinuva (2026-08-10): the
+      // historical sheet isn't prior-years-only, so overlapping rows were
+      // summed twice, roughly doubling every KPI on this page. The sync
+      // (orders) sheet covers the last ~90 days, which always covers
+      // current + previous month — that's sufficient on its own. The
+      // historical sheet is reserved exclusively for the YoY comparison
+      // (prevYoy, below), which genuinely needs data sync's 90-day window
+      // doesn't reach.
 
       // Amazon returns — dated by return_date (when the return happened),
       // not the original order date, same convention as the Overview
@@ -5503,8 +5502,8 @@ async function initSns() {
       const prevReturns = aggregateAmzReturnsMonth(amzReturnRows, prevYear, prevMonth);
       const yoyReturns  = aggregateAmzReturnsMonth(amzReturnRows, yoyYear, yoyMonth);
 
-      const curr     = aggregateMonth(allRows, year, month);
-      const prev     = aggregateMonth(allRows, prevYear, prevMonth);
+      const curr     = aggregateMonth(syncRows, year, month);
+      const prev     = aggregateMonth(syncRows, prevYear, prevMonth);
       const prevYoy  = aggregateMonth(histRows, yoyYear, yoyMonth); // historical for last year
 
       // Net returns against Total Units — Units (Organic) derives from
@@ -5545,7 +5544,7 @@ async function initSns() {
 
       renderKPIs(curr, prev, prevYoy, adUnitsKpi, prevAdUnitsKpi);
       setSourceLabel(year, month);
-      buildTopProductsTable(allRows, year, month, adOrderRows, prevYear, prevMonth, prevAdOrderRows, currReturns.byAsin, prevReturns.byAsin);
+      buildTopProductsTable(syncRows, year, month, adOrderRows, prevYear, prevMonth, prevAdOrderRows, currReturns.byAsin, prevReturns.byAsin);
 
       // Revenue chart — fetches from the separate revenue history sheet
       buildRevenueChart(year).catch(e => console.warn('[AmazonChart] Revenue chart failed:', e.message));
@@ -7359,18 +7358,17 @@ async function initSns() {
       const syncRows = isCsv(syncCsv) ? filterRows(parseCsv(syncCsv)) : [];
       const histRows = isCsv(histCsv) ? filterRows(parseCsv(histCsv)) : [];
 
-      // Combine all rows, DEDUPLICATED by order_id+sku. Originally this
-      // just concatenated syncRows + histRows, assuming the two sheets
-      // never cover the same date range — confirmed wrong for Skinuva
-      // (2026-08-10): the "historical" sheet isn't strictly prior-years-
-      // only, so overlapping rows were being summed twice, roughly
-      // doubling every KPI on this page. Sync wins on conflict since it's
-      // the more frequently-updated source.
-      const rowKey = r => `${r.order_id}||${(r.sku || r.asin || '').toUpperCase()}`;
-      const dedupMap = new Map();
-      histRows.forEach(r => dedupMap.set(rowKey(r), r));
-      syncRows.forEach(r => dedupMap.set(rowKey(r), r));
-      const allRows = Array.from(dedupMap.values());
+      // Current/previous month come from syncRows ONLY — never the
+      // historical sheet. Originally this concatenated syncRows +
+      // histRows for curr/prev, assuming the two sheets never cover the
+      // same date range — confirmed wrong for Skinuva (2026-08-10): the
+      // historical sheet isn't prior-years-only, so overlapping rows were
+      // summed twice, roughly doubling every KPI on this page. The sync
+      // (orders) sheet covers the last ~90 days, which always covers
+      // current + previous month — that's sufficient on its own. The
+      // historical sheet is reserved exclusively for the YoY comparison
+      // (prevYoy, below), which genuinely needs data sync's 90-day window
+      // doesn't reach.
 
       // Amazon returns — dated by return_date (when the return happened),
       // not the original order date, same convention as Overview and the
@@ -7394,8 +7392,8 @@ async function initSns() {
       const prevReturns = aggregateAmzReturnsMonth(amzReturnRows, prevYear, prevMonth);
       const yoyReturns  = aggregateAmzReturnsMonth(amzReturnRows, yoyYear, yoyMonth);
 
-      const curr     = aggregateMonth(allRows, year, month);
-      const prev     = aggregateMonth(allRows, prevYear, prevMonth);
+      const curr     = aggregateMonth(syncRows, year, month);
+      const prev     = aggregateMonth(syncRows, prevYear, prevMonth);
       const prevYoy  = aggregateMonth(histRows, yoyYear, yoyMonth); // historical for last year
 
       // Net returns against Total Units — Units (Organic) derives from
@@ -7435,7 +7433,7 @@ async function initSns() {
 
       renderKPIs(curr, prev, prevYoy, adUnitsKpi, prevAdUnitsKpi);
       setSourceLabel(year, month);
-      buildTopProductsTable(allRows, year, month, adOrderRows, prevYear, prevMonth, prevAdOrderRows, currReturns.byAsin, prevReturns.byAsin);
+      buildTopProductsTable(syncRows, year, month, adOrderRows, prevYear, prevMonth, prevAdOrderRows, currReturns.byAsin, prevReturns.byAsin);
 
       // Revenue chart — fetches from the separate revenue history sheet
       buildRevenueChart(year).catch(e => console.warn('[AmazonChart] Revenue chart failed:', e.message));
