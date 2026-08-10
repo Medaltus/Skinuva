@@ -1024,7 +1024,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
   .asn-meta-form-grid{grid-template-columns:1fr;}
 }
 </style>
-<link rel="icon" type="image/png" href="/reports/evolis_favicon.png">
+<link rel="icon" type="image/png" href="/reports/skinuva_favicon.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1210,11 +1210,11 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
           </div>
         </div>
         <div class="home-team-item">
-          <div class="home-team-avatar">JR</div>
+          <div class="home-team-avatar">IF</div>
           <div>
-            <div class="home-team-name">Jaclyn Risser</div>
+            <div class="home-team-name">Isabella Fernandez</div>
             <div class="home-team-role">Brand Manager</div>
-            <a class="home-team-email" href="mailto:jrisser@medaltus.com">jrisser@medaltus.com</a>
+            <a class="home-team-email" href="mailto:ifernandez@medaltus.com">ifernandez@medaltus.com</a>
           </div>
         </div>
         <div class="home-team-item">
@@ -12488,13 +12488,14 @@ async function ovLoadUnitsAndPeakMonth() {
   }
 }
 
-// ── Total SKUs — REWRITTEN 2026-08-05 per Jaclyn: now uses the exact same
-// logic as the Home page's Total SKUs KPI (loadHomeTotalSkus), instead of
-// the old DISCOVERABLE-status check on Products Cache alone. Products
-// Cache (latest daily snapshot) is the source of truth for WHICH SKUs
-// count as real, sellable products (base SKU, -SF suffix stripped so FBA/
-// seller-fulfilled variants count once); the Product Short Name sheet is
-// consulted ONLY for its Status column, counting SKUs marked LIVE.
+// ── Total SKUs — REWRITTEN 2026-08-10 for Skinuva (also applies to
+// évolis — see évolis-parity-notes.md): this mirrored the Home page's
+// Total SKUs logic, which was itself confirmed wrong — it assumed bundle
+// SKUs don't appear in the Products Cache sheet, but bundles are live,
+// separately-listed Amazon ASINs and DO show up there. Now also
+// cross-references the Product Short Name sheet's "SKU Type" column
+// (CATALOG vs BUNDLE) — already fetched here for the Status column, so no
+// extra request — and only counts a SKU if it's both LIVE and CATALOG.
 async function ovLoadTotalSkus() {
   const totalEl = document.getElementById('ms-total-skus');
   try {
@@ -12514,14 +12515,19 @@ async function ovLoadTotalSkus() {
     );
 
     const statusMap = {};
+    const typeMap = {};
     parseCsvToRows(statusCsv).forEach(r => {
       const sku = (r.sku || '').trim().toUpperCase().replace(/-SF$/i, '');
       const status = (r.status || '').trim().toUpperCase();
+      const skuType = (r['sku type'] || '').trim().toUpperCase();
       if (sku && status) statusMap[sku] = status;
+      if (sku && skuType) typeMap[sku] = skuType;
     });
 
     let activeCount = 0;
-    productSkus.forEach(sku => { if (statusMap[sku] === 'LIVE') activeCount++; });
+    productSkus.forEach(sku => {
+      if (statusMap[sku] === 'LIVE' && typeMap[sku] === 'CATALOG') activeCount++;
+    });
 
     if (totalEl) {
       totalEl.querySelector('.ms-value').textContent = activeCount.toLocaleString();
@@ -19106,18 +19112,22 @@ async function loadHomeConsignmentKpi() {
 }
 document.addEventListener('DOMContentLoaded', loadHomeConsignmentKpi);
 
-// Total SKUs KPI — REWRITTEN 2026-08-03 per Jaclyn: the previous version
-// (below, superseded) counted rows on the master Product Short Name
-// sheet directly, which includes bundle SKUs the brand does not consider
-// real SKUs. Now: the Products Cache sheet (evolis tab — same sheet the
-// internal Inventory page reads) is the source of truth for WHICH SKUs
-// count as real, sellable products; the Product Short Name sheet is
-// consulted ONLY for its Status column (LIVE/DISCONTINUED), exactly the
-// same two-sheet cross-reference pattern already established by the
-// internal Inventory page's statusMap lookup (see loadInventoryPage()).
-// This assumes bundle SKUs simply don't appear in the Products Cache
-// sheet at all — if they turn out to be in there too, this won't fully
-// fix the issue and Products Cache would need its own bundle filter.
+// Total SKUs KPI — REWRITTEN 2026-08-10 for Skinuva (also applies to
+// évolis — see évolis-parity-notes.md): the 2026-08-03 version below
+// assumed bundle SKUs simply don't appear in the Products Cache sheet at
+// all, and only cross-referenced Product Short Name for its Status column.
+// CONFIRMED WRONG for Skinuva: bundles ARE live, separately-listed Amazon
+// ASINs (e.g. a "Scar + Brite" combo has its own real ASIN and detail
+// page, even though ORDERS for it route to the component SKUs' own
+// inventory) — so they legitimately show up in the Products Cache
+// snapshot too, since that sheet reflects every live Amazon listing, not
+// just ones the brand considers "real" standalone products. Result:
+// Skinuva showed 24 Total SKUs instead of the correct 13 catalog products
+// (13 catalog + bundle/multi-listing rows the old logic never excluded).
+// Fix: also cross-reference the Product Short Name sheet's "SKU Type"
+// column (CATALOG vs BUNDLE) — already being fetched in this function for
+// the Status column, so this costs no extra request — and only count a
+// SKU if it's both LIVE and explicitly typed CATALOG.
 async function loadHomeTotalSkus() {
   const valEl = document.getElementById('home-kpi-skus');
   if (!valEl) return;
@@ -19143,14 +19153,19 @@ async function loadHomeTotalSkus() {
     );
 
     const statusMap = {};
+    const typeMap = {};
     parseCsvToRows(statusCsv).forEach(r => {
       const sku = (r.sku || '').trim().toUpperCase().replace(/-SF$/i, '');
       const status = (r.status || '').trim().toUpperCase();
+      const skuType = (r['sku type'] || '').trim().toUpperCase();
       if (sku && status) statusMap[sku] = status;
+      if (sku && skuType) typeMap[sku] = skuType;
     });
 
     let activeCount = 0;
-    productSkus.forEach(sku => { if (statusMap[sku] === 'LIVE') activeCount++; });
+    productSkus.forEach(sku => {
+      if (statusMap[sku] === 'LIVE' && typeMap[sku] === 'CATALOG') activeCount++;
+    });
 
     valEl.textContent = activeCount.toLocaleString();
   } catch (err) {
