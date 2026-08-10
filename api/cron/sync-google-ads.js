@@ -1,0 +1,407 @@
+/**
+ * api/cron/sync-google-ads.js
+ * Runs daily — pulls yesterday's Google Ads campaign performance and
+ * writes one row per campaign per day to the ads tab on the Shopify sheet.
+ * Computes ACOS using Shopify revenue from the orders tab for that date.
+ * Deduplicates on date + campaign_name — safe to re-run.
+ *
+ * ADAPTED FOR SKINUVA (2026-08-10) from évolis's identical file. No code
+ * changes were needed — this cron has zero hardcoded brand strings
+ * anywhere in it, and writes to SHOPIFY_ORDERS_SHEET, which already points
+ * at Skinuva's own dedicated Shopify sheet (set up earlier for the
+ * sync-shopify-orders/revenue/returns crons). Only the environment
+ * variable VALUES differ between the two brands' Vercel projects — see
+ * the env var breakdown given alongside this file for which ones need a
+ * genuinely new Skinuva-specific value vs. which may already be shared.
+ * Removed évolis's own hardcoded fallback account numbers below — those
+ * were specific to évolis's Google Ads account and would silently point
+ * Skinuva's cron at the wrong account/customer if the env var were ever
+ * left unset, rather than failing loudly the way the other guard clauses
+ * in this file already do.
+ *
+ * Sheet: SHOPIFY_ORDERS_SHEET
+ *   - Source: orders tab (reads revenue for ACOS)
+ *   - Destination: ads tab
+ *
+ * Headers: date | campaign_name | impressions | clicks | spend |
+ *          conversions | revenue | acos | last_updated
+ *
+ * Schedule: daily at 15 7 * * * (after orders + revenue sync)
+ */
+
+const { ensureTab, appendRows, replaceRows, readRows } = require('../config/_sheets_client');
+const { sendCronFailureAlert }            = require('../_alerts');
+
+const CUSTOMER_ID   = process.env.GOOGLE_ADS_CUSTOMER_ID;
+const DEV_TOKEN     = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
+const CLIENT_ID     = process.env.GOOGLE_ADS_CLIENT_ID;
+const CLIENT_SECRET = process.env.GOOGLE_ADS_CLIENT_SECRET;
+const REFRESH_TOKEN = process.env.GOOGLE_ADS_REFRESH_TOKEN;
+const SHEET_ID          = process.env.SHOPIFY_ORDERS_SHEET;
+const LOGIN_CUSTOMER_ID = process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID;
+const API_VERSION   = 'v24';
+
+const ORDERS_TAB   = 'orders';
+const ADS_TAB      = 'ads';
+const SHOPPING_TAB = 'shopping'; // new — per-product data, separate tab so the
+                                  // existing campaign-level ads tab (and every
+                                  // dashboard KPI already reading it) is untouched
+
+const ADS_HEADERS = [
+  'date', 'campaign_name', 'impressions', 'clicks',
+  'spend', 'conversions', 'revenue', 'acos', 'last_updated',
+];
+
+// item_id matches shopify_item_id written by sync-shopify-orders.js
+// (shopify_us_<product_id>_<variant_id>, confirmed 2026-07-28 against a real
+// product side by side with Google Ads' own Products page). conversions_value
+// comes directly from Google Ads itself here, so acos is spend/conversions_value
+// — no Shopify revenue join needed for this tab, unlike the campaign-level one.
+// sku added at the END, not inserted logically next to item_id — this tab
+// already has real rows written under the original 10-column layout from
+// today's earlier test runs, and ensureTab() never rewrites an existing
+// header row. Same lesson as the orders-sheet and insights-sheet bugs.
+const SHOPPING_HEADERS = [
+  'date', 'item_id', 'product_title', 'impressions', 'clicks',
+  'spend', 'conversions', 'conversions_value', 'acos', 'last_updated', 'sku',
+];
+
+module.exports = async (req, res) => {
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  if (!CUSTOMER_ID || !DEV_TOKEN || !CLIENT_ID || !CLIENT_SECRET || !REFRESH_TOKEN || !LOGIN_CUSTOMER_ID) {
+    await sendCronFailureAlert('sync-google-ads', 'Google Ads env vars not set');
+    return res.status(500).json({ error: 'Google Ads env vars not set' });
+  }
+  if (!SHEET_ID) {
+    await sendCronFailureAlert('sync-google-ads', 'SHOPIFY_ORDERS_SHEET not set');
+    return res.status(500).json({ error: 'SHOPIFY_ORDERS_SHEET not set' });
+  }
+
+  const mode = req.query.mode || 'yesterday';
+  const { startDate, endDate } = getDateRange(mode, req);
+  const nowEst = toEstIso(new Date());
+
+  console.log(`[sync-google-ads] mode=${mode} start=${startDate} end=${endDate}`);
+
+  // ── 1. Get Google OAuth access token ─────────────────────────────────────
+  let accessToken;
+  try {
+    accessToken = await getAccessToken();
+    console.log('[sync-google-ads] access token obtained');
+  } catch (err) {
+    console.error('[sync-google-ads] token failed:', err.message);
+    await sendCronFailureAlert('sync-google-ads', err.message, { Stage: 'Google OAuth token exchange' });
+    return res.status(500).json({ error: 'Token request failed', detail: err.message });
+  }
+
+  // ── 2. Query Google Ads — daily campaign performance ──────────────────────
+  const gaqlDate = startDate === endDate
+    ? `segments.date = '${startDate}'`
+    : `segments.date >= '${startDate}' AND segments.date <= '${endDate}'`;
+
+  const query = `
+    SELECT
+      segments.date,
+      campaign.name,
+      campaign.status,
+      metrics.impressions,
+      metrics.clicks,
+      metrics.cost_micros,
+      metrics.conversions
+    FROM campaign
+    WHERE ${gaqlDate}
+      AND metrics.impressions > 0
+    ORDER BY segments.date DESC, metrics.cost_micros DESC
+  `;
+
+  let adsRows = [];
+  try {
+    const resp = await googleAdsSearch(accessToken, query);
+    adsRows = resp.results || [];
+    console.log(`[sync-google-ads] ${adsRows.length} campaign-day rows from API`);
+  } catch (err) {
+    console.error('[sync-google-ads] API query failed:', err.message);
+    await sendCronFailureAlert('sync-google-ads', err.message, { Stage: 'Google Ads API query' });
+    return res.status(500).json({ error: 'Google Ads query failed', detail: err.message });
+  }
+
+  if (adsRows.length === 0) {
+    return res.status(200).json({ message: 'No ad data in range', mode, startDate, endDate });
+  }
+
+  // ── 3. Read Shopify orders for revenue lookup ─────────────────────────────
+  let orderRows = [];
+  try {
+    orderRows = await readRows(SHEET_ID, ORDERS_TAB);
+    console.log(`[sync-google-ads] loaded ${orderRows.length} order rows for revenue lookup`);
+  } catch (e) {
+    console.warn('[sync-google-ads] could not read orders tab — ACOS will be blank');
+  }
+
+  // Build revenue map: date → total revenue (sum item_price, exclude refunded/cancelled)
+  const revenueByDate = {};
+  for (const row of orderRows) {
+    const finStatus = (row.financial_status || row.status || '').toLowerCase();
+    if (finStatus === 'refunded' || finStatus === 'cancelled' || finStatus === 'canceled') continue;
+    const date  = normalizeDate(row.date);
+    if (!date) continue;
+    const price = parseFloat((row.item_price || '0').replace(/[$,]/g, '')) || 0;
+    revenueByDate[date] = (revenueByDate[date] || 0) + price;
+  }
+
+  // ── 4. Build sheet rows ───────────────────────────────────────────────────
+  const newLineItems = adsRows.map(r => {
+    const date         = r.segments?.date || '';
+    const campaignName = r.campaign?.name || '';
+    const impressions  = parseInt(r.metrics?.impressions || '0', 10);
+    const clicks       = parseInt(r.metrics?.clicks || '0', 10);
+    const spend        = round2(parseInt(r.metrics?.costMicros || '0', 10) / 1_000_000);
+    const conversions  = round2(r.metrics?.conversions || 0);
+    const revenue      = round2(revenueByDate[date] || 0);
+    const acos         = revenue > 0 ? round2(spend / revenue) : '';
+
+    return {
+      date,
+      campaign_name: campaignName,
+      impressions,
+      clicks,
+      spend,
+      conversions,
+      revenue,
+      acos,
+      last_updated: nowEst,
+    };
+  }).filter(r => r.date && r.campaign_name);
+
+  // ── 5. Dedup and write ────────────────────────────────────────────────────
+  const token        = await ensureTab(SHEET_ID, ADS_TAB, ADS_HEADERS);
+  const existingRows = await readRows(SHEET_ID, ADS_TAB);
+  const existingKeys = new Set(
+    existingRows
+      .map(r => `${r.date}||${r.campaign_name}`)
+      .filter(k => k !== '||')
+  );
+
+  const rowsToWrite = newLineItems
+    .filter(r => !existingKeys.has(`${r.date}||${r.campaign_name}`))
+    .map(r => ADS_HEADERS.map(h => r[h] ?? ''));
+
+  const dupCount = newLineItems.length - rowsToWrite.length;
+  if (dupCount > 0) {
+    console.log(`[sync-google-ads] skipped ${dupCount} duplicate date+campaign rows`);
+  }
+
+  if (rowsToWrite.length > 0) {
+    await appendRows(SHEET_ID, ADS_TAB, rowsToWrite, token);
+    console.log(`[sync-google-ads] wrote ${rowsToWrite.length} rows`);
+  } else {
+    console.log('[sync-google-ads] 0 new rows (all duplicates)');
+  }
+
+  // ── 6. Shopping performance (per-product) — new, best-effort ─────────────
+  // Deliberately isolated in its own try/catch: campaign-level ads sync above
+  // already succeeded and every dashboard KPI depends on it — a bug in this
+  // new per-product query should never take that down with it.
+  let shoppingResult = { new: 0, updated: 0, totalRows: 0, error: null };
+  try {
+    shoppingResult = await syncShoppingPerformance(accessToken, startDate, endDate, nowEst);
+  } catch (err) {
+    console.error('[sync-google-ads] shopping performance sync failed:', err.message);
+    await sendCronFailureAlert('sync-google-ads', err.message, { Stage: 'Shopping performance view (non-fatal)' });
+    shoppingResult = { new: 0, updated: 0, totalRows: 0, error: err.message };
+  }
+
+  return res.status(200).json({
+    rows:      rowsToWrite.length,
+    skipped:   dupCount,
+    shopping:  shoppingResult,
+    mode,
+    startDate,
+    endDate,
+    timestamp: nowEst,
+  });
+};
+
+// ── Shopping performance (per-product) sync ───────────────────────────────────
+// item_id here matches shopify_item_id from sync-shopify-orders.js exactly —
+// join on that string, no transformation needed on either side.
+async function syncShoppingPerformance(accessToken, startDate, endDate, nowEst) {
+  const gaqlDate = startDate === endDate
+    ? `segments.date = '${startDate}'`
+    : `segments.date >= '${startDate}' AND segments.date <= '${endDate}'`;
+
+  const query = `
+    SELECT
+      segments.date,
+      segments.product_item_id,
+      segments.product_title,
+      metrics.impressions,
+      metrics.clicks,
+      metrics.cost_micros,
+      metrics.conversions,
+      metrics.conversions_value
+    FROM shopping_performance_view
+    WHERE ${gaqlDate}
+      AND metrics.impressions > 0
+    ORDER BY segments.date DESC, metrics.cost_micros DESC
+  `;
+
+  const resp = await googleAdsSearch(accessToken, query);
+  const rows = resp.results || [];
+  console.log(`[sync-google-ads] ${rows.length} shopping product-day rows from API`);
+  if (rows.length === 0) return { new: 0, updated: 0, totalRows: 0, error: null };
+
+  // Resolve item_id -> sku here, once, at sync time — not something the
+  // dashboard should be doing itself on every page load by cross-referencing
+  // two sheets client-side. shopify_item_id lives on the orders tab (added
+  // 2026-07-28); any item_id with at least one order carrying that field
+  // resolves to a real SKU. Anything with zero orders so far (advertised,
+  // never purchased) stays blank — genuinely unresolvable yet, not a bug.
+  const orderRows = await readRows(SHEET_ID, ORDERS_TAB).catch(() => []);
+  const skuByItemId = new Map();
+  orderRows.forEach(r => {
+    const itemId = r.shopify_item_id;
+    if (itemId && r.sku && !skuByItemId.has(itemId)) skuByItemId.set(itemId, r.sku);
+  });
+  console.log(`[sync-google-ads] shopping: resolved ${skuByItemId.size} distinct item_id -> sku pairs from orders`);
+
+  const newLineItems = rows.map(r => {
+    const spend            = round2(parseInt(r.metrics?.costMicros || '0', 10) / 1_000_000);
+    const conversionsValue = round2(r.metrics?.conversionsValue || 0);
+    const itemId           = r.segments?.productItemId || '';
+    return {
+      date:              r.segments?.date || '',
+      item_id:           itemId,
+      product_title:     r.segments?.productTitle || '',
+      impressions:       parseInt(r.metrics?.impressions || '0', 10),
+      clicks:            parseInt(r.metrics?.clicks || '0', 10),
+      spend,
+      conversions:       round2(r.metrics?.conversions || 0),
+      conversions_value: conversionsValue,
+      acos:              conversionsValue > 0 ? round2(spend / conversionsValue) : '',
+      last_updated:      nowEst,
+      sku:               skuByItemId.get(itemId) || '',
+    };
+  }).filter(r => r.date && r.item_id);
+
+  // Upsert, not skip-duplicate — same reasoning as the orders-sheet fix:
+  // a row written before an order existed for that item_id would have a
+  // permanently blank sku otherwise, even after a real order comes in and
+  // resolves it. Overwriting on every run means sku (and any metric
+  // corrections Google Ads makes after the fact) stay current.
+  const token         = await ensureTab(SHEET_ID, SHOPPING_TAB, SHOPPING_HEADERS);
+  const existingRows  = await readRows(SHEET_ID, SHOPPING_TAB);
+  const existingByKey = new Map();
+  existingRows.forEach(r => {
+    const key = `${r.date}||${r.item_id}`;
+    if (key !== '||') existingByKey.set(key, r);
+  });
+
+  let updatedCount = 0, newCount = 0;
+  newLineItems.forEach(item => {
+    const key = `${item.date}||${item.item_id}`;
+    if (existingByKey.has(key)) updatedCount++; else newCount++;
+    existingByKey.set(key, item);
+  });
+
+  const outputRows = Array.from(existingByKey.values()).map(r => SHOPPING_HEADERS.map(h => r[h] ?? ''));
+  await replaceRows(SHEET_ID, SHOPPING_TAB, SHOPPING_HEADERS, outputRows, token);
+  console.log(`[sync-google-ads] shopping: ${newCount} new, ${updatedCount} refreshed, ${outputRows.length} total`);
+
+  return { new: newCount, updated: updatedCount, totalRows: outputRows.length, error: null };
+}
+
+// ── Google OAuth token exchange ───────────────────────────────────────────────
+
+async function getAccessToken() {
+  const resp = await fetch('https://oauth2.googleapis.com/token', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body:    new URLSearchParams({
+      client_id:     CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      refresh_token: REFRESH_TOKEN,
+      grant_type:    'refresh_token',
+    }),
+  });
+  if (!resp.ok) throw new Error(`Token request failed: ${resp.status}`);
+  const { access_token, error } = await resp.json();
+  if (error) throw new Error(`Token error: ${error}`);
+  if (!access_token) throw new Error('No access_token in response');
+  return access_token;
+}
+
+// ── Google Ads API search ─────────────────────────────────────────────────────
+
+async function googleAdsSearch(accessToken, query) {
+  const resp = await fetch(
+    `https://googleads.googleapis.com/${API_VERSION}/customers/${CUSTOMER_ID}/googleAds:search`,
+    {
+      method:  'POST',
+      headers: {
+        'Authorization':      `Bearer ${accessToken}`,
+        'developer-token':    DEV_TOKEN,
+        'login-customer-id':  LOGIN_CUSTOMER_ID,
+        'Content-Type':       'application/json',
+      },
+      body: JSON.stringify({ query }),
+    }
+  );
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(`Google Ads API error ${resp.status}: ${text.slice(0, 300)}`);
+  }
+  return resp.json();
+}
+
+// ── Date range ────────────────────────────────────────────────────────────────
+
+function getDateRange(mode, req) {
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+
+  if (mode === 'yesterday') {
+    const d = new Date(now); d.setDate(d.getDate() - 1);
+    const y = d.getFullYear(), m = pad(d.getMonth() + 1), day = pad(d.getDate());
+    return { startDate: `${y}-${m}-${day}`, endDate: `${y}-${m}-${day}` };
+  }
+
+  if (mode === 'week') {
+    const start = req?.query?.start;
+    const end   = req?.query?.end;
+    if (!start || !end) throw new Error('mode=week requires ?start=YYYY-MM-DD&end=YYYY-MM-DD');
+    return { startDate: start, endDate: end };
+  }
+
+  if (mode === 'day') {
+    const y = now.getUTCFullYear(), m = pad(now.getUTCMonth() + 1), d = pad(now.getUTCDate());
+    return { startDate: `${y}-${m}-${d}`, endDate: `${y}-${m}-${d}` };
+  }
+
+  throw new Error(`Unknown mode: ${mode}`);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function normalizeDate(val) {
+  if (!val) return '';
+  if (/^\d{4}-\d{2}/.test(val)) return val.substring(0, 10);
+  return val;
+}
+
+function toEstIso(date) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const p = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}.000Z`;
+}
+
+const round2 = n => Math.round(n * 100) / 100;
