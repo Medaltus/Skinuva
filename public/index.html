@@ -4960,7 +4960,8 @@ async function initSns() {
   }
   function isEvolisRow(row) {
     const b = (row.brand || '').toLowerCase().trim();
-    return !row.brand || b === 'evolis' || b.endsWith('volis');
+    const target = (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase().trim();
+    return !row.brand || b === target || (target.length > 3 && b.endsWith(target.slice(1)));
   }
 
   // Same spreadsheet as initStewardshipLive's SUMMARY_SHEET_ID, different tab.
@@ -5079,7 +5080,7 @@ async function initSns() {
       // immediately instead of silently falling back to wrong data again.
       console.log('[Evolis][subscriptions] retention sheet — raw brand value per row:', JSON.stringify(rows.map(r => ({ year: r.year, month: r.month, brand: r.brand }))));
       const stripAccentsSns = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      const useRows = rows.filter(r => stripAccentsSns(r.brand).toLowerCase().trim() === 'evolis');
+      const useRows = rows.filter(r => stripAccentsSns(r.brand).toLowerCase().trim() === (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase());
       console.log('[Evolis][subscriptions] retention rows — total:', rows.length, '— after STRICT brand filter (no fallback):', useRows.length, '— raw year/month per row:', JSON.stringify(useRows.map(r => ({ year: r.year, month: r.month }))));
 
       // MOM only works if this sheet actually has more than one dated row
@@ -5187,7 +5188,7 @@ async function initSns() {
   const AD_SUMMARY_GID      = window.SHEET_CFG.SHEET_ADVERTISING.gid;                                     // Évolis tab
   const AD_ORDERS_SHEET_ID  = window.SHEET_CFG.SHEET_AD_ORDERS.fileId; // ad orders cache
   const AD_ORDERS_GID       = window.SHEET_CFG.SHEET_AD_ORDERS.gid;                                      // Évolis tab
-  const BRAND               = 'evolis';
+  const BRAND               = (window.SHEET_CFG.BRAND_SLUG || 'evolis');
 
   // Derive the last FULL month from today
   function getLastFullMonth() {
@@ -5214,10 +5215,11 @@ async function initSns() {
   function isEvolisRow(row) {
     const brand = (row.brand || '').toLowerCase().trim();
     const skus  = (row.sku || row.skus || '').toUpperCase();
-    // Match 'evolis' and encoding-corrupted variants of 'Évolis' (e.g. √âvolis)
-    // that appear in older rows written before the encoding was fixed.
-    const isEvolisBrand = brand === BRAND || brand.endsWith('volis');
-    return isEvolisBrand || skus.split(',').some(s => s.trim().startsWith('EVO'));
+    const skuPrefix = (window.SHEET_CFG.BRAND_SKU_PREFIX || 'EVO').toUpperCase();
+    // Match the brand slug and encoding-corrupted variants (e.g. accented first
+    // letter dropped/corrupted) that appear in older rows.
+    const isBrandMatch = brand === BRAND || (BRAND.length > 3 && brand.endsWith(BRAND.slice(1)));
+    return isBrandMatch || skus.split(',').some(s => s.trim().startsWith(skuPrefix));
   }
 
   function isValidOrder(row) {
@@ -7089,7 +7091,7 @@ async function initSns() {
   const AD_SUMMARY_GID      = window.SHEET_CFG.SHEET_ADVERTISING.gid;                                     // Évolis tab
   const AD_ORDERS_SHEET_ID  = window.SHEET_CFG.SHEET_AD_ORDERS.fileId; // ad orders cache
   const AD_ORDERS_GID       = window.SHEET_CFG.SHEET_AD_ORDERS.gid;                                      // Évolis tab
-  const BRAND               = 'evolis';
+  const BRAND               = (window.SHEET_CFG.BRAND_SLUG || 'evolis');
 
   // External replica: month is locked to the latest Approved report
   // (window.__approvedReportMonth), resolved by initSalesExternalPage()
@@ -7114,10 +7116,11 @@ async function initSns() {
   function isEvolisRow(row) {
     const brand = (row.brand || '').toLowerCase().trim();
     const skus  = (row.sku || row.skus || '').toUpperCase();
-    // Match 'evolis' and encoding-corrupted variants of 'Évolis' (e.g. √âvolis)
-    // that appear in older rows written before the encoding was fixed.
-    const isEvolisBrand = brand === BRAND || brand.endsWith('volis');
-    return isEvolisBrand || skus.split(',').some(s => s.trim().startsWith('EVO'));
+    const skuPrefix = (window.SHEET_CFG.BRAND_SKU_PREFIX || 'EVO').toUpperCase();
+    // Match the brand slug and encoding-corrupted variants (e.g. accented first
+    // letter dropped/corrupted) that appear in older rows.
+    const isBrandMatch = brand === BRAND || (BRAND.length > 3 && brand.endsWith(BRAND.slice(1)));
+    return isBrandMatch || skus.split(',').some(s => s.trim().startsWith(skuPrefix));
   }
 
   function isValidOrder(row) {
@@ -9356,7 +9359,7 @@ let mxMfcShippedChartInstance = null;
 async function mxMfcLoadKpis() {
   try {
     const csv = await fetch(ovCsvUrl(OV_FULFILLMENT_DAILY_SHEET_ID, '106183169')).then(r => r.ok ? r.text() : '').catch(() => '');
-    const rows = parseCsvToRows(csv).filter(r => (r.brand || '') === 'evolis');
+    const rows = parseCsvToRows(csv).filter(r => (r.brand || '') === (window.SHEET_CFG.BRAND_SLUG || 'evolis'));
     const map = {};
     rows.forEach(r => { if (r.metric) map[r.metric] = r.value; });
 
@@ -9474,7 +9477,7 @@ async function mxMfcLoadReturns() {
     ]);
 
     const stripAccents = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const isEvolis = r => stripAccents(r.brand || '').toLowerCase().trim() === 'evolis';
+    const isEvolis = r => stripAccents(r.brand || '').toLowerCase().trim() === (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase();
     function countReturnsForMonth(csv, dateField) {
       return parseCsvToRows(csv).filter(isEvolis).filter(r => {
         return mfcNormalizeDate(r[dateField]).substring(0, 7) === prefix;
@@ -9546,7 +9549,8 @@ async function initSnsExternal() {
   }
   function isEvolisRow(row) {
     const b = (row.brand || '').toLowerCase().trim();
-    return !row.brand || b === 'evolis' || b.endsWith('volis');
+    const target = (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase().trim();
+    return !row.brand || b === target || (target.length > 3 && b.endsWith(target.slice(1)));
   }
 
   // Same spreadsheet as initStewardshipLive's SUMMARY_SHEET_ID, different tab.
@@ -9665,7 +9669,7 @@ async function initSnsExternal() {
       // immediately instead of silently falling back to wrong data again.
       console.log('[Evolis][subscriptions] retention sheet — raw brand value per row:', JSON.stringify(rows.map(r => ({ year: r.year, month: r.month, brand: r.brand }))));
       const stripAccentsSns = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      const useRows = rows.filter(r => stripAccentsSns(r.brand).toLowerCase().trim() === 'evolis');
+      const useRows = rows.filter(r => stripAccentsSns(r.brand).toLowerCase().trim() === (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase());
       console.log('[Evolis][subscriptions] retention rows — total:', rows.length, '— after STRICT brand filter (no fallback):', useRows.length, '— raw year/month per row:', JSON.stringify(useRows.map(r => ({ year: r.year, month: r.month }))));
 
       // MOM only works if this sheet actually has more than one dated row
@@ -11023,7 +11027,7 @@ async function initSnsExternal() {
 // the Sales Overview tab, once per event on that event's own tab).
 (function () {
   const REPORT_INSIGHTS_SHEET_ID = '1Fz0bEArdx54vTSGMGj-m6TYec1kizKyPubJOZNWBaLg';
-  const BRAND = 'evolis';
+  const BRAND               = (window.SHEET_CFG.BRAND_SLUG || 'evolis');
 
   // gviz/tq (not the usual export?format=csv&gid=N) because these tabs get
   // created on first save via ensureTab() — their gid isn't known ahead of
@@ -11266,7 +11270,7 @@ async function initSnsExternal() {
   const PD_AD_ORDERS_GID      = window.SHEET_CFG.SHEET_PD_AD_ORDERS.gid; // "Prime Day" tab on the ad orders sheet
   const PRODUCT_NAMES_SHEET_ID = '1NNRTRQxQl2r4XivAvH700CC39p49GD2xfZlyRNqahGA';
   const PRODUCT_NAMES_GID      = '164358627';
-  const BRAND = 'evolis';
+  const BRAND               = (window.SHEET_CFG.BRAND_SLUG || 'evolis');
 
   function sheetCsvUrl(id, gid) {
     return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}&_cb=${Date.now()}`;
@@ -11694,7 +11698,7 @@ async function initSnsExternal() {
   const AD_ORDERS_SHEET_ID    = window.SHEET_CFG.SHEET_AD_ORDERS.fileId;
   const PRODUCT_NAMES_SHEET_ID = '1NNRTRQxQl2r4XivAvH700CC39p49GD2xfZlyRNqahGA';
   const PRODUCT_NAMES_GID      = '164358627';
-  const BRAND = 'evolis';
+  const BRAND               = (window.SHEET_CFG.BRAND_SLUG || 'evolis');
   const TOP_SELLERS_COUNT = 7;
 
   // Per-event config — gids per Jaclyn 2026-07-20. Orders sheet is the same
@@ -12178,7 +12182,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // cards based on whether Title is filled, and collapse the Subtitle line
   // when it's blank — not just fill-or-placeholder per field.
   (function wireOpportunities() {
-    const BRAND = 'evolis';
+    const BRAND               = (window.SHEET_CFG.BRAND_SLUG || 'evolis');
     const editBtn = document.getElementById('opp-edit-btn');
     const saveBtn = document.getElementById('opp-save-btn');
     const cancelBtn = document.getElementById('opp-cancel-btn');
@@ -12549,7 +12553,8 @@ async function ovLoadActiveSkus(year, month) {
 
     function isEvolisRowLocal(r) {
       const brand = (r.brand || '').trim().toLowerCase();
-      return brand === 'evolis' || brand.endsWith('volis');
+      const target = (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase().trim();
+      return brand === target || (target.length > 3 && brand.endsWith(target.slice(1)));
     }
     const amzReturnRows = parseCsvToRows(amzReturnsCsv).filter(isEvolisRowLocal);
     const wmtReturnRows = parseCsvToRows(wmtReturnsCsv).filter(isEvolisRowLocal);
@@ -15004,7 +15009,7 @@ function ffFormatEst(isoString) {
 async function ffLoadKpis() {
   try {
     const csv = await fetch(ovCsvUrl(OV_FULFILLMENT_DAILY_SHEET_ID, '106183169')).then(r => r.ok ? r.text() : '').catch(() => '');
-    const rows = parseCsvToRows(csv).filter(r => (r.brand || '') === 'evolis');
+    const rows = parseCsvToRows(csv).filter(r => (r.brand || '') === (window.SHEET_CFG.BRAND_SLUG || 'evolis'));
     const map = {};
     rows.forEach(r => { if (r.metric) map[r.metric] = r.value; });
 
@@ -15310,7 +15315,7 @@ async function mfcLoadKpis() {
     // for these two exists to compute a true June average from — flag if
     // you have one and want these swapped over too.
     const kpisCsv = await fetch(ovCsvUrl(OV_FULFILLMENT_DAILY_SHEET_ID, '106183169')).then(r => r.ok ? r.text() : '').catch(() => '');
-    const kpiRows = parseCsvToRows(kpisCsv).filter(r => (r.brand || '') === 'evolis');
+    const kpiRows = parseCsvToRows(kpisCsv).filter(r => (r.brand || '') === (window.SHEET_CFG.BRAND_SLUG || 'evolis'));
     const map = {};
     kpiRows.forEach(r => { if (r.metric) map[r.metric] = r.value; });
     const procTime = document.getElementById('mfc-kpi-proctime');
@@ -15496,7 +15501,7 @@ async function getBlendedOrdersForMonth(year, month) {
     });
     return ids.size;
   }
-  const isEvolisAmzRow = r => (r.brand || '').toLowerCase().trim() === 'evolis' || (r.sku || '').toUpperCase().startsWith('EVO');
+  const isEvolisAmzRow = r => (r.brand || '').toLowerCase().trim() === (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase() || (r.sku || '').toUpperCase().startsWith((window.SHEET_CFG.BRAND_SKU_PREFIX || 'EVO').toUpperCase());
   const amzOrders = countOrdersForMonth(amzCsv, isEvolisAmzRow, r => {
     const status = (r.status || '').toLowerCase().trim();
     return status !== 'cancelled' && status !== 'pending';
@@ -15539,7 +15544,7 @@ async function mfcLoadReturns() {
     // codebase; stripping diacritics before comparing avoids the same trap
     // here.
     const stripAccents = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const isEvolis = r => stripAccents(r.brand || '').toLowerCase().trim() === 'evolis';
+    const isEvolis = r => stripAccents(r.brand || '').toLowerCase().trim() === (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase();
     // Same string-based date normalization as getBlendedOrdersForMonth,
     // rather than JS Date object comparison — consistent with the fix
     // applied there, in case any of these date columns use non-ISO
@@ -18239,7 +18244,9 @@ async function loadAuditResultsFromSheet() {
   function isEvolisRow(row) {
     const brand = (row.brand || '').toLowerCase().trim();
     const skus = (row.sku || row.skus || '').toUpperCase();
-    return brand === 'evolis' || brand.endsWith('volis') || skus.split(',').some(s => s.trim().startsWith('EVO'));
+    const target = (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase().trim();
+    const skuPrefix = (window.SHEET_CFG.BRAND_SKU_PREFIX || 'EVO').toUpperCase();
+    return brand === target || (target.length > 3 && brand.endsWith(target.slice(1))) || skus.split(',').some(s => s.trim().startsWith(skuPrefix));
   }
   function isValidAmazonRow(row) {
     const status = (row.status || '').toLowerCase().trim();
@@ -18641,12 +18648,12 @@ async function loadAuditResultsFromSheet() {
         adDrivenOrders = adRowsForOrders.filter(r =>
           parseInt(r.year, 10) === now.getFullYear() &&
           parseInt(r.month, 10) === now.getMonth() + 1 &&
-          (r.brand || '').trim().toLowerCase() === 'evolis'
+          (r.brand || '').trim().toLowerCase() === (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase()
         ).length;
         adDrivenOrdersLastMonthFull = adRowsForOrders.filter(r =>
           parseInt(r.year, 10) === lastMonthYear &&
           parseInt(r.month, 10) === lastMonthNum &&
-          (r.brand || '').trim().toLowerCase() === 'evolis'
+          (r.brand || '').trim().toLowerCase() === (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase()
         ).length;
       }
 
@@ -19149,7 +19156,7 @@ document.addEventListener('DOMContentLoaded', loadHomeTotalSkus);
 // If Clerk fails to load, isn't signed in, or membership check fails, the
 // safe fallback is simply "internal section stays hidden" — never a
 // broken or blank page.
-const EVOLIS_ORG_ID = 'org_3GrUGVaCu0kSFTjiYl8V743UQue';
+const SKINUVA_ORG_ID = 'org_3HbWzHJgiP3n5zZcgWArovipI5Y';
 
 window.addEventListener('load', async () => {
   try {
@@ -19159,7 +19166,7 @@ window.addEventListener('load', async () => {
     if (!user) return; // not signed in — safe default (internal hidden)
 
     const memberships = await window.Clerk.user.getOrganizationMemberships();
-    const hasAccess = memberships.data.some(m => m.organization.id === EVOLIS_ORG_ID);
+    const hasAccess = memberships.data.some(m => m.organization.id === SKINUVA_ORG_ID);
 
     if (hasAccess) {
       const internalNav = document.getElementById('nav-internal-section');
