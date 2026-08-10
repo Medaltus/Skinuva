@@ -353,7 +353,11 @@ async function googleAdsSearch(accessToken, query) {
   );
   if (!resp.ok) {
     const text = await resp.text();
-    throw new Error(`Google Ads API error ${resp.status}: ${text.slice(0, 300)}`);
+    // Increased from 300 to 2000 chars (2026-08-10) — GoogleAdsFailure error
+    // bodies are structured JSON that routinely runs past 300 chars before
+    // reaching the actual errorCode/message fields, which cut off exactly
+    // the part needed to diagnose a failure rather than just detecting one.
+    throw new Error(`Google Ads API error ${resp.status}: ${text.slice(0, 2000)}`);
   }
   return resp.json();
 }
