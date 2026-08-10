@@ -1,17 +1,20 @@
 {
   "outputDirectory": "public",
   "crons": [
-    {
-      "path": "/api/cron/sync-listings",
-      "schedule": "0 2 */2 * *"
-    }
+    { "path": "/api/cron/sync-shopify-orders",        "schedule": "0 7 * * *" },
+    { "path": "/api/cron/sync-shopify-revenue",       "schedule": "7 7 * * *" },
+    { "path": "/api/cron/sync-shopify-returns",       "schedule": "22 7 * * *" },
+    { "path": "/api/cron/sync-shopify-subscriptions", "schedule": "30 7 * * *" }
   ],
   "functions": {
-    "api/cron/sync-listings.js":  { "maxDuration": 300 },
-    "api/run-listing-audit.js":   { "maxDuration": 300 },
-    "api/write-listing-audit.js": { "maxDuration": 300 },
-    "api/run-analysis.js":        { "maxDuration": 300 },
-    "api/write-insights.js":      { "maxDuration": 300 },
-    "api/write-uploads.js":       { "maxDuration": 300 }
+    "api/run-listing-audit.js":               { "maxDuration": 300 },
+    "api/write-listing-audit.js":              { "maxDuration": 300 },
+    "api/run-analysis.js":                     { "maxDuration": 300 },
+    "api/write-insights.js":                   { "maxDuration": 300 },
+    "api/write-uploads.js":                    { "maxDuration": 300 },
+    "api/cron/sync-shopify-orders.js":         { "maxDuration": 300 },
+    "api/cron/sync-shopify-revenue.js":        { "maxDuration": 300 },
+    "api/cron/sync-shopify-returns.js":        { "maxDuration": 300 },
+    "api/cron/sync-shopify-subscriptions.js":  { "maxDuration": 300 }
   }
 }
