@@ -86,6 +86,19 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'SHEET_STEWARDSHIP_SUMMARY not set' });
   }
 
+  // TEMPORARY DIAGNOSTIC (2026-08-10) — a direct curl to Seal's API with a
+  // manually-copied token succeeded, but this cron (reading SEAL_API_TOKEN
+  // from Vercel's env var) got a 403 from Seal. That points to the stored
+  // env var not actually matching the working token — most likely a
+  // copy-paste issue (stray whitespace/newline, truncation) or the env var
+  // being set for the wrong Vercel environment (e.g. Preview instead of
+  // Production). This reports enough to diagnose that WITHOUT ever
+  // exposing the actual secret value. Remove once resolved.
+  const rawLen     = SEAL_API_TOKEN.length;
+  const trimmedLen = SEAL_API_TOKEN.trim().length;
+  const hasPrefix  = SEAL_API_TOKEN.trim().startsWith('seal_token_');
+  console.log(`[sync-shopify-subscriptions] SEAL_API_TOKEN diagnostic — rawLength:${rawLen} trimmedLength:${trimmedLen} hasExpectedPrefix:${hasPrefix}`);
+
   // ── Count ACTIVE subscriptions, paging through Seal's REST API ───────────
   let activeCount = 0;
   let page = 0;
@@ -105,7 +118,13 @@ module.exports = async (req, res) => {
 
     if (!resp.ok || data?.success === false) {
       console.error(`[sync-shopify-subscriptions] page ${page} error:`, resp.status, JSON.stringify(data));
-      return res.status(500).json({ error: 'Seal API returned an error', status: resp.status, detail: data, page });
+      return res.status(500).json({
+        error: 'Seal API returned an error',
+        status: resp.status,
+        detail: data,
+        page,
+        tokenDiagnostic: { rawLength: rawLen, trimmedLength: trimmedLen, hasExpectedPrefix: hasPrefix },
+      });
     }
 
     const items = Array.isArray(data?.payload?.subscriptions) ? data.payload.subscriptions : [];
