@@ -22,17 +22,18 @@
  * SHOPIFY_CLIENT_ID/SHOPIFY_CLIENT_SECRET — Seal's API lives on Seal's own
  * servers, not Shopify's, so Shopify's own app credentials don't apply.
  *
- * IMPORTANT — RESPONSE SHAPE NOT YET VERIFIED AGAINST REAL DATA: built
- * from Seal's published docs (sealsubscriptions.com/articles/
- * merchant-api-documentation), which show a full sample response for the
- * single-subscription endpoint (GET /subscription?id=...) but not the
- * *list* endpoint (GET /subscriptions) used here. Assumed shape:
- * { success: true, payload: [ {...}, ... ] }, each item carrying at least
- * an `id` field (used only to count array length, not any other field).
- * The response this endpoint returns includes `sampleFirstItem` — the
- * first real subscription object fetched — specifically so this can be
- * verified against Skinuva's actual data on the first real run. Remove
- * that field from the response once confirmed correct.
+ * RESPONSE SHAPE — CONFIRMED against real Skinuva data (2026-08-10), and
+ * it differs from what Seal's docs implied: the docs only show a full
+ * sample for the single-subscription endpoint, not the list endpoint used
+ * here. The list endpoint nests the array one level deeper than that
+ * sample suggests:
+ *   { success: true, payload: { subscriptions: [...], page, total_pages } }
+ * NOT { success: true, payload: [...] } — an earlier version of this file
+ * assumed the latter, which silently produced a count of 0 every time
+ * (Array.isArray(payload) is false when payload is an object, so the
+ * fallback empty array was used unconditionally, regardless of how many
+ * subscriptions actually existed). Pagination now uses the documented
+ * `total_pages` field directly rather than guessing from page fullness.
  *
  * Paginates with ?active-only=true&page=N, 50 results per page per Seal's
  * docs, stopping when a page comes back with fewer than 50 (last page).
@@ -88,7 +89,6 @@ module.exports = async (req, res) => {
   // ── Count ACTIVE subscriptions, paging through Seal's REST API ───────────
   let activeCount = 0;
   let page = 0;
-  let sampleFirstItem = null;
 
   do {
     page++;
@@ -108,13 +108,13 @@ module.exports = async (req, res) => {
       return res.status(500).json({ error: 'Seal API returned an error', status: resp.status, detail: data, page });
     }
 
-    const items = Array.isArray(data?.payload) ? data.payload : [];
-    if (page === 1 && items.length) sampleFirstItem = items[0];
+    const items = Array.isArray(data?.payload?.subscriptions) ? data.payload.subscriptions : [];
+    const totalPages = data?.payload?.total_pages || 1;
 
     activeCount += items.length;
-    console.log(`[sync-shopify-subscriptions] page ${page}: +${items.length} (running total: ${activeCount})`);
+    console.log(`[sync-shopify-subscriptions] page ${page}/${totalPages}: +${items.length} (running total: ${activeCount})`);
 
-    if (items.length < 50) break; // fewer than a full page — this was the last one
+    if (page >= totalPages) break; // reached the last page per Seal's own count
     if (page >= 200) { console.warn('[sync-shopify-subscriptions] hit page cap'); break; }
   } while (true);
 
@@ -160,7 +160,6 @@ module.exports = async (req, res) => {
       year, month,
       rowFoundExisting: found,
       pagesFetched: page,
-      sampleFirstItem, // TEMPORARY — verify this matches real Seal data, then remove
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
