@@ -1120,8 +1120,8 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 <div class="main">
 
   <!-- Topbar -->
-  <div class="topbar">
-    <span class="topbar-title" id="topbar-title">Home — Évolis</span>
+  <div class="topbar" id="global-topbar" style="display:none;">
+    <span class="topbar-title" id="topbar-title"></span>
     <div class="topbar-right">
       <div class="pdf-events-picker" id="pdf-events-picker" style="display:none;font-size:10.5px;color:var(--muted);align-items:center;gap:6px;flex-wrap:nowrap;white-space:nowrap;overflow-x:auto;max-width:60vw;">
         <span style="flex-shrink:0;">Include in PDF:</span>
@@ -4604,19 +4604,23 @@ Paraben-free · Sulfate-free · Silicone-free · Phthalate-free · Color-safe ·
 <div class="toast" id="toast"></div>
 
 <script>
-const pageTitles = {
-  home:'Home — Évolis',
-  overview:'Overview — Évolis',sales:'Sales — Évolis','sales-external':'Sales — Évolis',marketing:'Marketing — Évolis','marketing-external':'Marketing — Évolis',
-  events:'Events — Évolis',inventory:'Inventory — Évolis','inventory-external':'Inventory — Évolis',fulfillment:'Fulfillment — Évolis',
-  insights:'Insights — Évolis',listing:'Listing Audit — Évolis',ppc:'PPC — Évolis',organic:'Organic — Évolis'
-};
+// pageTitles removed 2026-08-10 — the "Page — Évolis" breadcrumb text is
+// gone; see showPage() below for the current topbar visibility logic.
 
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   btn.classList.add('active');
-  document.getElementById('topbar-title').textContent = pageTitles[id] || id;
+  // Header bar — REWRITTEN 2026-08-10 per Jaclyn: the "Home — Évolis" /
+  // "Sales — Évolis" style breadcrumb text is gone everywhere. The whole
+  // topbar itself is now only shown on the three pages that actually put
+  // something in it (the Export PDF Report button + its checkboxes) —
+  // hidden entirely on every other page rather than sitting there empty.
+  const exportablePages = ['sales', 'marketing', 'events'];
+  const topbarEl = document.getElementById('global-topbar');
+  if (topbarEl) topbarEl.style.display = exportablePages.includes(id) ? 'flex' : 'none';
+  document.getElementById('topbar-title').textContent = '';
 
   if (id === 'overview' && !window._overviewLiveInit && typeof window.initOverviewLive === 'function') window.initOverviewLive();
   // Fastest Path to Page 1 lives on the default "Insights" sub-tab of
@@ -4631,12 +4635,10 @@ function showPage(id, btn) {
   // Fulfillment, Insights, Listing Audit, PPC, Organic).
   const pdfBtn = document.getElementById('pdf-export-btn');
   if (pdfBtn) {
-    const exportablePages = ['sales', 'marketing', 'events'];
     pdfBtn.style.display = exportablePages.includes(id) ? 'flex' : 'none';
   }
   const pdfPicker = document.getElementById('pdf-events-picker');
   if (pdfPicker) {
-    const exportablePages = ['sales', 'marketing', 'events'];
     pdfPicker.style.display = exportablePages.includes(id) ? 'flex' : 'none';
   }
 
@@ -9947,20 +9949,37 @@ async function initSnsExternal() {
   let _skuStatusMap = {}; // SKU (base, no -SF) -> 'LIVE' | 'DELETED', col H of the same master sheet
   let _inboundBySku = {}; // SKU -> summed Expected Qty across all *Open* ASNs
 
-  // Same SKU-keyed lookup pattern already used elsewhere on this dashboard.
+  let _skuTypeMap = {};    // SKU (base) -> 'CATALOG' | 'BUNDLE', from the same master sheet
+  let _shopifySkus = new Set(); // base SKUs that have a Channel=Shopify row on the master sheet
+
+  // REWRITTEN 2026-08-10 per Jaclyn: switched from manual column-index
+  // parsing (cols[1]/cols[2]/cols[7]) to this sheet's own header-keyed
+  // parseCsvRows(), the same pattern already used for the Consignment and
+  // Tracker sheets below — column-position parsing is exactly the bug
+  // class that's bitten this codebase before if the sheet ever gets a
+  // column inserted/reordered. Also now captures SKU Type (CATALOG vs
+  // BUNDLE) and Channel, needed by loadStockLevelsExternal below to scope
+  // this page to Shopify catalog SKUs only. The sheet carries one row per
+  // (SKU, Channel) combination — the Shopify row for a given product uses
+  // a "C-"-prefixed SKU string distinct from that same product's Amazon
+  // row (e.g. "C-SVA0001" vs "SVA0001") — so the "C-" prefix is stripped
+  // here too, not just "-SF", to land on the same base-SKU key the
+  // Consignment sheet itself uses.
   async function loadSkuNameMap() {
     try {
       const csv = await fetch(fileCsvUrl(PRODUCT_NAMES_SHEET_ID, PRODUCT_NAMES_GID)).then(r => r.ok ? r.text() : '').catch(() => '');
       if (!isCsv(csv)) return;
-      const lines = csv.trim().split('\n');
-      for (let i = 1; i < lines.length; i++) {
-        const cols = parseCsvLine(lines[i]);
-        const sku    = (cols[1] || '').replace(/^"|"$/g,'').trim().toUpperCase().replace(/-SF$/i, '');
-        const name   = (cols[2] || '').replace(/^"|"$/g,'').trim();
-        const status = (cols[7] || '').replace(/^"|"$/g,'').trim().toUpperCase();
+      parseCsvRows(csv).forEach(r => {
+        const sku    = (r.sku || '').trim().toUpperCase().replace(/-SF$/i, '').replace(/^C-/, '');
+        const name   = (r.productshortname || '').trim();
+        const status = (r.status || '').trim().toUpperCase();
+        const skuType = (r.skutype || '').trim().toUpperCase();
+        const channel = (r.channel || '').trim().toUpperCase();
         if (sku && name) _skuNameMap[sku] = name;
         if (sku && status) _skuStatusMap[sku] = status;
-      }
+        if (sku && skuType) _skuTypeMap[sku] = skuType;
+        if (sku && channel === 'SHOPIFY') _shopifySkus.add(sku);
+      });
     } catch (e) {
       console.warn('[InventoryExternal] Product name lookup failed:', e.message);
     }
@@ -9969,26 +9988,25 @@ async function initSnsExternal() {
   window.loadStockLevelsExternal = async function () {
     const tbody = document.getElementById('ix-stock-tbody');
     try {
-      const [consignCsv, productsCsv] = await Promise.all([
-        fetch(fileCsvUrl(CONSIGNMENT_SHEET_ID, CONSIGNMENT_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
-        // Added 2026-08-03 per Jaclyn — see comment block below for why.
-        fetch(ovCsvUrl(OV_PRODUCTS_CACHE_SHEET_ID, OV_PRODUCTS_CACHE_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
-      ]);
+      const consignCsv = await fetch(fileCsvUrl(CONSIGNMENT_SHEET_ID, CONSIGNMENT_GID)).then(r => r.ok ? r.text() : '').catch(() => '');
       if (!Object.keys(_skuNameMap).length) await loadSkuNameMap();
 
-      // REWRITTEN 2026-08-03 per Jaclyn: this page's row list used to be
-      // built directly from the Consignment sheet's own rows — meaning any
-      // SKU with no Cin7-tracked consignment line item simply never
-      // appeared here at all, regardless of whether it's a real, live
-      // product. That silently dropped all 6 travel-size SKUs (EVO0014-
-      // EVO0019), which have no consignment entries. Same root-cause
-      // pattern as the Home page's Total SKUs KPI before its fix earlier
-      // today: Products Cache is now the source of truth for WHICH SKUs
-      // are real (latest daily snapshot, cross-referenced with Product
-      // Short Name's Status column for discontinued handling); Consignment
-      // is consulted only for the on-hand/available NUMBER per SKU, and
-      // simply shows 0 for any live SKU it has no data for — an honest
-      // "no consignment stock" rather than an invisible SKU.
+      // REWRITTEN 2026-08-10 per Jaclyn: this page's SKU universe used to
+      // come from Amazon's Products Cache sheet (added 2026-08-03 to stop
+      // travel-size SKUs with no consignment line item from disappearing
+      // entirely — see below for why that mattered). But Products Cache is
+      // an AMAZON-listing snapshot, and this page is specifically about
+      // Shopify-fulfilled 3PL consignment stock — an unrelated sales
+      // channel. Worse, it silently pulled in bundle ASINs (bundles are
+      // real, separately-listed Amazon products, so they show up in that
+      // snapshot too) — the exact same bug class already fixed on the
+      // Total SKUs KPI. Now sources the SKU list from the master Product
+      // Short Name sheet instead (already loaded via loadSkuNameMap for
+      // names/status) filtered to SKU Type = CATALOG — channel-agnostic,
+      // excludes bundles, and keeps the original fix's benefit: any real
+      // catalog SKU with zero consignment stock still shows here as an
+      // honest 0, rather than disappearing the way a Consignment-sheet-only
+      // list would.
       const consignRows = isCsv(consignCsv) ? parseCsvRows(consignCsv) : [];
       const consignMap = {};
       consignRows.forEach(r => {
@@ -10001,12 +10019,14 @@ async function initSnsExternal() {
         };
       });
 
-      const productRows = isCsv(productsCsv) ? parseCsvRows(productsCsv) : [];
-      const latestDate = productRows.reduce((max, r) => ((r.date || '') > max ? r.date : max), '');
+      // Scoped to Shopify-channel, catalog-type SKUs only — confirmed via
+      // the master sheet's own Channel column (2026-08-10, screenshot from
+      // Jaclyn): SKUs are listed per (SKU, Channel) row, and this page is
+      // specifically about Shopify-fulfilled 3PL consignment stock, not
+      // Amazon/Walmart. Excludes bundles via SKU Type = CATALOG, same as
+      // the Total SKUs KPI fix.
       const skuSet = new Set(
-        productRows.filter(r => r.date === latestDate)
-          .map(r => (r.sku || '').trim().toUpperCase().replace(/-SF$/i, ''))
-          .filter(Boolean)
+        [..._shopifySkus].filter(sku => _skuTypeMap[sku] === 'CATALOG')
       );
 
       _stockRows = [...skuSet].map(sku => {
