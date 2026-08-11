@@ -649,19 +649,51 @@ function buildSkuStrategySnapshots(kwRows, bizRowsFull, sqpRows) {
   const bizBySku = latestBizRowPerSku(bizRowsFull);
   const sqpIndex = buildSqpIndex(sqpRows); // same fix as buildRankChanges — see comment on buildSqpIndex above
 
+  // FIXED 2026-08-11 — likely explains why a Skinuva run logged "28 SKUs"
+  // here despite Skinuva's real catalog being ~13 products: SKU variant
+  // suffixes (Amazon-side "-stickerless", marketplace suffixes like
+  // "-CA"/"-UK", etc — the exact same pattern already handled elsewhere
+  // in this project's frontend code) were each being treated as their own
+  // distinct SKU rather than consolidated to one base product, roughly
+  // doubling the real count. That inflates this section twice over: more
+  // "SKUs" AND each one gets its own top-10-keywords block. Rooting to
+  // the base SKU (same regex used elsewhere: leading letters+digits) once
+  // here fixes both at the source, not just for Skinuva — this function
+  // is shared code, so évolis gets the same correction. NOT independently
+  // confirmed against a live sheet this session (same caveat as any
+  // inference-based fix) — worth a quick sanity check that the SKU count
+  // in the next run's insights actually lands near the real catalog size.
+  function rootSkuFor(sku) {
+    const m = String(sku || '').trim().toUpperCase().match(/^[A-Z]+\d+/);
+    return m ? m[0] : String(sku || '').trim().toUpperCase();
+  }
+
   const kwBySku = new Map();
   kwRows.forEach(r => {
-    const sku = (r.sku || '').trim();
+    const sku = rootSkuFor(r.sku);
     if (!sku) return;
     if (!kwBySku.has(sku)) kwBySku.set(sku, []);
     kwBySku.get(sku).push(r);
   });
 
-  const allSkus = new Set([...bizBySku.keys(), ...kwBySku.keys()]);
+  // latestBizRowPerSku already keys by whatever raw SKU string the
+  // Business Report uses — re-key those onto the same root so a variant
+  // SKU's business data merges with the same product's keyword data
+  // instead of sitting under a separate entry. Latest date wins if two
+  // variants somehow both have a row (mirrors latestBizRowPerSku's own
+  // "latest wins" convention).
+  const bizByRootSku = new Map();
+  bizBySku.forEach((entry, rawSku) => {
+    const root = rootSkuFor(rawSku);
+    const existing = bizByRootSku.get(root);
+    if (!existing || (entry.date || '') > (existing.date || '')) bizByRootSku.set(root, entry);
+  });
+
+  const allSkus = new Set([...bizByRootSku.keys(), ...kwBySku.keys()]);
   const snapshots = {};
 
   allSkus.forEach(sku => {
-    const bizEntry = bizBySku.get(sku);
+    const bizEntry = bizByRootSku.get(sku);
     const bizRow = bizEntry ? bizEntry.row : null;
 
     // Top 10 tracked keywords for this SKU by volume — Claude picks which
@@ -804,10 +836,21 @@ CRITICAL: Respond with a single valid JSON object only. No markdown fences, no p
   // existing fallback-when-not-found behavior means every keyword still
   // gets a recommended_action in the final output — keywords beyond this
   // cap get the generic fallback text instead of bespoke AI prose, not no
-  // action at all. RANK_CHANGES_PROMPT_CAP is a tunable trade-off between
-  // response completeness and reliability — raise it if 60 later turns out
-  // too conservative once this is confirmed no longer timing out.
-  const RANK_CHANGES_PROMPT_CAP = 60;
+  // action at all.
+  //
+  // REVISED same day per Jaclyn, using real évolis evidence instead of a
+  // guess: an actual successful évolis run (2026-07-31 log row) generated
+  // full recommended_action prose for 96 keywords in one call with no
+  // timeout — an earlier guess of 60 here was more conservative than that
+  // proven-working precedent justified. Raised to 100, just above évolis's
+  // own demonstrated-safe number, rather than the full 278 — matching
+  // Jaclyn's point that Skinuva shouldn't need to ask for meaningfully
+  // more than évolis's own working pattern already proves is safe. Still a
+  // tunable trade-off, not a hard ceiling — the buildSkuStrategySnapshots
+  // SKU-consolidation fix (same file, same day) independently shrinks the
+  // rest of the prompt too, so there may be room to raise this further
+  // once a run confirms the combined effect.
+  const RANK_CHANGES_PROMPT_CAP = 100;
   const rankChangesForPrompt = rankChanges.slice(0, RANK_CHANGES_PROMPT_CAP);
   if (rankChanges.length > RANK_CHANGES_PROMPT_CAP) {
     console.log(`[run-analysis] ${brand.id} — capped rank_changes sent to Claude at ${RANK_CHANGES_PROMPT_CAP} of ${rankChanges.length} total (highest-priority slice); remaining keywords get the generic fallback recommended_action.`);
