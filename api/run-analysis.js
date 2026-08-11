@@ -1055,7 +1055,24 @@ ${listingCtxTrimmed}`;
   // throwing and writing nothing at all for this week.
   if (!insights) {
     console.error(`[run-analysis] ${brand.id} — all JSON repair attempts failed. Raw length: ${raw.length}. Last error: ${lastParseErr && lastParseErr.message}. Falling back to deterministic-only insights.`);
-    console.error('[run-analysis] Raw (first 500):', clean0.slice(0, 500));
+    // FIXED 2026-08-11 — "Raw (first 500)" was useless for a Skinuva
+    // failure whose actual error position was 19585: a fixed preview from
+    // the START of the text tells you nothing when the real problem is
+    // ~58% of the way through a 33k-character response. JS's JSON.parse
+    // error messages include the exact character position (e.g.
+    // "position 19585") — extracted here to log a window of text
+    // centered on wherever the parser actually choked, which shows the
+    // specific malformed character/sequence directly instead of an
+    // unrelated snippet from the beginning.
+    const posMatch = lastParseErr && lastParseErr.message && lastParseErr.message.match(/position (\d+)/);
+    if (posMatch) {
+      const pos = parseInt(posMatch[1], 10);
+      const start = Math.max(0, pos - 150);
+      const end = Math.min(clean0.length, pos + 150);
+      console.error(`[run-analysis] Raw text surrounding error position ${pos} (chars ${start}-${end}):`, clean0.slice(start, end));
+    } else {
+      console.error('[run-analysis] Raw (first 500):', clean0.slice(0, 500));
+    }
     insights = buildFallbackInsights({ rankChanges, newPpcConverters, page1Opportunities, rankingDiagnostic, listingImplementationStatus, skuStrategySnapshots, comparison });
     _lap('JSON repair failed, using fallback insights — returning early');
     return insights; // already has rank_changes/etc. attached — skip the merge-back below, it's already in final shape
