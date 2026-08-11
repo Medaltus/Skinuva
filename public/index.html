@@ -18055,7 +18055,32 @@ async function runListingAudit() {
       '&gid=' + SHEET_LISTINGS_GID + '&_cb=' + Date.now();
     const srcRes = await fetch(srcUrl);
     if (!srcRes.ok) throw new Error('Could not read source listings sheet');
-    const srcRows = parseCsvToRows(await srcRes.text());
+    const srcRowsAll = parseCsvToRows(await srcRes.text());
+
+    // FIXED 2026-08-11 per Jaclyn — real bug, confirmed identical in
+    // évolis's own file (inherited, not introduced here): this sheet is a
+    // DAILY SNAPSHOT (one row per SKU per date), and this function was the
+    // only consumer of it in the whole codebase that never collapsed to
+    // the most-recent date per SKU before using it — every other place
+    // this same sheet gets read (loadListingsFromSheet, run-listing-
+    // audit.js's own backend logic, run-analysis.js's productInventoryRows
+    // handling) already does this. Without it, a SKU with 30 days of
+    // history counts as 30 separate "SKUs" here, which is exactly why a
+    // real catalog of ~13-15 products showed up as "401 SKUs" — accumulated
+    // daily snapshots, not 401 distinct products. This sheet has no
+    // channel column at all (confirmed against its own documented header
+    // list — date/sku/asin/fulfillable_quantity/.../item_type_keyword/
+    // last_synced, nothing else), so it's Amazon-only by nature already;
+    // no separate channel filter is needed, just this date dedup.
+    const latestBySkuForGrouping = new Map();
+    srcRowsAll.forEach(row => {
+      const sku = (row['sku'] || '').trim();
+      if (!sku) return;
+      const existing = latestBySkuForGrouping.get(sku);
+      if (!existing || (row['date'] || '') > (existing['date'] || '')) latestBySkuForGrouping.set(sku, row);
+    });
+    const srcRows = Array.from(latestBySkuForGrouping.values());
+    console.log(`[listing-audit] Collapsed ${srcRowsAll.length} raw rows (daily snapshots) to ${srcRows.length} distinct SKUs at their latest date.`);
 
     // Group SKUs by item_type_keyword (col 14 = index 14, 0-based)
     // Travel SKUs grouped with their parent type by stripping "travel" from name
