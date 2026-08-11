@@ -3678,9 +3678,15 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     <div class="sheet-link-menu">
       <button class="sheet-link-btn" onclick="document.getElementById('listing-sheet-dropdown').classList.toggle('open')">🔗 Source Sheets <span style="font-size:9px;">▾</span></button>
       <div class="sheet-link-dropdown" id="listing-sheet-dropdown">
-        <a href="https://docs.google.com/spreadsheets/d/1cdqKzqaUFr8MFDWkskpGJ5NQSv9QjVv64ab8P_PPr6s/edit?gid=1672819862#gid=1672819862" target="_blank" rel="noopener"><span class="sheet-link-icon">📦</span>Amazon Products Cache (current listing content)</a>
-        <a href="https://docs.google.com/spreadsheets/d/1NrCQPR7vuuHKgG6nVnh3hGnHGHD6txjXGdhrIn63w-M/edit?gid=2075287627#gid=2075287627" target="_blank" rel="noopener"><span class="sheet-link-icon">📋</span>Listing Audit (Run Listing Audit output)</a>
-        <a href="https://docs.google.com/spreadsheets/d/19SfYJ99fMtqXna4VKGr8TtNMNxg6z52b0yDQPm7yI9M/edit?gid=486436437#gid=486436437" target="_blank" rel="noopener"><span class="sheet-link-icon">🥇</span>Competitor Research (Key Ingredients, Key Features)</a>
+        <a href="https://docs.google.com/spreadsheets/d/1cdqKzqaUFr8MFDWkskpGJ5NQSv9QjVv64ab8P_PPr6s/edit?gid=350687224#gid=350687224" target="_blank" rel="noopener"><span class="sheet-link-icon">📦</span>Amazon Products Cache (current listing content)</a>
+        <a href="https://docs.google.com/spreadsheets/d/1NrCQPR7vuuHKgG6nVnh3hGnHGHD6txjXGdhrIn63w-M/edit?gid=1546261495#gid=1546261495" target="_blank" rel="noopener"><span class="sheet-link-icon">📋</span>Listing Audit (Run Listing Audit output)</a>
+        <a href="https://docs.google.com/spreadsheets/d/19SfYJ99fMtqXna4VKGr8TtNMNxg6z52b0yDQPm7yI9M/edit?gid=261549909#gid=261549909" target="_blank" rel="noopener"><span class="sheet-link-icon">🥇</span>Competitor Research — Scar (Key Ingredients, Key Features)</a>
+        <a href="https://docs.google.com/spreadsheets/d/19SfYJ99fMtqXna4VKGr8TtNMNxg6z52b0yDQPm7yI9M/edit?gid=2091190187#gid=2091190187" target="_blank" rel="noopener"><span class="sheet-link-icon">🥇</span>Competitor Research — Scar+ (Key Ingredients, Key Features)</a>
+        <a href="https://docs.google.com/spreadsheets/d/19SfYJ99fMtqXna4VKGr8TtNMNxg6z52b0yDQPm7yI9M/edit?gid=2078603906#gid=2078603906" target="_blank" rel="noopener"><span class="sheet-link-icon">🥇</span>Competitor Research — Brite (Key Ingredients, Key Features)</a>
+        <a href="https://docs.google.com/spreadsheets/d/19SfYJ99fMtqXna4VKGr8TtNMNxg6z52b0yDQPm7yI9M/edit?gid=428410254#gid=428410254" target="_blank" rel="noopener"><span class="sheet-link-icon">🥇</span>Competitor Research — Bruise (Key Ingredients, Key Features)</a>
+        <a href="https://docs.google.com/spreadsheets/d/19SfYJ99fMtqXna4VKGr8TtNMNxg6z52b0yDQPm7yI9M/edit?gid=840303564#gid=840303564" target="_blank" rel="noopener"><span class="sheet-link-icon">🥇</span>Competitor Research — ARC (Key Ingredients, Key Features)</a>
+        <a href="https://docs.google.com/spreadsheets/d/19SfYJ99fMtqXna4VKGr8TtNMNxg6z52b0yDQPm7yI9M/edit?gid=109622638#gid=109622638" target="_blank" rel="noopener"><span class="sheet-link-icon">🥇</span>Competitor Research — Bruise Recovery Duo (Key Ingredients, Key Features)</a>
+        <a href="https://docs.google.com/spreadsheets/d/19SfYJ99fMtqXna4VKGr8TtNMNxg6z52b0yDQPm7yI9M/edit?gid=243123247#gid=243123247" target="_blank" rel="noopener"><span class="sheet-link-icon">🥇</span>Competitor Research — Scar Kits (Key Ingredients, Key Features)</a>
       </div>
     </div>
 
@@ -3694,129 +3700,716 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 
     <!-- Product type tabs -->
     <div class="channel-tabs">
-      <button class="ch-tab active" onclick="showChannel('listing','la-activators',this)">Activators</button>
-      <button class="ch-tab" onclick="showChannel('listing','la-shampoos',this)">Shampoos</button>
-      <button class="ch-tab" onclick="showChannel('listing','la-conditioners',this)">Conditioners</button>
-      <button class="ch-tab" onclick="showChannel('listing','la-masks',this)">Hair Masks</button>
-      <button class="ch-tab" onclick="showChannel('listing','la-dryshampoo',this)">Dry Shampoo</button>
+      <button class="ch-tab active" onclick="showChannel('listing','la-scar',this)">Scar</button>
+      <button class="ch-tab" onclick="showChannel('listing','la-scarplus',this)">Scar+</button>
+      <button class="ch-tab" onclick="showChannel('listing','la-brite',this)">Brite</button>
+      <button class="ch-tab" onclick="showChannel('listing','la-bruise',this)">Bruise</button>
+      <button class="ch-tab" onclick="showChannel('listing','la-arc',this)">ARC</button>
+      <button class="ch-tab" onclick="showChannel('listing','la-bruiserecoveryduo',this)">Bruise Recovery Duo</button>
+      <button class="ch-tab" onclick="showChannel('listing','la-scarkits',this)">Scar Kits</button>
+      <button class="ch-tab" onclick="showChannel('listing','la-bundles',this)">Bundles</button>
     </div>
 
-    <!-- ── ACTIVATORS ── -->
-    <div class="channel-page active" id="la-activators">
-      <div class="insight-grid" id="la-insights-activators"><div style="color:var(--muted);font-size:12px;padding:12px;">Loading insights…</div></div>
+    <!-- ── SCAR ── -->
+    <div class="channel-page active" id="la-scar">
+      <div class="insight-grid" id="la-insights-scar"><div style="color:var(--muted);font-size:12px;padding:12px;">Loading insights…</div></div>
       <div class="sub-tabs">
-        <button class="sub-tab active" onclick="showSubTab('la-activators','la-evo0001',this)">Reverse (EVO0001)</button>
-        <button class="sub-tab" onclick="showSubTab('la-activators','la-evo0005',this)">Promote (EVO0005)</button>
-        <button class="sub-tab" onclick="showSubTab('la-activators','la-evo0009',this)">Prevent (EVO0009)</button>
+        <button class="sub-tab active" onclick="showSubTab('la-scar','la-scar-0001-stickerless',this)">Scar 30 ml (SVA0001-stickerless)</button>
+        <button class="sub-tab" onclick="showSubTab('la-scar','la-scar-0002',this)">Scar 50 ml (SVA0002)</button>
+        <button class="sub-tab" onclick="showSubTab('la-scar','la-scar-0004',this)">Scar 15 ml (SVA0004)</button>
+        <button class="sub-tab" onclick="showSubTab('la-scar','la-scar-0010',this)">Scar 75 ml (SVA0010)</button>
       </div>
-
-      <!-- EVO0001 Reverse Activator -->
-      <div class="sub-page active" id="la-evo0001">
+      <div class="sub-page active" id="la-scar-0001-stickerless">
 <div class="la-hero">
           <div class="la-hero-left">
-            <div class="la-hero-meta">EVO0001 &nbsp;·&nbsp; ASIN B08BJBM77V &nbsp;·&nbsp; Hair Regrowth Treatments</div>
-            <div class="la-hero-title">Reverse Activator</div>
-            <div class="la-hero-tags"><span id="la-hero-tags-0001"></span><span class="la-hero-tag bsr">BSR #1,220</span></div>
+            <div class="la-hero-meta">SVA0001-stickerless &nbsp;·&nbsp; ASIN B07RCJDFN4 &nbsp;·&nbsp; Scar 30 ml</div>
+            <div class="la-hero-title">Scar 30 ml</div>
+            <div class="la-hero-tags"><span id="la-hero-tags-0001-stickerless"></span><span class="la-hero-tag bsr">BSR —</span></div>
           </div>
           <div class="la-hero-actives">
             <div class="la-hero-actives-lbl">Hero Actives</div>
-            <div class="la-hero-actives-primary" id="la-hero-primary-0001"></div><div class="la-hero-actives-rest" id="la-hero-rest-0001"></div>
+            <div class="la-hero-actives-primary" id="la-hero-primary-0001-stickerless"></div><div class="la-hero-actives-rest" id="la-hero-rest-0001-stickerless"></div>
           </div>
         </div>
         <div class="la-card">
           <div class="la-card-label">Active Title</div>
-          <div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">166 chars used</span></div>
+          <div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
           <div class="la-copy-row">
             <div class="la-num">1</div>
-            <div class="la-copy-block ok">évolis Reverse Activator — Hair Growth Serum for Thinning Hair &amp; Postpartum Shedding — Targets the Stop-Growing Signal in Your Follicle, Clinically Tested (1.7 fl oz)</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">Within 75-char July 2026 limit. "Clinically Tested" and core benefit both present. <span class="kw-coverage-tag hit">thinning hair</span> <span class="kw-coverage-tag hit">hair growth serum</span> <span class="kw-coverage-tag hit">postpartum shedding</span> <span class="kw-coverage-tag hit">activator</span></div>
         </div>
         <div class="la-card">
           <div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div>
-          <div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS & PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill error">140 chars used</span></div>
+          <div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS &amp; PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
           <div class="la-copy-row">
             <div class="la-num">2</div>
-            <div class="la-copy-block ok">Clinically tested formula that reverses thinning and supports visible hair growth using FGF5-blocking technology. Clean, scalp-safe formula.</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">Concise and benefit-led. Consider adding "postpartum" for high-intent buyer. </div>
         </div>
         <div class="la-card">
           <div class="la-card-label">Active Bullet Points</div>
           <div class="la-card-sublabel">BULLET 1</div>
           <div class="la-copy-row">
             <div class="la-num">1</div>
-            <div class="la-copy-block ok"><strong>CLINICALLY TESTED HAIR GROWTH SERUM FOR THINNING HAIR:</strong> In 3 independent studies, 95% of users reported visibly thicker hair within 90 days and 97% noticed significantly reduced shedding by 120 days. Reverse Activator targets thinning hair, postpartum hair loss, and age-related shedding by addressing the root biological cause — not just the symptom. Developed by hair biologists.</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">Clinical stats and target audience both present. FGF5 mechanism clearly introduced. <span class="kw-coverage-tag hit">thinning hair</span> <span class="kw-coverage-tag hit">postpartum hair loss</span> <span class="kw-coverage-tag hit">95% in 90 days</span></div>
         </div>
         <div class="la-card">
           <div class="la-card-label"></div>
           <div class="la-card-sublabel">BULLET 2</div>
           <div class="la-copy-row">
             <div class="la-num">2</div>
-            <div class="la-copy-block ok"><strong>THE SCIENCE BEHIND THE RESULTS — YOUR HAIR HAS A "STOP GROWING" SIGNAL:</strong> Every hair follicle receives a biological signal — driven by a protein called FGF5 — that tells it to stop growing and begin shedding. Most hair loss products ignore this. Reverse Activator's proprietary blend of Sanguisorba Officinalis, Swertia Chirata, and Rosa Multiflora (Japanese Tea Rose) blocks that signal — keeping each follicle in the active growth phase longer.</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">Science story told in plain language. Differentiates from all competitors. <span class="kw-coverage-tag hit">FGF5 blocker</span> <span class="kw-coverage-tag hit">Sanguisorba Officinalis</span> <span class="kw-coverage-tag hit">Rosa Multiflora</span></div>
         </div>
         <div class="la-card">
           <div class="la-card-label"></div>
           <div class="la-card-sublabel">BULLET 3</div>
           <div class="la-copy-row">
             <div class="la-num">3</div>
-            <div class="la-copy-block ok"><strong>KERATIN + WHEAT PROTEIN SCALP SERUM FOR HAIR GROWTH:</strong> Formulated with keratin, hydrolyzed wheat protein, and a full antioxidant complex, this lightweight, non-greasy serum strengthens each strand from root to tip while the growth-phase-extending botanicals work at the follicle level. Apply twice daily with the precision self-dosing pipette — one bottle lasts 6–8 weeks.</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">Keratin + wheat protein keywords present. <span class="kw-coverage-tag hit">keratin hair treatment</span> <span class="kw-coverage-tag hit">scalp serum</span> <span class="kw-coverage-tag hit">hair serum</span></div>
         </div>
         <div class="la-card">
           <div class="la-card-label"></div>
           <div class="la-card-sublabel">BULLET 4</div>
           <div class="la-copy-row">
             <div class="la-num">4</div>
-            <div class="la-copy-block ok"><strong>HAIR GROWTH ACCELERATOR FOR WOMEN &amp; MEN — ALL HAIR TYPES:</strong> Reverse Activator works across all hair types — fine, thick, color-treated, natural. Safe for daily use with no known dependency or rebound shedding (unlike Minoxidil). Works as a hair loss serum, scalp oil, and hair thickening products for women dealing with hormonal or age-related thinning. Start seeing results in 4–8 weeks; full clinical results at 90–120 days.</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">"Hair growth accelerator" in copy — 51.3% ABA. Minoxidil differentiation explicit. <span class="kw-coverage-tag hit">hair growth accelerator</span> <span class="kw-coverage-tag hit">hair thickening products for women</span> <span class="kw-coverage-tag hit">scalp oil</span></div>
         </div>
         <div class="la-card">
           <div class="la-card-label"></div>
           <div class="la-card-sublabel">BULLET 5</div>
           <div class="la-copy-row">
             <div class="la-num">5</div>
-            <div class="la-copy-block warn"><strong>DEVELOPED BY HAIR BIOLOGISTS — CLEAN, PROFESSIONAL FORMULA:</strong> Infused with rosemary oil for hair growth and free from parabens, sulfates, silicones, and phthalates. Safe for color-treated hair. 100% cruelty-free. No minoxidil. No hormones. <strong>Note: the precision pipette requires a firm first press to activate — this ensures exact dosing every use.</strong> Winner: AskMen Grooming Awards "Best Natural Alternative for Hair Loss."</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">⚠ Pipette opening note already present — apply to Promote and Prevent as well. <span class="kw-coverage-tag hit">rosemary oil for hair growth</span> <span class="kw-coverage-tag hit">paraben-free</span> <span class="kw-coverage-tag hit">cruelty-free</span></div>
         </div>
         <div class="la-card">
           <div class="la-card-label">Active Product Description</div>
-          
           <div class="la-copy-row">
             <div class="la-num">6</div>
-            <div class="la-copy-block ok"><strong>Bring Back Your Best Hair — Hair Growth Serum That Targets the Root Cause</strong><br>
-évolis Reverse Activator is a clinically tested hair growth serum and thinning hair treatment built around one insight: your hair has a biological stop-signal. A protein called FGF5 tells each follicle to stop growing and begin shedding — and most hair loss products never address it. Reverse Activator's proprietary botanical blend — Sanguisorba Officinalis, Rosa Multiflora (Japanese Tea Rose), and Swertia Chirata — blocks that stop-signal, extending the anagen (growth) phase so each strand grows longer before it falls.<br><br>
-<strong>Clinically Tested Results</strong><br>
-In 3 independent studies, 95% of users noticed increased hair thickness within 90 days. 97% experienced reduced shedding by 120 days. Suitable for all hair types. Works on thinning hair, postpartum hair loss, and age-related shedding.<br><br>
-<strong>Weightless Formula</strong><br>
-Non-greasy, fast-absorbing scalp serum for hair growth. Strengthened with keratin, hydrolyzed wheat protein, and rosemary oil for hair growth. Dries instantly — no residue. One bottle = 6–8 weeks of twice-daily use.<br><br>
-Paraben-free · Sulfate-free · Silicone-free · Phthalate-free · Color-safe · Cruelty-free</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">Full science narrative with clinical results. Strong for A+ content translation. </div>
         </div>
         <div class="la-card">
           <div class="la-card-label">Backend Keywords — Spaces Only</div>
-          <div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">130 chars used</span></div>
-          <div class="la-backend-block">postpartum hair loss hair growth accelerator thinning hair treatment hair loss serum scalp serum for hair growth rosemary oil for hair growth dry scalp treatment hair follicle treatment oil for hair growth hair treatment oils</div>
+          <div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-backend-block">Loading…</div>
           <button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button>
-          <div class="la-note">10 terms, ~130 bytes. 120 bytes remaining — add: scalp oil, hair follicle treatment, hair growth oil spray. <span class="kw-coverage-tag hit">postpartum hair loss</span> <span class="kw-coverage-tag hit">hair growth accelerator</span> <span class="kw-coverage-tag hit">scalp serum for hair growth</span> <span class="kw-coverage-tag hit">rosemary oil</span></div>
         </div>
       </div>
-
-      <!-- EVO0005 Promote Activator -->
-      <div class="sub-page" id="la-evo0005">
+      <div class="sub-page" id="la-scar-0002">
 <div class="la-hero">
           <div class="la-hero-left">
-            <div class="la-hero-meta">EVO0005 &nbsp;·&nbsp; ASIN B07SG6S4VV &nbsp;·&nbsp; Hair Regrowth Treatments</div>
-            <div class="la-hero-title">Promote Activator</div>
-            <div class="la-hero-tags"><span id="la-hero-tags-0005"></span><span class="la-hero-tag bsr">BSR #1,220</span></div>
+            <div class="la-hero-meta">SVA0002 &nbsp;·&nbsp; ASIN B07RCYZWNH &nbsp;·&nbsp; Scar 50 ml</div>
+            <div class="la-hero-title">Scar 50 ml</div>
+            <div class="la-hero-tags"><span id="la-hero-tags-0002"></span><span class="la-hero-tag bsr">BSR —</span></div>
+          </div>
+          <div class="la-hero-actives">
+            <div class="la-hero-actives-lbl">Hero Actives</div>
+            <div class="la-hero-actives-primary" id="la-hero-primary-0002"></div><div class="la-hero-actives-rest" id="la-hero-rest-0002"></div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Title</div>
+          <div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div>
+          <div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS &amp; PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Bullet Points</div>
+          <div class="la-card-sublabel">BULLET 1</div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 2</div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 3</div>
+          <div class="la-copy-row">
+            <div class="la-num">3</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 4</div>
+          <div class="la-copy-row">
+            <div class="la-num">4</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 5</div>
+          <div class="la-copy-row">
+            <div class="la-num">5</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Product Description</div>
+          <div class="la-copy-row">
+            <div class="la-num">6</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Backend Keywords — Spaces Only</div>
+          <div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-backend-block">Loading…</div>
+          <button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button>
+        </div>
+      </div>
+      <div class="sub-page" id="la-scar-0004">
+<div class="la-hero">
+          <div class="la-hero-left">
+            <div class="la-hero-meta">SVA0004 &nbsp;·&nbsp; ASIN B09FQJMLPZ &nbsp;·&nbsp; Scar 15 ml</div>
+            <div class="la-hero-title">Scar 15 ml</div>
+            <div class="la-hero-tags"><span id="la-hero-tags-0004"></span><span class="la-hero-tag bsr">BSR —</span></div>
+          </div>
+          <div class="la-hero-actives">
+            <div class="la-hero-actives-lbl">Hero Actives</div>
+            <div class="la-hero-actives-primary" id="la-hero-primary-0004"></div><div class="la-hero-actives-rest" id="la-hero-rest-0004"></div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Title</div>
+          <div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div>
+          <div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS &amp; PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Bullet Points</div>
+          <div class="la-card-sublabel">BULLET 1</div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 2</div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 3</div>
+          <div class="la-copy-row">
+            <div class="la-num">3</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 4</div>
+          <div class="la-copy-row">
+            <div class="la-num">4</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 5</div>
+          <div class="la-copy-row">
+            <div class="la-num">5</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Product Description</div>
+          <div class="la-copy-row">
+            <div class="la-num">6</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Backend Keywords — Spaces Only</div>
+          <div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-backend-block">Loading…</div>
+          <button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button>
+        </div>
+      </div>
+      <div class="sub-page" id="la-scar-0010">
+<div class="la-hero">
+          <div class="la-hero-left">
+            <div class="la-hero-meta">SVA0010 &nbsp;·&nbsp; ASIN B0DXVVVVPR &nbsp;·&nbsp; Scar 75 ml</div>
+            <div class="la-hero-title">Scar 75 ml</div>
+            <div class="la-hero-tags"><span id="la-hero-tags-0010"></span><span class="la-hero-tag bsr">BSR —</span></div>
+          </div>
+          <div class="la-hero-actives">
+            <div class="la-hero-actives-lbl">Hero Actives</div>
+            <div class="la-hero-actives-primary" id="la-hero-primary-0010"></div><div class="la-hero-actives-rest" id="la-hero-rest-0010"></div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Title</div>
+          <div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div>
+          <div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS &amp; PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Bullet Points</div>
+          <div class="la-card-sublabel">BULLET 1</div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 2</div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 3</div>
+          <div class="la-copy-row">
+            <div class="la-num">3</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 4</div>
+          <div class="la-copy-row">
+            <div class="la-num">4</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 5</div>
+          <div class="la-copy-row">
+            <div class="la-num">5</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Product Description</div>
+          <div class="la-copy-row">
+            <div class="la-num">6</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Backend Keywords — Spaces Only</div>
+          <div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-backend-block">Loading…</div>
+          <button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button>
+        </div>
+      </div>
+    </div>
+    <!-- /la-scar -->
+
+    <!-- ── SCAR+ ── -->
+    <div class="channel-page" id="la-scarplus">
+      <div class="insight-grid" id="la-insights-scarplus"><div style="color:var(--muted);font-size:12px;padding:12px;">Loading insights…</div></div>
+      <div class="sub-tabs">
+        <button class="sub-tab active" onclick="showSubTab('la-scarplus','la-scarplus-0006',this)">Scar+ 30 ml (SVA0006)</button>
+        <button class="sub-tab" onclick="showSubTab('la-scarplus','la-scarplus-0007',this)">Scar+ 15 ml (SVA0007)</button>
+      </div>
+      <div class="sub-page active" id="la-scarplus-0006">
+<div class="la-hero">
+          <div class="la-hero-left">
+            <div class="la-hero-meta">SVA0006 &nbsp;·&nbsp; ASIN B0BRNWSQ8H &nbsp;·&nbsp; Scar+ 30 ml</div>
+            <div class="la-hero-title">Scar+ 30 ml</div>
+            <div class="la-hero-tags"><span id="la-hero-tags-0006"></span><span class="la-hero-tag bsr">BSR —</span></div>
+          </div>
+          <div class="la-hero-actives">
+            <div class="la-hero-actives-lbl">Hero Actives</div>
+            <div class="la-hero-actives-primary" id="la-hero-primary-0006"></div><div class="la-hero-actives-rest" id="la-hero-rest-0006"></div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Title</div>
+          <div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div>
+          <div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS &amp; PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Bullet Points</div>
+          <div class="la-card-sublabel">BULLET 1</div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 2</div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 3</div>
+          <div class="la-copy-row">
+            <div class="la-num">3</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 4</div>
+          <div class="la-copy-row">
+            <div class="la-num">4</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 5</div>
+          <div class="la-copy-row">
+            <div class="la-num">5</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Product Description</div>
+          <div class="la-copy-row">
+            <div class="la-num">6</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Backend Keywords — Spaces Only</div>
+          <div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-backend-block">Loading…</div>
+          <button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button>
+        </div>
+      </div>
+      <div class="sub-page" id="la-scarplus-0007">
+<div class="la-hero">
+          <div class="la-hero-left">
+            <div class="la-hero-meta">SVA0007 &nbsp;·&nbsp; ASIN B0BRNVTD7T &nbsp;·&nbsp; Scar+ 15 ml</div>
+            <div class="la-hero-title">Scar+ 15 ml</div>
+            <div class="la-hero-tags"><span id="la-hero-tags-0007"></span><span class="la-hero-tag bsr">BSR —</span></div>
+          </div>
+          <div class="la-hero-actives">
+            <div class="la-hero-actives-lbl">Hero Actives</div>
+            <div class="la-hero-actives-primary" id="la-hero-primary-0007"></div><div class="la-hero-actives-rest" id="la-hero-rest-0007"></div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Title</div>
+          <div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div>
+          <div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS &amp; PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Bullet Points</div>
+          <div class="la-card-sublabel">BULLET 1</div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 2</div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 3</div>
+          <div class="la-copy-row">
+            <div class="la-num">3</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 4</div>
+          <div class="la-copy-row">
+            <div class="la-num">4</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 5</div>
+          <div class="la-copy-row">
+            <div class="la-num">5</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Product Description</div>
+          <div class="la-copy-row">
+            <div class="la-num">6</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Backend Keywords — Spaces Only</div>
+          <div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-backend-block">Loading…</div>
+          <button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button>
+        </div>
+      </div>
+    </div>
+    <!-- /la-scarplus -->
+
+    <!-- ── BRITE ── -->
+    <div class="channel-page" id="la-brite">
+      <div class="insight-grid" id="la-insights-brite"><div style="color:var(--muted);font-size:12px;padding:12px;">Loading insights…</div></div>
+      <div class="sub-tabs">
+        <button class="sub-tab active" onclick="showSubTab('la-brite','la-brite-0003-stickerless',this)">Brite (SVA0003-stickerless)</button>
+        <button class="sub-tab" onclick="showSubTab('la-brite','la-brite-0003.2pk',this)">Brite 2-pack (SVA0003.2pk)</button>
+      </div>
+      <div class="sub-page active" id="la-brite-0003-stickerless">
+<div class="la-hero">
+          <div class="la-hero-left">
+            <div class="la-hero-meta">SVA0003-stickerless &nbsp;·&nbsp; ASIN B0861CGWLF &nbsp;·&nbsp; Brite</div>
+            <div class="la-hero-title">Brite</div>
+            <div class="la-hero-tags"><span id="la-hero-tags-0003-stickerless"></span><span class="la-hero-tag bsr">BSR —</span></div>
+          </div>
+          <div class="la-hero-actives">
+            <div class="la-hero-actives-lbl">Hero Actives</div>
+            <div class="la-hero-actives-primary" id="la-hero-primary-0003-stickerless"></div><div class="la-hero-actives-rest" id="la-hero-rest-0003-stickerless"></div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Title</div>
+          <div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div>
+          <div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS &amp; PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Bullet Points</div>
+          <div class="la-card-sublabel">BULLET 1</div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 2</div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 3</div>
+          <div class="la-copy-row">
+            <div class="la-num">3</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 4</div>
+          <div class="la-copy-row">
+            <div class="la-num">4</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 5</div>
+          <div class="la-copy-row">
+            <div class="la-num">5</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Product Description</div>
+          <div class="la-copy-row">
+            <div class="la-num">6</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Backend Keywords — Spaces Only</div>
+          <div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-backend-block">Loading…</div>
+          <button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button>
+        </div>
+      </div>
+      <div class="sub-page" id="la-brite-0003.2pk">
+<div class="la-hero">
+          <div class="la-hero-left">
+            <div class="la-hero-meta">SVA0003.2pk &nbsp;·&nbsp; ASIN B0D1W1WSFH &nbsp;·&nbsp; Brite 2-pack</div>
+            <div class="la-hero-title">Brite 2-pack</div>
+            <div class="la-hero-tags"><span id="la-hero-tags-0003.2pk"></span><span class="la-hero-tag bsr">BSR —</span></div>
+          </div>
+          <div class="la-hero-actives">
+            <div class="la-hero-actives-lbl">Hero Actives</div>
+            <div class="la-hero-actives-primary" id="la-hero-primary-0003.2pk"></div><div class="la-hero-actives-rest" id="la-hero-rest-0003.2pk"></div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Title</div>
+          <div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div>
+          <div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS &amp; PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Bullet Points</div>
+          <div class="la-card-sublabel">BULLET 1</div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 2</div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 3</div>
+          <div class="la-copy-row">
+            <div class="la-num">3</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 4</div>
+          <div class="la-copy-row">
+            <div class="la-num">4</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 5</div>
+          <div class="la-copy-row">
+            <div class="la-num">5</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Product Description</div>
+          <div class="la-copy-row">
+            <div class="la-num">6</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Backend Keywords — Spaces Only</div>
+          <div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-backend-block">Loading…</div>
+          <button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button>
+        </div>
+      </div>
+    </div>
+    <!-- /la-brite -->
+
+    <!-- ── BRUISE ── -->
+    <div class="channel-page" id="la-bruise">
+      <div class="insight-grid" id="la-insights-bruise"><div style="color:var(--muted);font-size:12px;padding:12px;">Loading insights…</div></div>
+      <div class="sub-tabs">
+        <button class="sub-tab active" onclick="showSubTab('la-bruise','la-bruise-0005',this)">Bruise (SVA0005)</button>
+      </div>
+      <div class="sub-page active" id="la-bruise-0005">
+<div class="la-hero">
+          <div class="la-hero-left">
+            <div class="la-hero-meta">SVA0005 &nbsp;·&nbsp; ASIN B0B23BB6CB &nbsp;·&nbsp; Bruise</div>
+            <div class="la-hero-title">Bruise</div>
+            <div class="la-hero-tags"><span id="la-hero-tags-0005"></span><span class="la-hero-tag bsr">BSR —</span></div>
           </div>
           <div class="la-hero-actives">
             <div class="la-hero-actives-lbl">Hero Actives</div>
@@ -3825,96 +4418,354 @@ Paraben-free · Sulfate-free · Silicone-free · Phthalate-free · Color-safe ·
         </div>
         <div class="la-card">
           <div class="la-card-label">Active Title</div>
-          <div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">152 chars used</span></div>
+          <div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
           <div class="la-copy-row">
             <div class="la-num">1</div>
-            <div class="la-copy-block ok">évolis Promote Activator — Hair Growth Serum for Longer Stronger Hair — Scalp Serum That Extends Your Hair's Growth Phase, Clinically Tested (1.7 fl oz)</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">Good. "Longer Stronger Hair" and "Extends Growth Phase" differentiate from Reverse. <span class="kw-coverage-tag hit">hair growth serum</span> <span class="kw-coverage-tag hit">scalp serum</span> <span class="kw-coverage-tag hit">activator</span></div>
         </div>
         <div class="la-card">
           <div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div>
-          <div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS & PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill error">141 chars used</span></div>
+          <div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS &amp; PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
           <div class="la-copy-row">
             <div class="la-num">2</div>
-            <div class="la-copy-block warn">Clinically tested scalp serum for longer, stronger hair. Extends the natural growth phase with FGF5-blocking botanicals and Baobab hydration.</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">⚠ Recommend leading with the 95%/90-day clinical stat for above-the-fold conversion lift. </div>
         </div>
         <div class="la-card">
           <div class="la-card-label">Active Bullet Points</div>
           <div class="la-card-sublabel">BULLET 1</div>
           <div class="la-copy-row">
             <div class="la-num">1</div>
-            <div class="la-copy-block ok"><strong>CLINICALLY TESTED: 95% OF USERS REPORT THICKER HAIR IN 90 DAYS —</strong> In 3 independent clinical studies, 95% of users reported visibly thicker hair within 90 days and 97% noticed significantly reduced hair fall by 120 days. Promote Activator is a hair growth serum for longer, stronger hair — developed by hair biologists to address the biological root cause of shedding and thinning, not just the surface symptom.</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">Strong — clinical data in Bullet 1. FGF5 mechanism implied. </div>
         </div>
         <div class="la-card">
           <div class="la-card-label"></div>
           <div class="la-card-sublabel">BULLET 2</div>
           <div class="la-copy-row">
             <div class="la-num">2</div>
-            <div class="la-copy-block ok"><strong>THE SCIENCE THAT MAKES PROMOTE DIFFERENT — YOUR HAIR'S GROWTH PHASE CAN BE EXTENDED:</strong> Hair grows, then stops, then sheds — that cycle is controlled by a protein signal in your follicle. Promote's three clinically studied botanicals (Sanguisorba Officinalis, Swertia Chirata, Rosa Multiflora) block that stop-signal — keeping follicles active longer so hair grows further before it falls. Enriched with rosemary oil and Baobab for antioxidant protection and lightweight hydration.</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">FGF5 stop-signal mechanism explained. Rosemary oil + Baobab present. </div>
         </div>
         <div class="la-card">
           <div class="la-card-label"></div>
           <div class="la-card-sublabel">BULLET 3</div>
           <div class="la-copy-row">
             <div class="la-num">3</div>
-            <div class="la-copy-block ok"><strong>HAIR SERUM FOR HAIR GROWTH WITH ROSEMARY OIL &amp; BAOBAB:</strong> Beyond the growth-cycle botanicals, Promote is enriched with rosemary oil for hair growth and Baobab (nature's moisture miracle) for lightweight nourishment and deep hydration. This hydrating serum works on all hair types. Self-dosing pipette for precise scalp application. One bottle = 6–8 weeks twice daily.</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">"Rosemary oil for hair growth" present. "Hair treatment for dry damaged hair" covered. </div>
         </div>
         <div class="la-card">
           <div class="la-card-label"></div>
           <div class="la-card-sublabel">BULLET 4</div>
           <div class="la-copy-row">
             <div class="la-num">4</div>
-            <div class="la-copy-block ok"><strong>HAIR GROWTH ACCELERATOR FOR WOMEN &amp; MEN — ALL HAIR TYPES:</strong> Promote Activator works as a hair growth accelerator for fine, thin, color-treated, or natural hair. Addresses hair loss treatments for women dealing with breakage, postpartum shedding, or hormonal thinning. No minoxidil, no hormones, no harsh chemicals. Results begin in 4–6 weeks. Full clinical results at 90–120 days of consistent twice-daily use.</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">"Hair growth accelerator" and "Hair loss treatments for women" both present. </div>
         </div>
         <div class="la-card">
           <div class="la-card-label"></div>
           <div class="la-card-sublabel">BULLET 5</div>
           <div class="la-copy-row">
             <div class="la-num">5</div>
-            <div class="la-copy-block warn"><strong>DEVELOPED BY HAIR BIOLOGISTS — CLEAN FORMULA, STYLIST RECOMMENDED:</strong> Free from parabens, sulfates, silicones, and phthalates. Safe for color-treated hair. 100% cruelty-free. Recommended by professional stylists and trichologists. <strong>Note: the precision pipette requires a firm first press to activate — this ensures exact dosing every use.</strong> Winner: AskMen Grooming Awards "Best Natural Alternative for Hair Loss."</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">⚠ Pipette note added. "Scalp serum for hair growth" and award both present. </div>
         </div>
         <div class="la-card">
           <div class="la-card-label">Active Product Description</div>
-          
           <div class="la-copy-row">
             <div class="la-num">6</div>
-            <div class="la-copy-block ok"><strong>For Longer, Stronger Hair — Hair Growth Serum That Extends Your Growth Phase</strong><br>
-EVOLIS Promote Activator is a clinically tested hair growth serum developed by hair biologists around one key discovery: your hair's growth cycle ends because of a biological stop-signal, not because the follicle is dead. A protein called FGF5 triggers each follicle to stop growing and shed prematurely. Promote's proprietary botanical blend — Sanguisorba Officinalis, Swertia Chirata, and Rosa Multiflora — blocks that signal, extending the growth phase so hair grows longer before it falls. Baobab adds deep hydration and antioxidant protection at every strand.<br><br>
-<strong>Clinically Tested Results</strong><br>
-In 3 independent studies, 95% of users noticed increased hair thickness within 90 days. 97% noticed reduced hair fall by 120 days. Suitable for all hair types including color-treated, fine, and thin hair.<br><br>
-Paraben-free · Sulfate-free · Silicone-free · Phthalate-free · Color-safe · Cruelty-free</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">Science narrative complete. Clinical results present. </div>
         </div>
         <div class="la-card">
           <div class="la-card-label">Backend Keywords — Spaces Only</div>
-          <div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">155 chars used</span></div>
-          <div class="la-backend-block">hair growth accelerator hair loss treatments for women hair growth oil for women hair volumizer for fine hair thinning hair treatment scalp serum for hair growth hair treatment for dry damaged hair rosemary oil for hair hair serum for hair growth hair growth treatment</div>
+          <div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-backend-block">Loading…</div>
           <button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button>
-          <div class="la-note">10 terms, ~155 bytes. ~95 bytes remaining — add: scalp oil, hair follicle treatment, baobab hair serum. </div>
         </div>
       </div>
+    </div>
+    <!-- /la-bruise -->
 
-      <!-- EVO0009 Prevent Activator -->
-      <div class="sub-page" id="la-evo0009">
+    <!-- ── ARC ── -->
+    <div class="channel-page" id="la-arc">
+      <div class="insight-grid" id="la-insights-arc"><div style="color:var(--muted);font-size:12px;padding:12px;">Loading insights…</div></div>
+      <div class="sub-tabs">
+        <button class="sub-tab active" onclick="showSubTab('la-arc','la-arc-0011',this)">Advanced Recovery Cream (SVA0011)</button>
+      </div>
+      <div class="sub-page active" id="la-arc-0011">
 <div class="la-hero">
           <div class="la-hero-left">
-            <div class="la-hero-meta">EVO0009 &nbsp;·&nbsp; ASIN B07SJ8K9HS &nbsp;·&nbsp; Hair Regrowth Treatments</div>
-            <div class="la-hero-title">Prevent Activator</div>
-            <div class="la-hero-tags"><span id="la-hero-tags-0009"></span><span class="la-hero-tag bsr">BSR #2,496</span></div>
+            <div class="la-hero-meta">SVA0011 &nbsp;·&nbsp; ASIN B0F45BTSB7 &nbsp;·&nbsp; Advanced Recovery Cream</div>
+            <div class="la-hero-title">Advanced Recovery Cream</div>
+            <div class="la-hero-tags"><span id="la-hero-tags-0011"></span><span class="la-hero-tag bsr">BSR —</span></div>
+          </div>
+          <div class="la-hero-actives">
+            <div class="la-hero-actives-lbl">Hero Actives</div>
+            <div class="la-hero-actives-primary" id="la-hero-primary-0011"></div><div class="la-hero-actives-rest" id="la-hero-rest-0011"></div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Title</div>
+          <div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div>
+          <div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS &amp; PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Bullet Points</div>
+          <div class="la-card-sublabel">BULLET 1</div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 2</div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 3</div>
+          <div class="la-copy-row">
+            <div class="la-num">3</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 4</div>
+          <div class="la-copy-row">
+            <div class="la-num">4</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 5</div>
+          <div class="la-copy-row">
+            <div class="la-num">5</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Product Description</div>
+          <div class="la-copy-row">
+            <div class="la-num">6</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Backend Keywords — Spaces Only</div>
+          <div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-backend-block">Loading…</div>
+          <button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button>
+        </div>
+      </div>
+    </div>
+    <!-- /la-arc -->
+
+    <!-- ── BRUISE RECOVERY DUO ── -->
+    <div class="channel-page" id="la-bruiserecoveryduo">
+      <div class="insight-grid" id="la-insights-bruiserecoveryduo"><div style="color:var(--muted);font-size:12px;padding:12px;">Loading insights…</div></div>
+      <div class="sub-tabs">
+        <button class="sub-tab active" onclick="showSubTab('la-bruiserecoveryduo','la-bruiserecoveryduo-0012',this)">Bruise Recovery Duo (SVA0012)</button>
+      </div>
+      <div class="sub-page active" id="la-bruiserecoveryduo-0012">
+<div class="la-hero">
+          <div class="la-hero-left">
+            <div class="la-hero-meta">SVA0012 &nbsp;·&nbsp; ASIN B0FRVVFPM5 &nbsp;·&nbsp; Bruise Recovery Duo</div>
+            <div class="la-hero-title">Bruise Recovery Duo</div>
+            <div class="la-hero-tags"><span id="la-hero-tags-0012"></span><span class="la-hero-tag bsr">BSR —</span></div>
+          </div>
+          <div class="la-hero-actives">
+            <div class="la-hero-actives-lbl">Hero Actives</div>
+            <div class="la-hero-actives-primary" id="la-hero-primary-0012"></div><div class="la-hero-actives-rest" id="la-hero-rest-0012"></div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Title</div>
+          <div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div>
+          <div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS &amp; PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Bullet Points</div>
+          <div class="la-card-sublabel">BULLET 1</div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 2</div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 3</div>
+          <div class="la-copy-row">
+            <div class="la-num">3</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 4</div>
+          <div class="la-copy-row">
+            <div class="la-num">4</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 5</div>
+          <div class="la-copy-row">
+            <div class="la-num">5</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Product Description</div>
+          <div class="la-copy-row">
+            <div class="la-num">6</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Backend Keywords — Spaces Only</div>
+          <div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-backend-block">Loading…</div>
+          <button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button>
+        </div>
+      </div>
+    </div>
+    <!-- /la-bruiserecoveryduo -->
+
+    <!-- ── SCAR KITS ── -->
+    <div class="channel-page" id="la-scarkits">
+      <div class="insight-grid" id="la-insights-scarkits"><div style="color:var(--muted);font-size:12px;padding:12px;">Loading insights…</div></div>
+      <div class="sub-tabs">
+        <button class="sub-tab active" onclick="showSubTab('la-scarkits','la-scarkits-0008',this)">24 HR Scar Kit 30 ml (SVA0008)</button>
+        <button class="sub-tab" onclick="showSubTab('la-scarkits','la-scarkits-0009',this)">24 HR Scar Kit 15 ml (SVA0009)</button>
+      </div>
+      <div class="sub-page active" id="la-scarkits-0008">
+<div class="la-hero">
+          <div class="la-hero-left">
+            <div class="la-hero-meta">SVA0008 &nbsp;·&nbsp; ASIN B0DHYLCML2 &nbsp;·&nbsp; 24 HR Scar Kit 30 ml</div>
+            <div class="la-hero-title">24 HR Scar Kit 30 ml</div>
+            <div class="la-hero-tags"><span id="la-hero-tags-0008"></span><span class="la-hero-tag bsr">BSR —</span></div>
+          </div>
+          <div class="la-hero-actives">
+            <div class="la-hero-actives-lbl">Hero Actives</div>
+            <div class="la-hero-actives-primary" id="la-hero-primary-0008"></div><div class="la-hero-actives-rest" id="la-hero-rest-0008"></div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Title</div>
+          <div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div>
+          <div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS &amp; PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Bullet Points</div>
+          <div class="la-card-sublabel">BULLET 1</div>
+          <div class="la-copy-row">
+            <div class="la-num">1</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 2</div>
+          <div class="la-copy-row">
+            <div class="la-num">2</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 3</div>
+          <div class="la-copy-row">
+            <div class="la-num">3</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 4</div>
+          <div class="la-copy-row">
+            <div class="la-num">4</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label"></div>
+          <div class="la-card-sublabel">BULLET 5</div>
+          <div class="la-copy-row">
+            <div class="la-num">5</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Active Product Description</div>
+          <div class="la-copy-row">
+            <div class="la-num">6</div>
+            <div class="la-copy-block ok">Loading…</div>
+          </div>
+        </div>
+        <div class="la-card">
+          <div class="la-card-label">Backend Keywords — Spaces Only</div>
+          <div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-backend-block">Loading…</div>
+          <button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button>
+        </div>
+      </div>
+      <div class="sub-page" id="la-scarkits-0009">
+<div class="la-hero">
+          <div class="la-hero-left">
+            <div class="la-hero-meta">SVA0009 &nbsp;·&nbsp; ASIN B0DHYJLHW1 &nbsp;·&nbsp; 24 HR Scar Kit 15 ml</div>
+            <div class="la-hero-title">24 HR Scar Kit 15 ml</div>
+            <div class="la-hero-tags"><span id="la-hero-tags-0009"></span><span class="la-hero-tag bsr">BSR —</span></div>
           </div>
           <div class="la-hero-actives">
             <div class="la-hero-actives-lbl">Hero Actives</div>
@@ -3923,234 +4774,86 @@ Paraben-free · Sulfate-free · Silicone-free · Phthalate-free · Color-safe ·
         </div>
         <div class="la-card">
           <div class="la-card-label">Active Title</div>
-          <div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill warn">171 chars used</span></div>
+          <div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
           <div class="la-copy-row">
             <div class="la-num">1</div>
-            <div class="la-copy-block ok">évolis Prevent Activator — Hair Growth Serum &amp; Dry Scalp Treatment with Rosemary Oil — Extends Your Hair's Growth Phase, Clinically Tested for Sensitive Scalps (1.7 fl oz)</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">"Dry Scalp Treatment" and "Rosemary Oil" trending. "Clinically Tested for Sensitive Scalps" differentiates from Reverse and Promote. <span class="kw-coverage-tag hit">dry scalp treatment</span> <span class="kw-coverage-tag hit">rosemary oil for hair growth</span> <span class="kw-coverage-tag hit">hair growth serum</span></div>
         </div>
         <div class="la-card">
           <div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div>
-          <div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS & PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill error">153 chars used</span></div>
+          <div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS &amp; PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
           <div class="la-copy-row">
             <div class="la-num">2</div>
-            <div class="la-copy-block warn">Award-winning scalp serum that protects against premature hair loss. Clinically tested for sensitive scalps with rosemary oil, green tea, and mangosteen.</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">⚠ Add "Best Natural Alternative for Hair Loss" award name explicitly — establishes trust faster. </div>
         </div>
         <div class="la-card">
           <div class="la-card-label">Active Bullet Points</div>
           <div class="la-card-sublabel">BULLET 1</div>
           <div class="la-copy-row">
             <div class="la-num">1</div>
-            <div class="la-copy-block ok"><strong>AWARD-WINNING DRY SCALP TREATMENT &amp; HAIR GROWTH SERUM:</strong> AskMen Grooming Awards "Best Natural Alternative for Hair Loss." In 3 independent clinical studies, 95% of users reported increased hair thickness within 90 days and 97% noticed reduced shedding by 120 days. Prevent Activator calms sensitive and irritated scalps while protecting against premature thinning — the ideal hair growth serum for those who want to preserve what they have before loss accelerates.</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">Award and clinical data both in Bullet 1. "Preserve what you have" — differentiated positioning. </div>
         </div>
         <div class="la-card">
           <div class="la-card-label"></div>
           <div class="la-card-sublabel">BULLET 2</div>
           <div class="la-copy-row">
             <div class="la-num">2</div>
-            <div class="la-copy-block ok"><strong>THE SCIENCE OF KEEPING THE HAIR YOU HAVE — GROWTH CYCLE PROTECTION MEETS ROSEMARY OIL:</strong> Your hair follicle receives a biological stop-signal that ends each strand's growth phase. Prevent's proprietary botanical blend (Sanguisorba Officinalis, Swertia Chirata, Rosa Multiflora) blocks that signal — extending active growth before shedding begins. Combined with rosemary oil, green tea extract, and mangosteen for antioxidant protection and a calm, healthy scalp environment.</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">FGF5 mechanism + rosemary oil + green tea + mangosteen all present. </div>
         </div>
         <div class="la-card">
           <div class="la-card-label"></div>
           <div class="la-card-sublabel">BULLET 3</div>
           <div class="la-copy-row">
             <div class="la-num">3</div>
-            <div class="la-copy-block ok"><strong>HAIR GROWTH ACCELERATOR — NATURAL ALTERNATIVE TO MINOXIDIL:</strong> Prevent Activator targets the biology of hair loss without drugs, hormones, or harsh chemicals. No rebound shedding. No scalp irritation from chemicals. Works as a hair thinning treatment and scalp oil to extend the growth phase and reduce premature shedding. A science-backed natural alternative for those who prefer to manage hair health proactively — before significant loss occurs.</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">"Natural alternative to Minoxidil" — high search intent. "Hair thinning treatment" covered. </div>
         </div>
         <div class="la-card">
           <div class="la-card-label"></div>
           <div class="la-card-sublabel">BULLET 4</div>
           <div class="la-copy-row">
             <div class="la-num">4</div>
-            <div class="la-copy-block ok"><strong>HAIR LOSS TREATMENTS FOR WOMEN &amp; MEN — SENSITIVE SCALP FORMULA:</strong> Developed by hair biologists specifically for sensitive, dry, and irritated scalps. Free from parabens, sulfates, silicones, and phthalates. Safe for color-treated hair. 100% cruelty-free. Ideal for hair loss treatments for women dealing with hormonal thinning or age-related hair changes — and for men with a family history of thinning who want to act early.</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">"Hair loss treatments for women" and men's family history angle — unique in category. </div>
         </div>
         <div class="la-card">
           <div class="la-card-label"></div>
           <div class="la-card-sublabel">BULLET 5</div>
           <div class="la-copy-row">
             <div class="la-num">5</div>
-            <div class="la-copy-block warn"><strong>HAIR THICKENING PRODUCTS FOR WOMEN &amp; MEN — 6–8 WEEKS PER BOTTLE:</strong> Prevent Activator supports fuller, thicker hair over time by addressing scalp sensitivity while the growth-cycle-protecting botanicals keep each follicle active longer. One 1.7 fl oz bottle lasts 6–8 weeks with twice-daily use. <strong>Note: the precision pipette requires a firm first press to activate — this ensures exact dosing every use.</strong> Pair with évolis shampoo and conditioner for full-system results.</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">⚠ Pipette note added. "Hair thickening products for women & men" keyword present. </div>
         </div>
         <div class="la-card">
           <div class="la-card-label">Active Product Description</div>
-          
           <div class="la-copy-row">
             <div class="la-num">6</div>
-            <div class="la-copy-block ok"><strong>Protect Your Hair Before the Thinning Starts — Growth Cycle Serum with Rosemary Oil</strong><br>
-évolis Prevent Activator is a clinically tested scalp serum and dry scalp treatment for people in the early stages of hair change. Hair growth ends when a biological stop-signal (driven by FGF5) triggers each follicle to stop growing and shed. Prevent's proprietary botanical blend — Sanguisorba Officinalis, Rosa Multiflora, and Swertia Chirata — blocks that signal before it gains momentum, combined with rosemary oil, green tea extract, and mangosteen to support a calm, healthy scalp environment.<br><br>
-<strong>Clinically Tested Results</strong><br>
-In 3 independent studies, 95% of users noticed increased hair thickness within 90 days. 97% noticed reduced hair fall by 120 days. Ideal for sensitive or dry scalps, those with a family history of thinning, or anyone in the early stages of hair change.<br><br>
-AskMen Grooming Awards — "Best Natural Alternative for Hair Loss"<br>
-A recognized, award-winning alternative to Minoxidil. No hormones. No harsh chemicals. No rebound shedding.<br><br>
-Paraben-free · Sulfate-free · Silicone-free · Phthalate-free · Color-safe · Cruelty-free</div>
+            <div class="la-copy-block ok">Loading…</div>
           </div>
-          <div class="la-note">"Before the thinning starts" — differentiated angle not used by any competitor. </div>
         </div>
         <div class="la-card">
           <div class="la-card-label">Backend Keywords — Spaces Only</div>
-          <div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">140 chars used</span></div>
-          <div class="la-backend-block">hair growth accelerator dry scalp treatment rosemary oil for hair growth hair regrowth for men hair loss treatments for men hair follicle treatment thinning hair treatment scalp serum for hair growth hair loss serum oil for hair growth</div>
+          <div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">0 chars used</span></div>
+          <div class="la-backend-block">Loading…</div>
           <button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button>
-          <div class="la-note">10 terms, ~140 bytes. ~110 bytes remaining — add: scalp oil, dry scalp serum, hair growth oil. </div>
         </div>
       </div>
-      </div>
-      <!-- /la-activators -->
+    </div>
+    <!-- /la-scarkits -->
 
-    <!-- ── SHAMPOOS ── -->
-    <div class="channel-page" id="la-shampoos">
-      <div class="insight-grid" id="la-insights-shampoos"><div style="color:var(--muted);font-size:12px;padding:12px;">Loading insights…</div></div>
-      <div class="sub-tabs">
-        <button class="sub-tab active" onclick="showSubTab('la-shampoos','la-evo0002',this)">Reverse (EVO0002)</button>
-        <button class="sub-tab" onclick="showSubTab('la-shampoos','la-evo0006',this)">Promote (EVO0006)</button>
-        <button class="sub-tab" onclick="showSubTab('la-shampoos','la-evo0010',this)">Prevent (EVO0010)</button>
-        <button class="sub-tab" onclick="showSubTab('la-shampoos','la-evo0014',this)">Reverse Travel (EVO0014)</button>
-        <button class="sub-tab" onclick="showSubTab('la-shampoos','la-evo0016',this)">Promote Travel (EVO0016)</button>
-      </div>
-      <div class="sub-page active" id="la-evo0002">
-<div class="la-hero">
-          <div class="la-hero-left">
-            <div class="la-hero-meta">EVO0002 &nbsp;·&nbsp; ASIN B07S8QJSNP &nbsp;·&nbsp; Hair Growth Shampoos</div>
-            <div class="la-hero-title">Reverse Thickening Shampoo</div>
-            <div class="la-hero-tags"><span id="la-hero-tags-0002"></span><span class="la-hero-tag bsr">BSR —</span></div>
-          </div>
-          <div class="la-hero-actives">
-            <div class="la-hero-actives-lbl">Hero Actives</div>
-            <div class="la-hero-actives-primary" id="la-hero-primary-0002"></div><div class="la-hero-actives-rest" id="la-hero-rest-0002"></div>
-          </div>
-        </div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">122 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">EVOLIS Reverse Thickening Shampoo for Hair Growth - Keratin Treatment for Thinning Hair and Hair Loss - Volumizing Shampoo (8.5 fl oz)</div></div><div class="la-note">Core keywords present. "Hair growth shampoo" not in title — consider adding. <span class="kw-coverage-tag hit">keratin hair treatment</span> <span class="kw-coverage-tag hit">thinning hair</span> <span class="kw-coverage-tag hit">volumizing shampoo</span> <span class="kw-coverage-tag">hair growth shampoo</span></div></div><div class="la-card"><div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div><div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS & PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill warn">125 chars used</span></div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block ok">Reverse the hair loss cycle with FGF5-blocking botanicals. Keratin-infused, sulfate-free volumizing shampoo for thinning hair. Clinically tested — 95% noticing thicker hair in 90 days.</div></div></div><div class="la-card"><div class="la-card-label">Active Bullet Points</div><div class="la-card-sublabel">BULLET 1</div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok"><strong>Reverse the hair loss cycle</strong> – Reverse thickening shampoo helps those experiencing hair thinning, postpartum shedding, or aging hair. Infused with a hair growth serum, this rich-lathering formula gently cleanses the scalp while boosting volume and density.</div></div><div class="la-note"> <span class="kw-coverage-tag hit">thinning hair</span> <span class="kw-coverage-tag hit">postpartum shedding</span></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 2</div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block ok"><strong>Keratin Hair Treatment</strong> – Formulated with keratin and wheat proteins, this sulfate free shampoo helps strengthen fragile strands while improving overall hair resilience. Designed as a thickening shampoo with rosemary oil for hair growth, it leaves hair looking visibly fuller, stronger, and more voluminous.</div></div><div class="la-note"> <span class="kw-coverage-tag hit">keratin hair treatment</span> <span class="kw-coverage-tag hit">sulfate-free</span> <span class="kw-coverage-tag hit">rosemary oil for hair growth</span></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 3</div><div class="la-copy-row"><div class="la-num">3</div><div class="la-copy-block warn"><strong>Proprietary Blend</strong> – A powerful hair growth shampoo with a unique blend of botanical actives and antioxidants to inhibit FGF5, a protein linked to hair aging and thinning. Extending the growth cycle, this shampoo works to nourish the scalp and support hair growth for men and women.</div></div><div class="la-note">⚠ FGF5 mentioned but not explained. Recommend pairing with plain-language note as used in Activator listings. </div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 4</div><div class="la-copy-row"><div class="la-num">4</div><div class="la-copy-block ok"><strong>Developed by hair biologists</strong> - Free of parabens, sulfates, silicones, and phthalates, this volumizing shampoo is scientifically designed to restore scalp health and support stronger, healthier hair growth. Safe, cruelty-free, and recommended by hair stylists.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 5</div><div class="la-copy-row"><div class="la-num">5</div><div class="la-copy-block ok"><strong>Visible Results in 90 Days</strong> – Clinically tested, with 95% of users noticing increased hair thickness within 90 days and 97% experiencing reduced hair loss by 120 days. For best results, use with Reverse Conditioner and Reverse Activator.</div></div></div><div class="la-card"><div class="la-card-label">Backend Keywords — Spaces Only</div><div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill warn">220 chars used</span></div><div class="la-backend-block">hair growth shampoo hair growth shampoo for men hair regrowth shampoos shampoo for hair growth shampoo hair loss shampoo for thinning hair evolis cruelty free shampoo sulfate free shampoo thickening shampoo Hair thickening products for women Hair growth serum Hair loss shampoo hair oils for hair growth hair growth products hair growth oil</div><button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button></div>
-      </div>
-      <div class="sub-page" id="la-evo0006">
-<div class="la-hero">
-          <div class="la-hero-left">
-            <div class="la-hero-meta">EVO0006 &nbsp;·&nbsp; ASIN B07S9SZ56F &nbsp;·&nbsp; Hair Growth Shampoos</div>
-            <div class="la-hero-title">Promote Nourishing Shampoo</div>
-            <div class="la-hero-tags"><span id="la-hero-tags-0006"></span><span class="la-hero-tag bsr">BSR —</span></div>
-          </div>
-          <div class="la-hero-actives">
-            <div class="la-hero-actives-lbl">Hero Actives</div>
-            <div class="la-hero-actives-primary" id="la-hero-primary-0006"></div><div class="la-hero-actives-rest" id="la-hero-rest-0006"></div>
-          </div>
-        </div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">86 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">EVOLIS Promote Nourishing Shampoo for Hair Growth – Strengthening Treatment for Longer, Stronger Hair (8.5 fl oz)</div></div><div class="la-note">2024 People.com Lengthening Award not in title — consider adding for social proof. <span class="kw-coverage-tag hit">hair growth shampoo</span> <span class="kw-coverage-tag hit">strengthening treatment</span></div></div><div class="la-card"><div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div><div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS & PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill warn">115 chars used</span></div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block ok">Sulfate-free shampoo for longer, stronger hair. Baobab + keratin + FGF5-blocking botanicals. Voted Best Lengthening Shampoo by People.com 2024.</div></div></div><div class="la-card"><div class="la-card-label">Active Bullet Points</div><div class="la-card-sublabel">BULLET 1</div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok"><strong>Support Hair Growth &amp; Strengthen Strands</strong> – Promote hair growth shampoo is a professional shampoo for dry, brittle hair designed to cleanse the scalp, fortify fragile strands, and support longer, stronger, more resilient hair. This advanced hair loss shampoo helps extend the growth phase while preventing breakage and premature shedding.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 2</div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block ok"><strong>Gentle Cleansing with Baobab &amp; Keratin</strong> – Infused with Baobab, nature's moisture miracle, keratin, and a proprietary blend of botanicals, this sulfate-free shampoo removes buildup while replenishing moisture and enhancing shine. Perfect for those looking for hair growth shampoos, it leaves hair feeling clean, soft, and voluminous.</div></div><div class="la-note"> <span class="kw-coverage-tag hit">sulfate-free</span> <span class="kw-coverage-tag hit">baobab</span> <span class="kw-coverage-tag hit">keratin</span></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 3</div><div class="la-copy-row"><div class="la-num">3</div><div class="la-copy-block ok"><strong>Proprietary Blend of Growth-Boosting Botanicals</strong> – This lengthening shampoo is enriched with FGF5-blocking botanicals (Sanguisorba officinalis, Rosa multiflora, and Swertia chirata) to help extend the hair's natural growth cycle. Combined with rosemary oil for hair growth, this scalp treatment nourishes the roots, reduces shedding, and promotes longer, stronger hair over time.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 4</div><div class="la-copy-row"><div class="la-num">4</div><div class="la-copy-block ok"><strong>Developed by Hair Biologists &amp; Trusted by Stylists</strong> – Formulated by experts in hair science, this cruelty-free shampoo is free from parabens, sulfates, silicones, and phthalates. Color-safe and stylist-recommended, it supports scalp health while strengthening strands for improved hair resilience and length.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 5</div><div class="la-copy-row"><div class="la-num">5</div><div class="la-copy-block ok"><strong>Visible Results in 90 Days</strong> – Clinically tested, with 95% of users noticing increased hair thickness within 90 days and 97% experiencing reduced hair loss by 120 days. For best results, pair with Promote Conditioner and Promote Activator for a complete hair growth products routine.</div></div></div><div class="la-card"><div class="la-card-label">Backend Keywords — Spaces Only</div><div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill warn">220 chars used</span></div><div class="la-backend-block">hair growth shampoo hair growth shampoo for men hair regrowth shampoos shampoo for hair growth shampoo hair loss shampoo for thinning hair evolis cruelty free shampoo sulfate free shampoo thickening shampoo Hair thickening products for women Hair growth serum Hair loss shampoo hair oils for hair growth hair growth products hair growth oil</div><button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button></div>
-      </div>
-      <div class="sub-page" id="la-evo0010">
-<div class="la-hero">
-          <div class="la-hero-left">
-            <div class="la-hero-meta">EVO0010 &nbsp;·&nbsp; ASIN B07S7RLWVK &nbsp;·&nbsp; Hair Growth Shampoos</div>
-            <div class="la-hero-title">Prevent Anti-Aging Shampoo</div>
-            <div class="la-hero-tags"><span id="la-hero-tags-0010"></span><span class="la-hero-tag bsr">BSR —</span></div>
-          </div>
-          <div class="la-hero-actives">
-            <div class="la-hero-actives-lbl">Hero Actives</div>
-            <div class="la-hero-actives-primary" id="la-hero-primary-0010"></div><div class="la-hero-actives-rest" id="la-hero-rest-0010"></div>
-          </div>
-        </div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">100 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">EVOLIS Prevent Anti-Aging Shampoo for Hair Growth – Antioxidant-Rich Formula for Scalp Health &amp; Stronger Hair (8.5 fl oz)</div></div><div class="la-note">Good. "Anti-aging" differentiates. "Antioxidant-Rich" supported by Green Tea, Mangosteen, Vitamin E in INCI. <span class="kw-coverage-tag hit">hair growth shampoo</span> <span class="kw-coverage-tag hit">scalp health</span> <span class="kw-coverage-tag hit">antioxidant</span></div></div><div class="la-card"><div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div><div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS & PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill error">140 chars used</span></div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block warn">Antioxidant-rich, sulfate-free shampoo that soothes sensitive scalps and protects against premature thinning with FGF5-blocking botanicals. Clinically tested.</div></div></div><div class="la-card"><div class="la-card-label">Active Bullet Points</div><div class="la-card-sublabel">BULLET 1</div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok"><strong>Soothe &amp; Protect Your Scalp</strong> - Prevent anti-aging shampoo is a hair growth shampoo designed to support scalp health and preserves the hair you have. Ideal for those with sensitive, dry, or irritated scalps, this gentle, sulfate-free formula soothes irritation, supports stronger strands, and promotes an optimal environment for healthy hair growth.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 2</div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block ok"><strong>Antioxidant-Rich Hair &amp; Scalp Treatment</strong> - Enriched with Mangosteen, Green Tea, and Rosemary oil, this sulfate-free shampoo provides protection against environmental stressors while helping to hydrate and fortify strands for thicker, healthier-looking hair.</div></div><div class="la-note"> <span class="kw-coverage-tag hit">mangosteen</span> <span class="kw-coverage-tag hit">green tea</span> <span class="kw-coverage-tag hit">rosemary oil</span></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 3</div><div class="la-copy-row"><div class="la-num">3</div><div class="la-copy-block ok"><strong>Powered by Science &amp; Proven Botanicals</strong> - A proactive approach to scalp health. By blocking FGF5—a protein responsible for hair shedding—this advanced formula helps maintain stronger, longer-lasting hair, ensuring your strands stay in their natural growth phase for longer.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 4</div><div class="la-copy-row"><div class="la-num">4</div><div class="la-copy-block ok"><strong>Developed by Hair Biologists &amp; Trusted by Stylists</strong> - Free from parabens, sulfates, silicones, and phthalates, this cruelty-free shampoo gently cleanses while restoring scalp balance —perfect for those experiencing thinning hair, dryness, or scalp irritation.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 5</div><div class="la-copy-row"><div class="la-num">5</div><div class="la-copy-block ok"><strong>Visible Results in 90 Days</strong> - Clinically tested, with 95% of users noticing a healthier scalp within 90 days and 97% experiencing reduced scalp discomfort and improved hair resilience by 120 days. For best results, use with Prevent Conditioner and Prevent Activator as part of a complete scalp and hair care routine.</div></div></div><div class="la-card"><div class="la-card-label">Backend Keywords — Spaces Only</div><div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">210 chars used</span></div><div class="la-backend-block">hair growth shampoo hair growth shampoo for men shampoo for hair growth shampoo hair loss shampoo for thinning hair evolis cruelty free shampoo sulfate free shampoo thickening shampoo Hair thickening products for women Hair growth serum Hair loss shampoo hair oils for hair growth hair growth products hair growth oil</div><button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button></div>
-      </div>
-      <div class="sub-page" id="la-evo0014">
-<div class="la-hero">
-          <div class="la-hero-left">
-            <div class="la-hero-meta">EVO0014 &nbsp;·&nbsp; ASIN B0C634RF2M &nbsp;·&nbsp; Hair Growth Shampoos</div>
-            <div class="la-hero-title">Reverse Thickening Shampoo — Travel Size</div>
-            <div class="la-hero-tags"><span id="la-hero-tags-0014"></span><span class="la-hero-tag bsr">BSR —</span></div>
-          </div>
-          <div class="la-hero-actives">
-            <div class="la-hero-actives-lbl">Hero Actives</div>
-            <div class="la-hero-actives-primary" id="la-hero-primary-0014"></div><div class="la-hero-actives-rest" id="la-hero-rest-0014"></div>
-          </div>
-        </div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">162 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block warn">EVOLIS Reverse Thickening Shampoo for Thinning Hair and Hair Regrowth, Treating Hair Loss, Created with Botanical Actives for Noticeably Thicker, Fuller Hair - Travel Size (2 fl.oz)</div></div><div class="la-note">⚠ "hair growth shampoo" missing from title. "Travel Size" present. Title is long — consider shortening. <span class="kw-coverage-tag hit">thinning hair</span> <span class="kw-coverage-tag hit">travel size</span> <span class="kw-coverage-tag hit">hair regrowth</span> <span class="kw-coverage-tag">hair growth shampoo</span></div></div><div class="la-card"><div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div><div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS & PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill warn">110 chars used</span></div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block ok">Sulfate-free travel shampoo for thinning hair. Same clinically tested formula as full-size Reverse Shampoo. TSA-approved 2 fl oz.</div></div></div><div class="la-card"><div class="la-card-label">Backend Keywords — Spaces Only</div><div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">170 chars used</span></div><div class="la-backend-block">hair growth shampoo shampoo for hair growth shampoo for thinning hair evolis sulfate free shampoo thickening shampoo Hair thickening products for women Hair loss shampoo travel size shampoo travel shampoo tsa approved shampoo mini shampoo</div><button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button></div>
-      </div>
-      <div class="sub-page" id="la-evo0016">
-<div class="la-hero">
-          <div class="la-hero-left">
-            <div class="la-hero-meta">EVO0016 &nbsp;·&nbsp; ASIN B0C62SD751 &nbsp;·&nbsp; Hair Growth Shampoos</div>
-            <div class="la-hero-title">Promote Nourishing Shampoo — Travel Size</div>
-            <div class="la-hero-tags"><span id="la-hero-tags-0016"></span><span class="la-hero-tag bsr">BSR —</span></div>
-          </div>
-          <div class="la-hero-actives">
-            <div class="la-hero-actives-lbl">Hero Actives</div>
-            <div class="la-hero-actives-primary" id="la-hero-primary-0016"></div><div class="la-hero-actives-rest" id="la-hero-rest-0016"></div>
-          </div>
-        </div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">91 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">EVOLIS Promote Nourishing Shampoo – Strengthening Treatment for Longer, Healthier-Looking Hair - Travel Size (2 fl oz)</div></div><div class="la-note">Good. 2024 People.com Lengthening Award featured in Bullet 1. "Hair growth shampoo" not in title — opportunity. <span class="kw-coverage-tag hit">travel size</span> <span class="kw-coverage-tag hit">strengthening treatment</span> <span class="kw-coverage-tag">hair growth shampoo</span></div></div><div class="la-card"><div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div><div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS & PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill warn">120 chars used</span></div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block ok">Award-winning travel shampoo for longer, stronger hair. Baobab + keratin + FGF5-blocking botanicals. 2024 People.com Best Lengthening Shampoo.</div></div></div><div class="la-card"><div class="la-card-label">Backend Keywords — Spaces Only</div><div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">175 chars used</span></div><div class="la-backend-block">hair growth shampoo shampoo for hair growth shampoo for thinning hair evolis sulfate free shampoo thickening shampoo Hair thickening products for women Hair loss shampoo travel size shampoo travel shampoo tsa approved shampoo mini shampoo baobab shampoo</div><button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button></div>
-      </div>
-      </div>
-      <!-- /la-shampoos -->
-
-    <!-- ── CONDITIONERS ── -->
-    <div class="channel-page" id="la-conditioners">
-      <div class="insight-grid" id="la-insights-conditioners"><div style="color:var(--muted);font-size:12px;padding:12px;">Loading insights…</div></div>
-      <div class="sub-tabs">
-        <button class="sub-tab active" onclick="showSubTab('la-conditioners','la-cond-evo0003',this)">Reverse (EVO0003)</button>
-        <button class="sub-tab" onclick="showSubTab('la-conditioners','la-cond-evo0007',this)">Promote (EVO0007)</button>
-        <button class="sub-tab" onclick="showSubTab('la-conditioners','la-cond-evo0011',this)">Prevent (EVO0011)</button>
-        <button class="sub-tab" onclick="showSubTab('la-conditioners','la-cond-evo0015',this)">Reverse Travel (EVO0015)</button>
-        <button class="sub-tab" onclick="showSubTab('la-conditioners','la-cond-evo0017',this)">Promote Travel (EVO0017)</button>
-      </div>
-      <div class="sub-page active" id="la-cond-evo0003">
-<div class="la-hero"><div class="la-hero-left"><div class="la-hero-meta">EVO0003 &nbsp;·&nbsp; ASIN B07S7RLBVV &nbsp;·&nbsp; Hair Growth Conditioners</div><div class="la-hero-title">Reverse Thickening Conditioner</div><div class="la-hero-tags"><span id="la-hero-tags-0003"></span><span class="la-hero-tag bsr">BSR —</span></div></div><div class="la-hero-actives"><div class="la-hero-actives-lbl">Hero Actives</div><div class="la-hero-actives-primary" id="la-hero-primary-0003"></div><div class="la-hero-actives-rest" id="la-hero-rest-0003"></div></div></div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">122 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">EVOLIS Reverse Thickening Conditioner for Hair Growth - Keratin Treatment for Thinning Hair and Hair Loss - Volumizing Conditioner (8.5 fl oz)</div></div><div class="la-note">Mirrors shampoo title structure — consistent branding. <span class="kw-coverage-tag hit">hair growth conditioner</span> <span class="kw-coverage-tag hit">keratin hair treatment</span> <span class="kw-coverage-tag hit">thinning hair</span></div></div><div class="la-card"><div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div><div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS & PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill error">130 chars used</span></div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block warn">Keratin-infused, sulfate-free conditioner that reverses thinning and boosts volume. FGF5-blocking botanicals extend the growth phase. Clinically tested.</div></div></div><div class="la-card"><div class="la-card-label">Active Bullet Points</div><div class="la-card-sublabel">BULLET 1</div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok"><strong>Reverse the hair loss cycle</strong> – Reverse thickening conditioner helps those experiencing hair thinning, postpartum shedding, or aging hair. Infused with a hair growth serum, this lightweight yet deeply nourishing formula hydrates the scalp while boosting volume and density.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 2</div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block ok"><strong>Keratin Hair Treatment</strong> – Formulated with keratin and wheat proteins, this sulfate free conditioner helps strengthen fragile strands while improving overall hair resilience. Designed as a thickening conditioner with rosemary oil for hair growth, it leaves hair looking visibly fuller, stronger, and more voluminous.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 3</div><div class="la-copy-row"><div class="la-num">3</div><div class="la-copy-block ok"><strong>Proprietary blend</strong> – a powerful hair growth conditioner with a unique blend of botanical actives and antioxidants to inhibit FGF5, a protein linked to hair aging and thinning. Extending the growth cycle, this conditioner works to nourish the scalp, detangle strands, and support hair growth for men and women.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 4</div><div class="la-copy-row"><div class="la-num">4</div><div class="la-copy-block ok"><strong>Developed by hair biologists</strong> – free of parabens, sulfates, silicones, and phthalates, this volumizing conditioner is scientifically designed to restore scalp health and support stronger, healthier hair growth. Safe, cruelty-free, and recommended by hair stylists.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 5</div><div class="la-copy-row"><div class="la-num">5</div><div class="la-copy-block ok"><strong>Visible results in 90 days</strong> – clinically tested, with 95% of users noticing increased hair thickness within 90 days and 97% experiencing reduced hair loss by 120 days. For best results, use with Reverse Activator and shampoo.</div></div></div><div class="la-card"><div class="la-card-label">Backend Keywords — Spaces Only</div><div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">200 chars used</span></div><div class="la-backend-block">hair growth conditioner hair growth conditioner for men hair regrowth conditioners conditioner for hair growth conditioner for hair loss conditioner for thinning hair evolis cruelty-free conditioner sulfate-free conditioner thickening conditioner Hair thickening products for women hair growth serum hair loss conditioner hair oil for hair growth hair growth products</div><button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button></div>
-      </div>
-      <div class="sub-page" id="la-cond-evo0007">
-<div class="la-hero"><div class="la-hero-left"><div class="la-hero-meta">EVO0007 &nbsp;·&nbsp; ASIN B07SBWSJXP &nbsp;·&nbsp; Hair Growth Conditioners</div><div class="la-hero-title">Promote Nourishing Conditioner</div><div class="la-hero-tags"><span id="la-hero-tags-0007"></span><span class="la-hero-tag bsr">BSR —</span></div></div><div class="la-hero-actives"><div class="la-hero-actives-lbl">Hero Actives</div><div class="la-hero-actives-primary" id="la-hero-primary-0007"></div><div class="la-hero-actives-rest" id="la-hero-rest-0007"></div></div></div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">101 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">EVOLIS Promote Nourishing Conditioner for Hair Growth – Deep Conditioning Hair Treatment for Longer, Stronger Hair (8.5 fl oz)</div></div><div class="la-note">Good. "Deep Conditioning Hair Treatment" adds premium feel. <span class="kw-coverage-tag hit">hair growth conditioner</span> <span class="kw-coverage-tag hit">deep conditioning</span></div></div><div class="la-card"><div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div><div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS & PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill error">128 chars used</span></div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block warn">Deep conditioning, sulfate-free conditioner for longer, stronger hair. Baobab + FGF5 botanicals + keratin. Voted Best Lengthening by People.com 2024.</div></div></div><div class="la-card"><div class="la-card-label">Active Bullet Points</div><div class="la-card-sublabel">BULLET 1</div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok"><strong>Support Hair Growth &amp; Strengthen Strands</strong> – Promote hair growth conditioner is a professional conditioner for thinning hair designed to nourish the scalp, fortify fragile strands, and support longer, stronger hair. This advanced hair loss conditioner helps extend the growth phase while preventing breakage and premature shedding.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 2</div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block ok"><strong>Deep Hydration with Baobab</strong> – Formulated with Baobab, nature's moisture miracle, and a proprietary blend of botanicals, this deep conditioning hair treatment replenishes moisture, enhances softness, and protects against damage. It leaves strands stronger, healthier, and shinier.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 3</div><div class="la-copy-row"><div class="la-num">3</div><div class="la-copy-block ok"><strong>Proprietary Blend of Growth-Boosting Botanicals</strong> – This lengthening conditioner is enriched with FGF5-blocking botanicals (Sanguisorba officinalis, Rosa multiflora, and Swertia chirata) to help extend the hair's natural growth cycle. Combined with rosemary oil for hair growth, this sulfate-free conditioner deeply nourishes strands while helping to reduce shedding and promote longer, thicker hair.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 4</div><div class="la-copy-row"><div class="la-num">4</div><div class="la-copy-block ok"><strong>Developed by Hair Biologists</strong> – Formulated by experts in hair science, this cruelty-free conditioner is free from parabens, sulfates, silicones, and phthalates. Color-safe and stylist-recommended, it supports scalp health while strengthening strands for improved hair resilience and length.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 5</div><div class="la-copy-row"><div class="la-num">5</div><div class="la-copy-block ok"><strong>Visible Results in 90 Days</strong> – Clinically tested, with 95% of users noticing increased hair thickness within 90 days and 97% experiencing reduced hair loss by 120 days. For best results, pair with Promote Shampoo and Promote Activator for a complete hair growth products routine.</div></div></div><div class="la-card"><div class="la-card-label">Backend Keywords — Spaces Only</div><div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">200 chars used</span></div><div class="la-backend-block">hair growth conditioner hair growth conditioner for men hair regrowth conditioners conditioner for hair growth conditioner for hair loss conditioner for thinning hair evolis cruelty-free conditioner sulfate-free conditioner thickening conditioner Hair thickening products for women hair growth serum hair loss conditioner hair oil for hair growth hair growth products</div><button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button></div>
-      </div>
-      <div class="sub-page" id="la-cond-evo0011">
-<div class="la-hero"><div class="la-hero-left"><div class="la-hero-meta">EVO0011 &nbsp;·&nbsp; ASIN B07SBWS4BS &nbsp;·&nbsp; Hair Growth Conditioners</div><div class="la-hero-title">Prevent Anti-Aging Conditioner</div><div class="la-hero-tags"><span id="la-hero-tags-0011"></span><span class="la-hero-tag bsr">BSR —</span></div></div><div class="la-hero-actives"><div class="la-hero-actives-lbl">Hero Actives</div><div class="la-hero-actives-primary" id="la-hero-primary-0011"></div><div class="la-hero-actives-rest" id="la-hero-rest-0011"></div></div></div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">106 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block warn">EVOLIS Prevent Anti-Aging Conditioner for Fuller-Looking Hair – Antioxidant-Rich Formula for Scalp Health &amp; Stronger Hair (8.5 fl oz)</div></div><div class="la-note">⚠ CRITICAL: xlsx data shows "Conditiner" (typo) — verify if this is live on Amazon and fix immediately. <span class="kw-coverage-tag hit">anti-aging conditioner</span> <span class="kw-coverage-tag hit">antioxidant</span> <span class="kw-coverage-tag hit">scalp health</span></div></div><div class="la-card"><div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div><div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS & PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill warn">120 chars used</span></div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block ok">Antioxidant-rich, sulfate-free conditioner for sensitive scalps. Mangosteen + green tea + FGF5-blocking botanicals preserve the hair you have.</div></div></div><div class="la-card"><div class="la-card-label">Active Bullet Points</div><div class="la-card-sublabel">BULLET 1</div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok"><strong>Soothe &amp; Protect Your Scalp</strong> - Prevent anti-aging conditioner is a scientifically formulated thickening conditioner designed to support scalp health and hair vitality. Ideal for those with sensitive, dry, or irritated scalps, this gentle, sulfate-free formula helps maintain a balanced scalp while preserving the hair you have.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 2</div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block ok"><strong>Antioxidant-rich hair &amp; scalp treatment</strong> - Enriched with Mangosteen, Green Tea, and Rosemary oil, this sulfate-free conditioner provides targeted protection against environmental stressors while helping to calm the scalp. These natural botanicals work to soothe and hydrate the scalp, and fortify strands for thicker, healthier-looking hair.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 3</div><div class="la-copy-row"><div class="la-num">3</div><div class="la-copy-block ok"><strong>Powered by Science &amp; Proven Botanicals</strong> - A proactive approach to scalp health, the Prevent Conditioner is formulated with FGF5-inhibiting botanicals, including Swertia Chirata and Sanguisorba Officinalis, to help extend the hair's natural growth cycle. By blocking FGF5, this advanced formula helps maintain stronger, healthier hair.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 4</div><div class="la-copy-row"><div class="la-num">4</div><div class="la-copy-block ok"><strong>Developed by Hair Biologists &amp; Trusted by Stylists</strong> - Free from parabens, sulfates, silicones, and phthalates, this cruelty-free conditioner is scientifically crafted to support scalp health and stronger, fuller-looking hair.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 5</div><div class="la-copy-row"><div class="la-num">5</div><div class="la-copy-block ok"><strong>Visible Results in 90 Days</strong> - Clinically tested, with 95% of users noticing a healthier scalp within 90 days and 97% experiencing reduced scalp discomfort and improved hair resilience by 120 days. For best results, use with Prevent Shampoo and Prevent Activator.</div></div></div><div class="la-card"><div class="la-card-label">Backend Keywords — Spaces Only</div><div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill ok">200 chars used</span></div><div class="la-backend-block">hair growth conditioner hair growth conditioner for men hair regrowth conditioners conditioner for hair growth conditioner for hair loss conditioner for thinning hair evolis cruelty-free conditioner sulfate-free conditioner thickening conditioner Hair thickening products for women hair growth serum hair loss conditioner hair oil for hair growth hair growth products</div><button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button></div>
-      </div>
-      <div class="sub-page" id="la-cond-evo0015">
-<div class="la-hero"><div class="la-hero-left"><div class="la-hero-meta">EVO0015 &nbsp;·&nbsp; ASIN B0C633C5MS &nbsp;·&nbsp; Hair Growth Conditioners</div><div class="la-hero-title">Reverse Thickening Conditioner — Travel Size</div><div class="la-hero-tags"><span id="la-hero-tags-0015"></span><span class="la-hero-tag bsr">BSR —</span></div></div><div class="la-hero-actives"><div class="la-hero-actives-lbl">Hero Actives</div><div class="la-hero-actives-primary" id="la-hero-primary-0015"></div><div class="la-hero-actives-rest" id="la-hero-rest-0015"></div></div></div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">108 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">EVOLIS Reverse Thickening Conditioner for Fuller-Looking Hair – Keratin Treatment &amp; Formula for Thinning Hair - Travel Size (2 fl oz)</div></div><div class="la-note">Good. Travel Size callout present. <span class="kw-coverage-tag hit">thinning hair</span> <span class="kw-coverage-tag hit">keratin treatment</span> <span class="kw-coverage-tag hit">travel size</span></div></div><div class="la-card"><div class="la-card-label">Backend Keywords — Spaces Only</div><div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill warn">220 chars used</span></div><div class="la-backend-block">hair growth conditioner hair growth conditioner for men hair regrowth conditioners conditioner for hair growth conditioner for hair loss conditioner for thinning hair evolis cruelty-free conditioner sulfate-free conditioner thickening conditioner Hair thickening products for women hair growth serum hair loss conditioner hair oil for hair growth hair growth products travel size conditioner travel conditioner tsa approved conditioner mini conditioner</div><button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button></div>
-      </div>
-      <div class="sub-page" id="la-cond-evo0017">
-<div class="la-hero"><div class="la-hero-left"><div class="la-hero-meta">EVO0017 &nbsp;·&nbsp; ASIN B0C63177RS &nbsp;·&nbsp; Hair Growth Conditioners</div><div class="la-hero-title">Promote Nourishing Conditioner — Travel Size</div><div class="la-hero-tags"><span id="la-hero-tags-0017"></span><span class="la-hero-tag bsr">BSR —</span></div></div><div class="la-hero-actives"><div class="la-hero-actives-lbl">Hero Actives</div><div class="la-hero-actives-primary" id="la-hero-primary-0017"></div><div class="la-hero-actives-rest" id="la-hero-rest-0017"></div></div></div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">97 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">EVOLIS Promote Nourishing Conditioner – Deep Conditioning Hair Treatment for Longer, Healthier-Looking Hair - Travel Size (2 oz)</div></div><div class="la-note">Good. 2024 People.com award in Bullet 1. <span class="kw-coverage-tag hit">deep conditioning</span> <span class="kw-coverage-tag hit">travel size</span></div></div><div class="la-card"><div class="la-card-label">Backend Keywords — Spaces Only</div><div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill warn">220 chars used</span></div><div class="la-backend-block">hair growth conditioner hair growth conditioner for men hair regrowth conditioners conditioner for hair growth conditioner for hair loss conditioner for thinning hair evolis cruelty-free conditioner sulfate-free conditioner thickening conditioner Hair thickening products for women hair growth serum hair loss conditioner hair oil for hair growth hair growth products travel size conditioner travel conditioner tsa approved conditioner mini conditioner baobab conditioner</div><button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button></div>
-      </div>
-      </div>
-      <!-- /la-conditioners -->
-
-    <!-- ── HAIR MASKS ── -->
-    <div class="channel-page" id="la-masks">
-      <div class="insight-grid" id="la-insights-masks"><div style="color:var(--muted);font-size:12px;padding:12px;">Loading insights…</div></div>
-      <div class="sub-tabs">
-        <button class="sub-tab active" onclick="showSubTab('la-masks','la-mask-evo0004',this)">Reverse (EVO0004)</button>
-        <button class="sub-tab" onclick="showSubTab('la-masks','la-mask-evo0008',this)">Promote (EVO0008)</button>
-        <button class="sub-tab" onclick="showSubTab('la-masks','la-mask-evo0018',this)">Promote Travel (EVO0018)</button>
-        <button class="sub-tab" onclick="showSubTab('la-masks','la-mask-evo0019',this)">Reverse Travel (EVO0019)</button>
-      </div>
-      <div class="sub-page active" id="la-mask-evo0004">
-<div class="la-hero"><div class="la-hero-left"><div class="la-hero-meta">EVO0004 &nbsp;·&nbsp; ASIN B07S7RLM1R &nbsp;·&nbsp; Hair Treatment Masks</div><div class="la-hero-title">Reverse Repairing Hair Mask</div><div class="la-hero-tags"><span id="la-hero-tags-0004"></span><span class="la-hero-tag bsr">BSR —</span></div></div><div class="la-hero-actives"><div class="la-hero-actives-lbl">Hero Actives</div><div class="la-hero-actives-primary" id="la-hero-primary-0004"></div><div class="la-hero-actives-rest" id="la-hero-rest-0004"></div></div></div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">134 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">EVOLIS Reverse Repairing Hair Mask - Deep Conditioning Hair Mask for Hair Growth &amp; Damage Repair - Hydrating Hair Mask for Dry, Damaged Hair (8 fl oz)</div></div><div class="la-note">All key category terms present. "Hair Growth" + "Damage Repair" + "Deep Conditioning" covers search intent. <span class="kw-coverage-tag hit">deep conditioning hair mask</span> <span class="kw-coverage-tag hit">hair growth</span> <span class="kw-coverage-tag hit">damage repair</span> <span class="kw-coverage-tag hit">hydrating hair mask</span></div></div><div class="la-card"><div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div><div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS & PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill warn">125 chars used</span></div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block ok">Deep conditioning hair mask for growth and damage repair. Keratin + collagen + FGF5-blocking botanicals. Leave on 10–15 min or overnight for best results.</div></div></div><div class="la-card"><div class="la-card-label">Active Bullet Points</div><div class="la-card-sublabel">BULLET 1</div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok"><strong>Restores &amp; Strengthens Hair</strong> – Reverse Hair Mask is a deeply conditioning hair mask designed to restore moisture, repair damage, and promote healthier, stronger hair. Ideal for those experiencing hair thinning, aging hair, or damage from styling and color treatments.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 2</div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block ok"><strong>Keratin Hair Treatment</strong> – This deep conditioning hair mask provides intense moisture to dry, brittle strands, helping to reduce frizz, enhance softness, and restore shine. Infused with hair oils for hair growth, it nourishes from root to tip while supporting stronger, healthier hair.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 3</div><div class="la-copy-row"><div class="la-num">3</div><div class="la-copy-block ok"><strong>Powerful Ingredients for Hair Repair</strong> – Formulated with a proprietary blend of natural actives and antioxidants, including keratin, collagen, and botanical FGF5 blockers, this protein hair mask helps strengthen weak strands, minimize split ends, and extend the growth phase for visibly healthier, more resilient hair.</div></div><div class="la-note"> <span class="kw-coverage-tag hit">protein hair mask</span> <span class="kw-coverage-tag hit">FGF5</span> <span class="kw-coverage-tag hit">collagen</span> <span class="kw-coverage-tag hit">keratin</span></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 4</div><div class="la-copy-row"><div class="la-num">4</div><div class="la-copy-block ok"><strong>Developed by hair biologists</strong> – Free of parabens, sulfates, silicones, and phthalates, this hydrating hair mask is safe for color-treated hair and is cruelty-free. Scientifically crafted to improve scalp and hair health, created by hair biologists and trusted by hair stylists.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 5</div><div class="la-copy-row"><div class="la-num">5</div><div class="la-copy-block ok"><strong>Visible Results in 90 Days</strong> – Clinically tested, with 95% of users noticing improved hair texture and increased shine. For best results, use with the Reverse Activator as part of a complete hair growth and repair routine.</div></div></div><div class="la-card"><div class="la-card-label">Backend Keywords — Spaces Only</div><div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill warn">220 chars used</span></div><div class="la-backend-block">hair growth products hair mask hair care deep conditioning hair mask hair oils for hair growth hair mask for dry damaged hair growth serum hair growth deep conditioner for dry damaged hair collagen hair mask hydrating hair mask hair conditioning mask protein hair mask hair repair mask</div><button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button></div>
-      </div>
-      <div class="sub-page" id="la-mask-evo0008">
-<div class="la-hero"><div class="la-hero-left"><div class="la-hero-meta">EVO0008 &nbsp;·&nbsp; ASIN B07S7RKMZC &nbsp;·&nbsp; Hair Treatment Masks</div><div class="la-hero-title">Promote Nourishing Hair Mask</div><div class="la-hero-tags"><span id="la-hero-tags-0008"></span><span class="la-hero-tag bsr">BSR —</span></div></div><div class="la-hero-actives"><div class="la-hero-actives-lbl">Hero Actives</div><div class="la-hero-actives-primary" id="la-hero-primary-0008"></div><div class="la-hero-actives-rest" id="la-hero-rest-0008"></div></div></div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">120 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block warn">Promote Nourishing Hair Mask - Deep Conditioning Hair Mask for Hair Growth &amp; Damage Repair - Hydrating Hair Mask for Dry, Damaged Hair (8 fl oz)</div></div><div class="la-note">⚠ Missing "EVOLIS" brand prefix — fix for brand consistency. All other titles include "EVOLIS". Baobab (hero active) not in title. <span class="kw-coverage-tag hit">deep conditioning hair mask</span> <span class="kw-coverage-tag hit">hair growth</span> <span class="kw-coverage-tag">EVOLIS prefix</span></div></div><div class="la-card"><div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div><div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS & PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill warn">118 chars used</span></div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block ok">Deep conditioning hair mask for longer, stronger hair. Baobab moisture miracle + FGF5 botanicals + keratin. Leave on 10–15 min or overnight.</div></div></div><div class="la-card"><div class="la-card-label">Active Bullet Points</div><div class="la-card-sublabel">BULLET 1</div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok"><strong>Nourish &amp; Strengthen for Longer, Healthier Hair</strong> - a deep conditioning hair mask designed to fortify, repair, and deeply hydrate damaged strands. Perfect for those struggling to grow out their hair, it helps prevent breakage, lock in moisture, and support longer, stronger, healthier hair.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 2</div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block ok"><strong>Deep Hydration &amp; Damage Repair</strong> - Infused with Baobab, nature's moisture miracle, this hydrating hair mask replenishes lost hydration, smooths frizz, and strengthens strands from root to tip. Rich in conditioning botanicals, it enhances elasticity and shine.</div></div><div class="la-note"> <span class="kw-coverage-tag hit">baobab</span> <span class="kw-coverage-tag hit">deep hydration</span></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 3</div><div class="la-copy-row"><div class="la-num">3</div><div class="la-copy-block ok"><strong>Proprietary Blend</strong> - Formulated with a patented blend of FGF5-inhibiting botanicals, including Sanguisorba officinalis, Rosa multiflora, and Swertia chirata, this hair repair mask helps extend the hair's natural growth cycle. By blocking FGF5, this Keratin hair mask supports longer, healthier hair.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 4</div><div class="la-copy-row"><div class="la-num">4</div><div class="la-copy-block ok"><strong>Developed by Hair Biologists &amp; Trusted by Stylists</strong> - Scientifically crafted and free of parabens, sulfates, silicones, and phthalates, this cruelty-free hair conditioning mask is color-safe and recommended by hair stylists.</div></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 5</div><div class="la-copy-row"><div class="la-num">5</div><div class="la-copy-block ok"><strong>Visible Results in 90 Days</strong> - Clinically tested, with 95% of users noticing improved hair texture and shine. For best results, use this protein hair mask alongside the Promote Shampoo and Promote Activator as part of a complete hair growth and repair routine.</div></div></div><div class="la-card"><div class="la-card-label">Backend Keywords — Spaces Only</div><div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill warn">220 chars used</span></div><div class="la-backend-block">hair growth products hair mask hair care deep conditioning hair mask hair oils for hair growth hair mask for dry damaged hair growth serum hair growth deep conditioner for dry damaged hair collagen hair mask hydrating hair mask hair conditioning mask protein hair mask hair repair mask</div><button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button></div>
-      </div>
-      <div class="sub-page" id="la-mask-evo0018">
-<div class="la-hero"><div class="la-hero-left"><div class="la-hero-meta">EVO0018 &nbsp;·&nbsp; ASIN B0C62QRGVX &nbsp;·&nbsp; Hair Treatment Masks</div><div class="la-hero-title">Promote Nourishing Hair Mask — Travel Size</div><div class="la-hero-tags"><span id="la-hero-tags-0018"></span><span class="la-hero-tag bsr">BSR —</span></div></div><div class="la-hero-actives"><div class="la-hero-actives-lbl">Hero Actives</div><div class="la-hero-actives-primary" id="la-hero-primary-0018"></div><div class="la-hero-actives-rest" id="la-hero-rest-0018"></div></div></div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">148 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">EVOLIS Promote Nourishing Treatment Mask - Deep Conditioning Hair Mask to Support Hair Growth - Hydrating Hair Mask for Dry, Damaged Hair - Travel Size (1 fl oz)</div></div><div class="la-note">Good. All core keywords present. <span class="kw-coverage-tag hit">deep conditioning hair mask</span> <span class="kw-coverage-tag hit">hair growth</span> <span class="kw-coverage-tag hit">travel size</span></div></div><div class="la-card"><div class="la-card-label">Backend Keywords — Spaces Only</div><div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill warn">230 chars used</span></div><div class="la-backend-block">hair growth products hair mask hair care deep conditioning hair mask hair oils for hair growth hair mask for dry damaged hair growth serum hair growth deep conditioner for dry damaged hair collagen hair mask hydrating hair mask hair conditioning mask protein hair mask hair repair mask travel size hair mask travel hair mask mini hair mask tsa approved hair mask</div><button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button></div>
-      </div>
-      <div class="sub-page" id="la-mask-evo0019">
-<div class="la-hero"><div class="la-hero-left"><div class="la-hero-meta">EVO0019 &nbsp;·&nbsp; ASIN B0C63BJKBF &nbsp;·&nbsp; Hair Treatment Masks</div><div class="la-hero-title">Reverse Repairing Hair Mask — Travel Size</div><div class="la-hero-tags"><span id="la-hero-tags-0019"></span><span class="la-hero-tag bsr">BSR —</span></div></div><div class="la-hero-actives"><div class="la-hero-actives-lbl">Hero Actives</div><div class="la-hero-actives-primary" id="la-hero-primary-0019"></div><div class="la-hero-actives-rest" id="la-hero-rest-0019"></div></div></div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">146 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">EVOLIS Reverse Repairing Treatment Mask - Deep Conditioning Hair Mask to Support Hair Growth - Hydrating Hair Mask for Dry, Damaged Hair - Travel Size (1 fl oz)</div></div><div class="la-note">Good. Mirrors Promote Travel Mask for consistency. <span class="kw-coverage-tag hit">deep conditioning hair mask</span> <span class="kw-coverage-tag hit">hair growth</span> <span class="kw-coverage-tag hit">travel size</span></div></div><div class="la-card"><div class="la-card-label">Backend Keywords — Spaces Only</div><div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill warn">230 chars used</span></div><div class="la-backend-block">hair growth products hair mask hair care deep conditioning hair mask hair oils for hair growth hair mask for dry damaged hair growth serum hair growth deep conditioner for dry damaged hair collagen hair mask hydrating hair mask hair conditioning mask protein hair mask hair repair mask travel size hair mask travel hair mask mini hair mask tsa approved hair mask reverse hair mask</div><button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button></div>
-      </div>
-      </div>
-      <!-- /la-masks -->
-
-    <!-- ── DRY SHAMPOO ── -->
-    <div class="channel-page" id="la-dryshampoo">
-      <div class="insight-grid" id="la-insights-dryshampoo"><div style="color:var(--muted);font-size:12px;padding:12px;">Loading insights…</div></div>
-      <div class="sub-tabs"><button class="sub-tab active">Dry Shampoo (EVO0012)</button></div>
-      <div>
-<div class="la-hero"><div class="la-hero-left"><div class="la-hero-meta">EVO0012 &nbsp;·&nbsp; ASIN B08BGCRKTV &nbsp;·&nbsp; Dry Shampoos / Styling</div><div class="la-hero-title">Style + Treat Dry Shampoo</div><div class="la-hero-tags"><span id="la-hero-tags-0012"></span><span class="la-hero-tag bsr">BSR —</span></div></div><div class="la-hero-actives"><div class="la-hero-actives-lbl">Hero Actives</div><div class="la-hero-actives-primary" id="la-hero-primary-0012"></div><div class="la-hero-actives-rest" id="la-hero-rest-0012"></div></div></div><div class="la-card"><div class="la-card-label">Active Title</div><div class="la-char-info">≤200 chars &nbsp;·&nbsp; <span class="char-pill ok">162 chars used</span></div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">EVOLIS Style &amp; Treat Dry Shampoo for Volume and Texture – Lightweight Texture Powder for Oily Hair – Clean Hair Care and Volumizing Hair Products for All Hair Types (5.2 oz)</div></div><div class="la-note">Good. "Style & Treat" dual-use positioning clear. "Volumizing Hair Products" keyword present. <span class="kw-coverage-tag hit">dry shampoo</span> <span class="kw-coverage-tag hit">volumizing hair products</span> <span class="kw-coverage-tag hit">texture powder</span> <span class="kw-coverage-tag hit">clean hair care</span></div></div><div class="la-card"><div class="la-card-label">Item Highlights<span class="la-badge new">NEW · JUL 27</span></div><div class="la-card-sublabel">≤125 CHARS · SEARCHABLE · VISIBLE IN SEARCH RESULTS & PDPS</div><div class="la-char-info">≤125 chars &nbsp;·&nbsp; <span class="char-pill warn">118 chars used</span></div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block ok">Dry shampoo spray that absorbs oil, adds volume, and supports scalp health. FGF5-inhibiting botanicals. Non-comedogenic, residue-free — no chalk on dark hair.</div></div></div><div class="la-card"><div class="la-card-label">Active Bullet Points</div><div class="la-card-sublabel">BULLET 1</div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok"><strong>Revives Hair with Volume and Texture</strong> – EVOLIS Style Treat dry shampoo and multi-use styling spray instantly absorbs excess oil and odor while delivering root lift, touchable texture, and weightless volume—no chalky residue, even on dark hair.</div></div><div class="la-note"> <span class="kw-coverage-tag hit">dry shampoo</span> <span class="kw-coverage-tag hit">volume</span> <span class="kw-coverage-tag hit">root lift</span> <span class="kw-coverage-tag hit">dark hair</span></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 2</div><div class="la-copy-row"><div class="la-num">2</div><div class="la-copy-block ok"><strong>Supports Scalp Health and Fuller-Looking Hair</strong> – Developed for all hair types, including those with thinning hair, shedding, or scalp sensitivity, this dry shampoo for women and men uses a blend of natural extracts and antioxidants to support scalp vitality and maintain healthy-looking strands. Ideal for extending time between washes while caring for the scalp.</div></div><div class="la-note"> <span class="kw-coverage-tag hit">scalp health</span> <span class="kw-coverage-tag hit">thinning hair</span> <span class="kw-coverage-tag hit">dry shampoo for women</span></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 3</div><div class="la-copy-row"><div class="la-num">3</div><div class="la-copy-block warn"><strong>Powered by Antioxidants and FGF5-Inhibiting Botanicals</strong> – Infused with a proprietary blend of rosemary, green tea, and mangosteen, this natural dry shampoo supports the scalp's natural barrier and helps defend against FGF5, a protein linked to hair thinning. It's a powerful addition to any volumizing hair products or hair care routine.</div></div><div class="la-note">⚠ FGF5 mention may confuse buyers new to the brand. Consider simplifying to "antioxidant botanicals that support scalp health" and saving FGF5 language for the activators. </div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 4</div><div class="la-copy-row"><div class="la-num">4</div><div class="la-copy-block ok"><strong>Non-Comedogenic and Residue-Free</strong> – This clean formula is non-comedogenic and free from sulfates, parabens, phthalates, and silicones. It won't clog follicles or leave behind powdery buildup, making it suitable for all hair types, including color-treated and keratin-treated hair.</div></div><div class="la-note"> <span class="kw-coverage-tag hit">non-comedogenic</span> <span class="kw-coverage-tag hit">sulfate-free</span> <span class="kw-coverage-tag hit">paraben-free</span></div></div><div class="la-card"><div class="la-card-label"></div><div class="la-card-sublabel">BULLET 5</div><div class="la-copy-row"><div class="la-num">5</div><div class="la-copy-block ok"><strong>Formulated by Hair Biologists, Recommended by Stylists</strong> – Like all EVOLIS hair products, this dry shampoo spray is backed by science and crafted for performance. Whether you're styling limp, oily hair or looking to boost volume on the go, it acts as a versatile volume powder, hair volumizer, and hair texture spray.</div></div><div class="la-note"> <span class="kw-coverage-tag hit">volume powder</span> <span class="kw-coverage-tag hit">hair volumizer</span> <span class="kw-coverage-tag hit">hair texture spray</span></div></div><div class="la-card"><div class="la-card-label">Backend Keywords — Spaces Only</div><div class="la-char-info">≤250 chars &nbsp;·&nbsp; <span class="char-pill warn">245 chars used</span></div><div class="la-backend-block">dry shampoo dry shampoo for women texture powder dry shampoo for dark hair travel dry shampoo volumizing hair products powder dry shampoo volume spray root lifter hair products hair texture spray hair volumizer hair products for women brunette dry shampoo volume powder non aerosol dry shampoo volumizing spray hair root touch up powder</div><button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button></div>
-      </div>
-      <!-- /la-dryshampoo -->
-
+  <!-- Bundles — deliberately simpler than the 7 categories above: shows
+       CURRENT live listing content only (from Products Cache), NOT a full
+       AI audit — run-listing-audit.js hasn't been confirmed to cover
+       bundle SKUs, so this doesn't fabricate compliance notes it can't
+       back up. Sub-tabs and card shells generated dynamically by
+       renderBundleListingTabs() from Product Short Name's bundle list. -->
+  <div class="channel-page" id="la-bundles">
+    <div id="la-bundles-container"><div style="color:var(--muted);font-size:12px;padding:12px;">Loading…</div></div>
   </div>
-
   </div><!-- /page-listing -->
 
   <!-- ══ PPC (internal only) ══ -->
@@ -16905,7 +17608,7 @@ function injectInsightsBoxes(ins) {
   // same rendered HTML is placed into all 5 category tabs' containers —
   // matching Jaclyn's ask that each tab show it, not just Activators.
   if (ins.listing) {
-    ['la-insights-activators','la-insights-shampoos','la-insights-conditioners','la-insights-masks','la-insights-dryshampoo'].forEach(id => {
+    ['la-insights-scar','la-insights-scarplus','la-insights-brite','la-insights-bruise','la-insights-arc','la-insights-bruiserecoveryduo','la-insights-scarkits'].forEach(id => {
       const el = document.getElementById(id);
       if (el) renderListingInsightCards(ins.listing, el);
     });
@@ -17009,6 +17712,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadInsightsFromSheet();
   await loadListingsFromSheet(false);
   await loadAuditResultsFromSheet();
+  if (typeof window.renderBundleListingTabs === 'function') window.renderBundleListingTabs();
 });
 
 
@@ -17331,15 +18035,102 @@ function injectAuditResults(results) {
 
 // Maps SKU → sub-page id
 const SKU_TO_PAGE_ID = {
-  'EVO0001':'la-evo0001', 'EVO0005':'la-evo0005', 'EVO0009':'la-evo0009',
-  'EVO0002':'la-evo0002', 'EVO0006':'la-evo0006', 'EVO0010':'la-evo0010',
-  'EVO0014':'la-evo0014', 'EVO0016':'la-evo0016',
-  'EVO0003':'la-cond-evo0003', 'EVO0007':'la-cond-evo0007', 'EVO0011':'la-cond-evo0011',
-  'EVO0015':'la-cond-evo0015', 'EVO0017':'la-cond-evo0017',
-  'EVO0004':'la-mask-evo0004', 'EVO0008':'la-mask-evo0008',
-  'EVO0018':'la-mask-evo0018', 'EVO0019':'la-mask-evo0019',
-  'EVO0012':'la-dryshampoo'
+  'SVA0001-stickerless':'la-scar-0001-stickerless',
+  'SVA0002':'la-scar-0002',
+  'SVA0004':'la-scar-0004',
+  'SVA0010':'la-scar-0010',
+  'SVA0006':'la-scarplus-0006',
+  'SVA0007':'la-scarplus-0007',
+  'SVA0003-stickerless':'la-brite-0003-stickerless',
+  'SVA0003.2pk':'la-brite-0003.2pk',
+  'SVA0005':'la-bruise-0005',
+  'SVA0011':'la-arc-0011',
+  'SVA0012':'la-bruiserecoveryduo-0012',
+  'SVA0008':'la-scarkits-0008',
+  'SVA0009':'la-scarkits-0009',
 };
+
+function sanitizeForId(s) {
+  return String(s || '').replace(/[^A-Za-z0-9_-]/g, '-');
+}
+
+// Bundles — deliberately simpler than the 7 categories above: shows
+// CURRENT live listing content only (same Products Cache source
+// loadListingsFromSheet uses below), NOT a full AI audit —
+// run-listing-audit.js hasn't been confirmed to cover bundle SKUs, so
+// this doesn't fabricate compliance notes or keyword-coverage tags it
+// can't back up. Sub-tabs and card content are generated dynamically
+// from getBundleProducts() rather than hand-authored, since bundle
+// SKUs/ASINs are opaque Amazon-generated codes.
+async function renderBundleListingTabs() {
+  const container = document.getElementById('la-bundles-container');
+  if (!container) return;
+  try {
+    const bundleProducts = await getBundleProducts();
+    if (!bundleProducts.length) {
+      container.innerHTML = '<div style="color:var(--muted);font-size:12px;">No bundle SKUs found on Product Short Name.</div>';
+      return;
+    }
+
+    const url = 'https://docs.google.com/spreadsheets/d/' + SHEET_LISTINGS_ID +
+      '/export?format=csv&gid=' + SHEET_LISTINGS_GID + '&_cb=' + Date.now();
+    const res = await fetch(url).catch(() => null);
+    const text = (res && res.ok) ? await res.text() : '';
+    const rows = parseCsvToRows(text);
+    const latestRowBySku = {};
+    rows.forEach(row => {
+      const sku = (row['sku'] || '').trim().toUpperCase();
+      if (!sku) return;
+      const date = row['date'] || '';
+      if (!latestRowBySku[sku] || date > (latestRowBySku[sku]['date'] || '')) latestRowBySku[sku] = row;
+    });
+    console.log('[Bundles][Listing][qa] Products Cache resolved', Object.keys(latestRowBySku).length, 'SKUs — checking against', bundleProducts.length, 'bundle SKU(s) from Product Short Name.');
+
+    const idFor = sku => 'la-bundle-' + sanitizeForId(sku);
+    const shortLabel = s => String(s || '').replace(/\s*\([^)]*\)/g, '').trim();
+
+    const subTabsHtml = bundleProducts.map((p, i) =>
+      `<button class="sub-tab${i === 0 ? ' active' : ''}" onclick="showSubTab('la-bundles-container','${idFor(p.sku)}',this)">${escapeHtmlOrg(shortLabel(p.label))}</button>`
+    ).join('');
+
+    const fieldOrEmpty = (row, field) => {
+      if (!row) return '<span style="color:var(--muted);">No Products Cache row found for this SKU.</span>';
+      const val = row[field] || '';
+      return val ? escapeHtmlOrg(val) : '<span style="color:var(--muted);">(empty)</span>';
+    };
+
+    const pagesHtml = bundleProducts.map((p, i) => {
+      const row = latestRowBySku[p.sku.toUpperCase()];
+      const bulletsHtml = [1, 2, 3, 4, 5].map(n => `<div class="la-card">
+          <div class="la-card-label">${n === 1 ? 'Active Bullet Points' : ''}</div>
+          <div class="la-card-sublabel">BULLET ${n}</div>
+          <div class="la-copy-row"><div class="la-num">${n}</div><div class="la-copy-block ok">${fieldOrEmpty(row, 'bullet_' + n)}</div></div>
+        </div>`).join('');
+
+      return `<div class="sub-page${i === 0 ? ' active' : ''}" id="${idFor(p.sku)}">
+        <div class="la-hero"><div class="la-hero-left">
+          <div class="la-hero-meta">${escapeHtmlOrg(p.sku)} &nbsp;·&nbsp; ASIN ${escapeHtmlOrg(p.asin)} &nbsp;·&nbsp; Bundle</div>
+          <div class="la-hero-title">${escapeHtmlOrg(p.label)}</div>
+        </div></div>
+        <div class="la-card"><div class="la-card-label">Active Title</div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">${fieldOrEmpty(row, 'title')}</div></div></div>
+        <div class="la-card"><div class="la-card-label">Item Highlights</div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">${fieldOrEmpty(row, 'item_highlights')}</div></div></div>
+        ${bulletsHtml}
+        <div class="la-card"><div class="la-card-label">Active Product Description</div><div class="la-copy-row"><div class="la-num">1</div><div class="la-copy-block ok">${fieldOrEmpty(row, 'description')}</div></div></div>
+        <div class="la-card"><div class="la-card-label">Backend Keywords</div><div class="la-backend-block">${row ? escapeHtmlOrg(row['backend_keywords'] || '') : ''}</div>
+          <button class="la-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('.la-backend-block').textContent)">📋 Copy Backend Keywords</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    container.innerHTML = `<div class="ppc-note" style="margin-bottom:14px;">ℹ Current live listing content only, pulled directly from the Products Cache sheet. This is NOT a full AI audit like the other 7 categories — no compliance notes, no keyword-coverage tags. Bundle SKUs haven't been confirmed as covered by the Listing Audit AI review yet.</div>
+      <div class="sub-tabs">${subTabsHtml}</div>
+      ${pagesHtml}`;
+  } catch (err) {
+    console.warn('[Bundles][Listing] failed:', err.message);
+    container.innerHTML = '<div style="color:var(--danger);font-size:12px;">Error loading bundle listing content — see console.</div>';
+  }
+}
+window.renderBundleListingTabs = renderBundleListingTabs;
 
 async function loadListingsFromSheet(forceRefresh) {
   const badge = document.getElementById('listings-sync-badge');
