@@ -13,17 +13,10 @@
 // This function never throws — a failure inside the alerting itself only
 // logs a warning, so it can never mask or replace the original error.
 //
-// Required env vars (set these in the SKINUVA Vercel project — they do
-// NOT carry over from évolis's or any other brand's project):
+// Required env vars (set these in the evolis Vercel project — they do
+// NOT carry over from the VB Cosmetics project):
 //   CRON_ALERTS_RESEND_API_KEY
 //   CRON_ALERTS_RECIPIENTS — comma-separated
-//
-// Adapted from évolis's equivalent file (2026-08-10). The only real change:
-// the alert branding below said "NEWDERM" inévolis's version — changed to
-// "SKINUVA" here so alert emails self-identify which brand's cron actually
-// failed, rather than every brand's alerts looking identical. Confirm with
-// Jaclyn if "NEWDERM" was meant to indicate something else (e.g. a selling
-// account or parent company) rather than the brand itself.
 
 const INSTRUCTIONS_URL = 'https://docs.google.com/document/d/1eR41bQVQtP4PJMyX5P0Pa3yS6e_1SOTgW7wec3xJcW4/edit?tab=t.0';
 
@@ -52,7 +45,7 @@ async function sendCronFailureAlert(sourceName, errorMessage, extra = {}) {
     const html = `
       <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto">
         <div style="background:#a02828;padding:18px 22px;border-radius:8px 8px 0 0">
-          <h2 style="color:#fff;margin:0;font-size:16px">⚠ SKINUVA Cron Failure — ${sourceName}</h2>
+          <h2 style="color:#fff;margin:0;font-size:16px">⚠ NEWDERM Cron Failure — ${sourceName}</h2>
         </div>
         <div style="background:#f8f9fa;padding:20px 22px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px">
           <table style="width:100%;border-collapse:collapse;margin-bottom:14px">
@@ -67,7 +60,7 @@ async function sendCronFailureAlert(sourceName, errorMessage, extra = {}) {
               📋 Manual Fix Instructions →
             </a>
           </p>
-          <p style="margin:14px 0 0;font-size:11px;color:#999">Sent by the shared failure-alert helper (api/_alerts.js) · Medaltus · SKINUVA</p>
+          <p style="margin:14px 0 0;font-size:11px;color:#999">Sent by the shared failure-alert helper (api/_alerts.js) · Medaltus · NEWDERM</p>
         </div>
       </div>`;
 
@@ -80,7 +73,7 @@ async function sendCronFailureAlert(sourceName, errorMessage, extra = {}) {
       body: JSON.stringify({
         from:    'Medaltus Alerts <reports@medaltus.com>',
         to:      recipients,
-        subject: `⚠ SKINUVA Cron Failure — ${sourceName}`,
+        subject: `⚠ NEWDERM Cron Failure — ${sourceName}`,
         html,
       }),
     });
