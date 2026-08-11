@@ -690,6 +690,14 @@ function buildSkuStrategySnapshots(kwRows, bizRowsFull, sqpRows) {
   });
 
   const allSkus = new Set([...bizByRootSku.keys(), ...kwBySku.keys()]);
+  // Direct before/after comparison — confirms whether the root-SKU
+  // consolidation above actually reduced the count (e.g. the "28 SKUs"
+  // logged for Skinuva before this fix, against a real catalog of ~13),
+  // rather than only seeing the final post-consolidation number with
+  // nothing to compare it against.
+  const rawSkuSet = new Set([...bizBySku.keys()]);
+  kwRows.forEach(r => { const s = (r.sku || '').trim(); if (s) rawSkuSet.add(s); });
+  console.log(`[run-analysis] buildSkuStrategySnapshots — raw SKU strings before consolidation: ${rawSkuSet.size}, after rooting to base SKU: ${allSkus.size}`);
   const snapshots = {};
 
   allSkus.forEach(sku => {
@@ -995,6 +1003,13 @@ ${listingCtxTrimmed}`;
 
   const data = await claudeRes.json();
   _lap('Claude response body parsed as JSON');
+  // Logged unconditionally (not just on truncation) — data.usage is
+  // Claude's own ground-truth token count for this exact request/response,
+  // not an estimate from character count like userPrompt.length above.
+  // Directly confirms whether the rank_changes cap + SKU-consolidation
+  // fixes actually reduced prompt/response size, rather than inferring it
+  // indirectly from timing alone.
+  console.log(`[run-analysis] ${brand.id} — Claude usage: input_tokens=${data.usage && data.usage.input_tokens}, output_tokens=${data.usage && data.usage.output_tokens}, stop_reason=${data.stop_reason}`);
   if (data.stop_reason === 'max_tokens') {
     console.warn(`[run-analysis] ${brand.id} — response truncated by max_tokens`);
   }
@@ -1003,6 +1018,7 @@ ${listingCtxTrimmed}`;
     .filter(b => b.type === 'text')
     .map(b => b.text)
     .join('');
+  console.log(`[run-analysis] ${brand.id} — response text length: ${raw.length} chars`);
 
   const clean0 = raw
     .replace(/^```json\s*/i, '')
@@ -1044,6 +1060,7 @@ ${listingCtxTrimmed}`;
     _lap('JSON repair failed, using fallback insights — returning early');
     return insights; // already has rank_changes/etc. attached — skip the merge-back below, it's already in final shape
   }
+  _lap('insights JSON parsed successfully (as-is or via repair)');
 
   insights.date = new Date().toISOString().slice(0, 10); // always override — Claude often hallucinates dates
 
