@@ -821,15 +821,22 @@ ${listingCtxTrimmed}`;
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      // Raised from 5000 to 12000 on 2026-07-28 — the item-count caps
-      // removed earlier that same day made responses genuinely longer
-      // (uncapped wins/actions/opportunities/keywords_to_watch, plus a
-      // keyed recommended-action sentence per keyword in rank_changes,
-      // which scales with however many keywords this brand tracks), and
-      // 5000 started truncating mid-response for evolis the same day this
-      // shipped. See the repair logic below for what happens if a
-      // response still exceeds this.
-      max_tokens: 12000,
+      // Raised again 2026-08-11 — 12000 (itself already raised once from
+      // 5000 for évolis on 2026-07-28) started truncating for Skinuva:
+      // confirmed via Vercel logs, stop_reason: max_tokens, all JSON
+      // repair attempts failed, fell back to deterministic-only insights
+      // for the 2026-08-11 run. Skinuva tracks 277 keywords (per that
+      // same log's raw output) — since the response includes a keyed
+      // recommended-action sentence per keyword, more tracked keywords
+      // means a longer required response, not a fixed cost. This is a
+      // reactive cap increase, not a structural fix — if Skinuva's
+      // tracked-keyword count keeps growing, the same truncation can
+      // recur at an even higher threshold. A more durable fix would cap
+      // per-keyword prose length more aggressively in the prompt, or
+      // limit recommended_action generation to the highest-priority
+      // keyword tier rather than all 277 — worth considering if this
+      // keeps happening rather than raising the number again each time.
+      max_tokens: 24000,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }]
     })
