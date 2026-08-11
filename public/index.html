@@ -409,6 +409,11 @@ table.perf-compare th.prodcol{text-align:center;}
 table.perf-compare td{padding:12px 14px;border-bottom:1px solid var(--border2);font-size:13px;font-weight:700;color:var(--navy);text-align:center;}
 table.perf-compare td:first-child{text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
 table.perf-compare tr:last-child td{border-bottom:none;}
+table.perf-compare th.prodcol-oos, table.perf-compare td.prodcol-oos{background:rgba(120,120,130,.14);}
+table.perf-compare td.prodcol-oos{color:var(--muted)!important;}
+.prodcol-oos-pill{display:inline-block;margin-top:4px;font-size:9px;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:8px;background:var(--danger);color:#fff;text-transform:uppercase;}
+.pcard-oos-overlay{position:absolute;inset:0;background:rgba(230,230,235,.72);border-radius:0 0 var(--radius) var(--radius);z-index:5;display:flex;align-items:flex-start;justify-content:flex-end;padding:14px;pointer-events:none;}
+.pcard-oos-overlay .prodcol-oos-pill{pointer-events:none;}
 .prodcol-name{font-family:var(--font-subheader);font-size:14px;font-weight:700;color:var(--navy);}
 .prodcol-sku{font-size:10px;color:var(--muted);font-weight:400;}
 
@@ -461,7 +466,7 @@ table.perf-compare tr:last-child td{border-bottom:none;}
 .evs-outlook-text{font-size:14.5px;color:var(--navy);line-height:1.7;}
 .evs-outlook-text strong{font-weight:700;}
 
-.pcard-exec-body{padding:18px 20px;display:grid;grid-template-columns:1.2fr 1fr;gap:24px;}
+.pcard-exec-body{padding:18px 20px;display:grid;grid-template-columns:1.2fr 1fr;gap:24px;position:relative;}
 .hero-tag{display:inline-block;font-size:10.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--bg2);color:var(--navy);border:1px solid var(--border);margin:2px 3px 2px 0;}
 details.inci-toggle{margin:8px 0 14px;}
 details.inci-toggle summary{font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;list-style:none;}
@@ -13317,13 +13322,17 @@ async function ovLoadPriorityActions(year, month) {
 // couldn't pull this specific sheet's header row directly this session.
 // If skuType/category come back empty for every row despite the sheet
 // clearly having data, a header-text mismatch is the first thing to check.
-// FIXED 2026-08-11, Skinuva-specific: the separator character class only
-// covered "•" (bullet), "-", and "–" (en dash) — but Skinuva's own
-// Product Category column uses "·" (middle dot, U+00B7), a visually
-// similar but distinct Unicode character that the old regex silently
-// failed to match, leaving the brand prefix ("SVA · ") un-stripped.
+// FIXED 2026-08-11, Skinuva-specific — round 2: the previous fix added
+// "·" to an enumerated list of separator characters ("•", "-", "–"), but
+// Bruise Recovery Duo still failed to match after that fix, meaning the
+// sheet is using yet another separator character variant not in that
+// list. Rather than keep enumerating unicode look-alikes one at a time
+// as each new one surfaces, this now matches ANY single non-word,
+// non-space character as the separator (a dash, dot, bullet, or any
+// other punctuation-like symbol), which covers every case seen so far
+// and any future variant without needing another fix.
 function stripCategoryBrandPrefix(raw) {
-  return (raw || '').trim().replace(/^[A-Za-z0-9]+\s*[•·\-–]\s*/, '').trim();
+  return (raw || '').trim().replace(/^[A-Za-z0-9]+\s*[^\w\s]\s*/, '').trim();
 }
 let _productMasterPromise = null;
 function getProductMaster() {
@@ -13763,13 +13772,14 @@ async function renderCategoryPerformanceTable(containerId, categoryLabel) {
     const { year, month } = ovGetLastFullMonth();
     const monthPrefix = `${year}-${String(month).padStart(2, '0')}`;
 
-    const [master, kwCsv, bizCsv, amzCsv, wmtCsv, webCsv] = await Promise.all([
+    const [master, kwCsv, bizCsv, amzCsv, wmtCsv, webCsv, oosBySku] = await Promise.all([
       getProductMaster(),
       fetch(ovCsvUrl(KEYWORD_TRACKER_SUMMARY_SHEET_ID, KEYWORD_TRACKER_SUMMARY_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
       fetch(ovCsvUrl(OV_BUSINESS_REPORT_SHEET_ID, OV_BUSINESS_REPORT_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
       fetch(ovCsvUrl(OV_ORDER_SYNC_SHEET_ID, OV_ORDER_SYNC_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
       fetch(ovCsvUrl(OV_WMT_ORDERS_SHEET_ID, OV_WMT_ORDERS_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
       fetch(ovCsvUrl(OV_WEB_ORDERS_SHEET_ID, OV_WEB_ORDERS_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
+      getOosStatusBySku(),
     ]);
 
     const kwRows  = parseCsvToRows(kwCsv);
@@ -13797,16 +13807,32 @@ async function renderCategoryPerformanceTable(containerId, categoryLabel) {
       return;
     }
 
-    const rowsData = { bsr: [], sessions: [], units: [], revenue: [], conv: [], rating: [] };
+    const rowsData = { bsr: [], subBsr: [], sessions: [], units: [], revenue: [], conv: [], rating: [] };
 
     products.forEach(p => {
       const kwRow = pickKwRowForAsin(kwRows, p.asin);
+      const prevKwRow = kwRow ? pickPreviousKwRowForAsin(kwRows, p.asin, kwRow.date || '') : null;
+
+      // Split into two rows 2026-08-10 per Jaclyn, now that category/
+      // subcategory are synced fields (upload-keyword-tracker.js) — BSR
+      // shows the overall category name, Subcategory BSR shows its own
+      // name, each with its own independent trend marker (the two ranks
+      // can move in different directions from each other).
       let bsrText = '—';
       if (kwRow && kwRow.bsr) {
         bsrText = '#' + (Number(kwRow.bsr) || 0).toLocaleString();
-        if (kwRow.subcategory_bsr) bsrText += ` (Sub #${(Number(kwRow.subcategory_bsr) || 0).toLocaleString()})`;
+        if (kwRow.category) bsrText += ` (${escapeHtmlOrg(kwRow.category)})`;
+        bsrText += buildBsrTrendHtml(kwRow.bsr, prevKwRow, 'bsr');
       }
       rowsData.bsr.push(bsrText);
+
+      let subBsrText = '—';
+      if (kwRow && kwRow.subcategory_bsr) {
+        subBsrText = '#' + (Number(kwRow.subcategory_bsr) || 0).toLocaleString();
+        if (kwRow.subcategory) subBsrText += ` (${escapeHtmlOrg(kwRow.subcategory)})`;
+        subBsrText += buildBsrTrendHtml(kwRow.subcategory_bsr, prevKwRow, 'subcategory_bsr');
+      }
+      rowsData.subBsr.push(subBsrText);
 
       const rating = kwRow ? parseFloat(kwRow.rating) : NaN;
       const reviews = kwRow ? parseInt(kwRow.review_count, 10) : NaN;
@@ -13838,23 +13864,35 @@ async function renderCategoryPerformanceTable(containerId, categoryLabel) {
       rowsData.conv.push(conv != null ? conv.toFixed(2) + '%' : '—');
     });
 
-    const theadHtml = '<tr><th></th>' + products.map(p =>
-      `<th class="prodcol"><div class="prodcol-name">${escapeHtmlOrg(p.name || p.sku)}</div><div class="prodcol-sku">${escapeHtmlOrg(p.sku)}</div></th>`
-    ).join('') + '</tr>';
+    const theadHtml = '<tr><th></th>' + products.map(p => {
+      const isOos = !!oosBySku[p.sku.toUpperCase()];
+      return `<th class="prodcol${isOos ? ' prodcol-oos' : ''}"><div class="prodcol-name">${escapeHtmlOrg(p.name || p.sku)}</div><div class="prodcol-sku">${escapeHtmlOrg(p.sku)}</div>${isOos ? '<div class="prodcol-oos-pill">Out of Stock</div>' : ''}</th>`;
+    }).join('') + '</tr>';
 
     const rowDefs = [
-      ['BSR', 'bsr'], ['Sessions', 'sessions'],
+      ['BSR', 'bsr'], ['Subcategory BSR', 'subBsr'], ['Sessions', 'sessions'],
       [`Units — ${OV_MONTH_ABBR[month - 1]}`, 'units'],
       ['Revenue', 'revenue'], ['Conversion', 'conv'], ['Rating', 'rating'],
     ];
     const tbodyHtml = rowDefs.map(([label, key]) =>
-      `<tr><td>${label}</td>${rowsData[key].map(v => `<td>${v}</td>`).join('')}</tr>`
+      `<tr><td>${label}</td>${rowsData[key].map((v, i) => `<td${oosBySku[products[i].sku.toUpperCase()] ? ' class="prodcol-oos"' : ''}>${v}</td>`).join('')}</tr>`
     ).join('');
+
+    // Cosmetic — added 2026-08-11 per Jaclyn: with only one product in a
+    // category, the table's default width:100% (from the .perf-compare
+    // class, shared with every other category regardless of product
+    // count) stretched the single product column across the full card
+    // width, leaving a large empty gap between the row labels and the
+    // actual values. Single-product categories instead size the table to
+    // its content and center it, rather than letting it fill the card.
+    const tableStyle = products.length === 1
+      ? 'width:auto;min-width:280px;max-width:420px;margin:0 auto;'
+      : '';
 
     container.innerHTML = `<div class="card">
       <div class="card-title" style="margin-bottom:2px;">Performance — ${OV_MONTH_ABBR[month - 1]} ${year}</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Amazon</div>
-      <div style="overflow-x:auto;"><table class="perf-compare"><thead>${theadHtml}</thead><tbody>${tbodyHtml}</tbody></table></div>
+      <div style="overflow-x:auto;"><table class="perf-compare" style="${tableStyle}"><thead>${theadHtml}</thead><tbody>${tbodyHtml}</tbody></table></div>
     </div>`;
   } catch (err) {
     console.warn(`[CategoryPerf][${categoryLabel}] load failed:`, err.message);
@@ -14161,10 +14199,11 @@ async function renderProductPortfolioCards(productTypeKey, productIds) {
   try {
     const gid = COMPETITOR_GID_BY_PRODUCT_TYPE[productTypeKey];
     if (!gid) { console.warn('[Variations] no gid configured for product type', productTypeKey); return; }
-    const [master, csv, itemTypeBySku] = await Promise.all([
+    const [master, csv, itemTypeBySku, oosBySku] = await Promise.all([
       getProductMaster(),
       fetch(ovCsvUrl(SHEET_COMPETITOR_ID, gid) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
       getItemTypeBySku(),
+      getOosStatusBySku(),
     ]);
     const rows = parseCsvFull(csv);
     const varByAsin = varParseSection(rows);
@@ -14198,6 +14237,26 @@ async function renderProductPortfolioCards(productTypeKey, productIds) {
       setPerfCellText(`pcard-itemtype-${suffix}`, itemTypeBySku[sku] || '');
       setPerfCellText(`pcard-asin-${suffix}`, entry.asin || '—');
       setPerfCellText(`pcard-price-${suffix}`, entry.price ? '$' + entry.price.toFixed(2) : '—');
+
+      // OOS dulling overlay — traverses from the name element (nameEl)
+      // rather than needing a new ID on the card body itself, since the
+      // pcard-exec-body containers are static hand-authored HTML with no
+      // per-SKU id of their own. Inserts/removes the overlay div fresh
+      // each render rather than toggling a class, so this is safe to
+      // re-run repeatedly (e.g. on a refresh) without stacking duplicate
+      // overlays.
+      const nameEl = document.getElementById(`pcard-name-${suffix}`);
+      const cardBody = nameEl ? nameEl.closest('.pcard-exec')?.querySelector('.pcard-exec-body') : null;
+      if (cardBody) {
+        const existingOverlay = cardBody.querySelector('.pcard-oos-overlay');
+        if (existingOverlay) existingOverlay.remove();
+        if (oosBySku[sku.toUpperCase()]) {
+          const overlay = document.createElement('div');
+          overlay.className = 'pcard-oos-overlay';
+          overlay.innerHTML = '<span class="prodcol-oos-pill">Out of Stock</span>';
+          cardBody.appendChild(overlay);
+        }
+      }
 
       const priceContextEl = document.getElementById(`pcard-pricecontext-${suffix}`);
       if (priceContextEl) priceContextEl.innerHTML = varRenderPriceContext(entry.name || sku, entry.price || 0, topCompetitors);
