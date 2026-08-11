@@ -1629,10 +1629,12 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <span id="web-hdr-date" style="font-size:11px;color:var(--muted);">📅 Loading…</span>
       </div>
 
-      <!-- Order-type sub-tabs — Skinuva-specific (2026-08-10, per Jaclyn):
-           website order data is split by SKU prefix into Customer (C-),
-           Physician (P-), and International (I-) order types. Samples
-           (S-) are deliberately excluded/ignored for now, per Jaclyn.
+      <!-- Order-type sub-tabs — Skinuva-specific: website order data is
+           split by SKU prefix into Customer (C-), Physician (P-),
+           International (I-), and Samples (S-) order types. Samples was
+           added 2026-08-11 as a 4th tab per Jaclyn — originally excluded
+           entirely (2026-08-10), but requested afterward once internal
+           feedback said the data would be useful to see after all.
            Customer is the default/primary tab — it keeps all the original
            element IDs (web-kpi-*, chart-web, web-tp-tbody, etc.) so the
            PDF export (which only ever reads those IDs) picks up Customer
@@ -1643,6 +1645,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <button class="sub-tab active" onclick="showWebOrderType('customer', this)">Customer</button>
         <button class="sub-tab" onclick="showWebOrderType('physician', this)">Physician</button>
         <button class="sub-tab" onclick="showWebOrderType('international', this)">International</button>
+        <button class="sub-tab" onclick="showWebOrderType('samples', this)">Samples</button>
       </div>
 
       <div class="web-order-type-page active" id="web-ordertype-customer">
@@ -1737,6 +1740,33 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
           <table class="data-table" id="webintl-top-sellers">
             <thead><tr><th style="width:32px;">#</th><th>Product</th><th>Units</th><th>Units (Ads)</th><th>Units (Organic)</th></tr></thead>
             <tbody id="webintl-tp-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="web-order-type-page" id="web-ordertype-samples" style="display:none;">
+        <div class="kpi-row">
+          <div class="kpi-card" id="websamp-kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="websamp-kpi-total-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="websamp-kpi-avg-order"><div class="kpi-label">Average Order</div><div class="kpi-value sm">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="websamp-kpi-units-ads"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="websamp-kpi-units-organic"><div class="kpi-label">Units (Organic)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div class="card-title" style="margin-bottom:0;">Sales Revenue by Month</div>
+            <div id="legend-websamp" style="display:flex;align-items:center;"></div>
+          </div>
+          <div style="position:relative;height:320px;"><canvas id="chart-websamp"></canvas></div>
+        </div>
+        <div class="card" id="websamp-top-products-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px;">
+            <span class="card-title" style="margin-bottom:0;">Top Selling Products <span style="font-size:11px;color:var(--muted);font-weight:400;">(by Units)</span></span>
+            <span id="websamp-products-source" style="font-size:10px;color:var(--muted);"></span>
+          </div>
+          <table class="data-table" id="websamp-top-sellers">
+            <thead><tr><th style="width:32px;">#</th><th>Product</th><th>Units</th><th>Units (Ads)</th><th>Units (Organic)</th></tr></thead>
+            <tbody id="websamp-tp-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -4791,6 +4821,7 @@ function showChannel(page, channelId, btn) {
 
     if (type === 'physician' && typeof window.initWebPhysicianLive === 'function') window.initWebPhysicianLive();
     if (type === 'international' && typeof window.initWebInternationalLive === 'function') window.initWebInternationalLive();
+    if (type === 'samples' && typeof window.initWebSamplesLive === 'function') window.initWebSamplesLive();
   }
 
 
@@ -6174,6 +6205,12 @@ async function initSns() {
     if (window._webIntlLivePromise) return window._webIntlLivePromise;
     window._webIntlLivePromise = loadWebOrderTypeTab('I-', 'webintl');
     return window._webIntlLivePromise;
+  };
+
+  window.initWebSamplesLive = function () {
+    if (window._webSampLivePromise) return window._webSampLivePromise;
+    window._webSampLivePromise = loadWebOrderTypeTab('S-', 'websamp');
+    return window._webSampLivePromise;
   };
 
 
@@ -10196,6 +10233,12 @@ async function initSnsExternal() {
   let _inboundBySku = {}; // SKU -> summed Expected Qty across all *Open* ASNs
 
   let _shopifySkus = new Set(); // base SKUs that have a Channel=Shopify row on the master sheet
+  // Added 2026-08-11 per Jaclyn: marketing collateral (brochures, cards,
+  // inserts) also needs its consignment stock tracked on this page, even
+  // though these items aren't sold on Shopify (or any channel) at all —
+  // matched purely by name, not by Channel/SKU Type, since they don't fit
+  // either of those columns' normal meaning.
+  let _collateralSkus = new Set();
 
   // REWRITTEN 2026-08-10 per Jaclyn: switched from manual column-index
   // parsing (cols[1]/cols[2]/cols[7]) to this sheet's own header-keyed
@@ -10232,6 +10275,7 @@ async function initSnsExternal() {
         if (sku && name) _skuNameMap[sku] = name;
         if (sku && status) _skuStatusMap[sku] = status;
         if (sku && channel === 'SHOPIFY') _shopifySkus.add(sku);
+        if (sku && /brochure|card|insert/i.test(name)) _collateralSkus.add(sku);
       });
     } catch (e) {
       console.warn('[InventoryExternal] Product name lookup failed:', e.message);
@@ -10272,13 +10316,18 @@ async function initSnsExternal() {
         };
       });
 
-      // Scoped to Shopify-channel SKUs only — confirmed via the master
-      // sheet's own Channel column (2026-08-10, screenshots from Jaclyn):
-      // SKUs are listed per (SKU, Channel) row, and this page is
-      // specifically about Shopify-fulfilled 3PL consignment stock, not
-      // Amazon/Walmart. No separate CATALOG/BUNDLE type filter needed —
-      // per Jaclyn, Shopify only ever lists catalog SKUs, never bundles.
-      const skuSet = _shopifySkus;
+      // Scoped to Shopify-channel SKUs, PLUS marketing collateral (name
+      // contains Brochure/Card/Insert) regardless of channel — added
+      // 2026-08-11 per Jaclyn. Confirmed via the master sheet's own
+      // Channel column (2026-08-10, screenshots from Jaclyn): SKUs are
+      // listed per (SKU, Channel) row, and this page is specifically
+      // about Shopify-fulfilled 3PL consignment stock, not Amazon/
+      // Walmart — collateral items are the one deliberate exception,
+      // since Medaltus stocks/fulfills those on Skinuva's behalf too even
+      // though they aren't sold on any channel. No separate CATALOG/
+      // BUNDLE type filter needed — per Jaclyn, Shopify only ever lists
+      // catalog SKUs, never bundles.
+      const skuSet = new Set([..._shopifySkus, ..._collateralSkus]);
 
       _stockRows = [...skuSet].map(sku => {
         const c = consignMap[sku] || { onHand: 0, available: 0, lastUpdated: '' };
