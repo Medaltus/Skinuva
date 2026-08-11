@@ -5050,14 +5050,27 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <button class="sub-tab" onclick="showSubTab('org-scar','osc-ranktracker',this); window.initRankTracker('scar');">Rank Tracker</button>
       </div>
       <div class="sub-page active" id="osc-insights">
-        <div class="insight-grid" style="grid-template-columns:1fr 1fr;">
+        <!-- 4-card layout matching évolis's own pattern — added 2026-08-11
+             per Jaclyn: ins.organic is one shared, brand-wide analysis (not
+             per-category), so the SAME content is injected into every
+             category's cards below, matching exactly how ins.listing
+             already replicates across every Listing Audit tab. -->
+        <div class="insight-grid">
+          <div class="ppc-opp-card summary-type">
+            <div class="ppc-opp-hd"><div class="ppc-opp-badge med">SUMMARY</div><div class="ppc-opp-title">This Week</div></div>
+            <div class="ppc-opp-body" id="osc-insight-summary"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+          </div>
+          <div class="ppc-opp-card win-type">
+            <div class="ppc-opp-hd"><div class="ppc-opp-badge win">✓ WIN</div></div>
+            <div class="ppc-opp-body" id="osc-insight-win"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+          </div>
           <div class="ppc-opp-card action-type">
             <div class="ppc-opp-hd"><div class="ppc-opp-badge urgent">⚡ ACTION</div></div>
-            <div class="ppc-opp-body"><div style="color:var(--muted);font-size:12px;">No AI-generated action items yet for this category — run analysis, or add manually.</div></div>
+            <div class="ppc-opp-body" id="osc-insight-action"><div style="color:var(--muted);font-size:12px;">No AI-generated action items yet — run analysis, or add manually.</div></div>
           </div>
           <div class="ppc-opp-card opportunity-type">
             <div class="ppc-opp-hd"><div class="ppc-opp-badge high">💡 OPPORTUNITY</div></div>
-            <div class="ppc-opp-body"><div style="color:var(--muted);font-size:12px;">No AI-generated opportunities yet for this category — run analysis, or add manually.</div></div>
+            <div class="ppc-opp-body" id="osc-insight-opportunity"><div style="color:var(--muted);font-size:12px;">No AI-generated opportunities yet — run analysis, or add manually.</div></div>
           </div>
         </div>
         <div class="org-section-title">Fastest Path to Page 1 — Scar</div>
@@ -5108,14 +5121,27 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <button class="sub-tab" onclick="showSubTab('org-scarplus','oscp-ranktracker',this); window.initRankTracker('scarplus');">Rank Tracker</button>
       </div>
       <div class="sub-page active" id="oscp-insights">
-        <div class="insight-grid" style="grid-template-columns:1fr 1fr;">
+        <!-- 4-card layout matching évolis's own pattern — added 2026-08-11
+             per Jaclyn: ins.organic is one shared, brand-wide analysis (not
+             per-category), so the SAME content is injected into every
+             category's cards below, matching exactly how ins.listing
+             already replicates across every Listing Audit tab. -->
+        <div class="insight-grid">
+          <div class="ppc-opp-card summary-type">
+            <div class="ppc-opp-hd"><div class="ppc-opp-badge med">SUMMARY</div><div class="ppc-opp-title">This Week</div></div>
+            <div class="ppc-opp-body" id="oscp-insight-summary"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+          </div>
+          <div class="ppc-opp-card win-type">
+            <div class="ppc-opp-hd"><div class="ppc-opp-badge win">✓ WIN</div></div>
+            <div class="ppc-opp-body" id="oscp-insight-win"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+          </div>
           <div class="ppc-opp-card action-type">
             <div class="ppc-opp-hd"><div class="ppc-opp-badge urgent">⚡ ACTION</div></div>
-            <div class="ppc-opp-body"><div style="color:var(--muted);font-size:12px;">No AI-generated action items yet for this category — run analysis, or add manually.</div></div>
+            <div class="ppc-opp-body" id="oscp-insight-action"><div style="color:var(--muted);font-size:12px;">No AI-generated action items yet — run analysis, or add manually.</div></div>
           </div>
           <div class="ppc-opp-card opportunity-type">
             <div class="ppc-opp-hd"><div class="ppc-opp-badge high">💡 OPPORTUNITY</div></div>
-            <div class="ppc-opp-body"><div style="color:var(--muted);font-size:12px;">No AI-generated opportunities yet for this category — run analysis, or add manually.</div></div>
+            <div class="ppc-opp-body" id="oscp-insight-opportunity"><div style="color:var(--muted);font-size:12px;">No AI-generated opportunities yet — run analysis, or add manually.</div></div>
           </div>
         </div>
         <div class="org-section-title">Fastest Path to Page 1 — Scar+</div>
@@ -5166,14 +5192,27 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <button class="sub-tab" onclick="showSubTab('org-brite','obr-ranktracker',this); window.initRankTracker('brite');">Rank Tracker</button>
       </div>
       <div class="sub-page active" id="obr-insights">
-        <div class="insight-grid" style="grid-template-columns:1fr 1fr;">
+        <!-- 4-card layout matching évolis's own pattern — added 2026-08-11
+             per Jaclyn: ins.organic is one shared, brand-wide analysis (not
+             per-category), so the SAME content is injected into every
+             category's cards below, matching exactly how ins.listing
+             already replicates across every Listing Audit tab. -->
+        <div class="insight-grid">
+          <div class="ppc-opp-card summary-type">
+            <div class="ppc-opp-hd"><div class="ppc-opp-badge med">SUMMARY</div><div class="ppc-opp-title">This Week</div></div>
+            <div class="ppc-opp-body" id="obr-insight-summary"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+          </div>
+          <div class="ppc-opp-card win-type">
+            <div class="ppc-opp-hd"><div class="ppc-opp-badge win">✓ WIN</div></div>
+            <div class="ppc-opp-body" id="obr-insight-win"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+          </div>
           <div class="ppc-opp-card action-type">
             <div class="ppc-opp-hd"><div class="ppc-opp-badge urgent">⚡ ACTION</div></div>
-            <div class="ppc-opp-body"><div style="color:var(--muted);font-size:12px;">No AI-generated action items yet for this category — run analysis, or add manually.</div></div>
+            <div class="ppc-opp-body" id="obr-insight-action"><div style="color:var(--muted);font-size:12px;">No AI-generated action items yet — run analysis, or add manually.</div></div>
           </div>
           <div class="ppc-opp-card opportunity-type">
             <div class="ppc-opp-hd"><div class="ppc-opp-badge high">💡 OPPORTUNITY</div></div>
-            <div class="ppc-opp-body"><div style="color:var(--muted);font-size:12px;">No AI-generated opportunities yet for this category — run analysis, or add manually.</div></div>
+            <div class="ppc-opp-body" id="obr-insight-opportunity"><div style="color:var(--muted);font-size:12px;">No AI-generated opportunities yet — run analysis, or add manually.</div></div>
           </div>
         </div>
         <div class="org-section-title">Fastest Path to Page 1 — Brite</div>
@@ -5224,14 +5263,27 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <button class="sub-tab" onclick="showSubTab('org-bruise','obru-ranktracker',this); window.initRankTracker('bruise');">Rank Tracker</button>
       </div>
       <div class="sub-page active" id="obru-insights">
-        <div class="insight-grid" style="grid-template-columns:1fr 1fr;">
+        <!-- 4-card layout matching évolis's own pattern — added 2026-08-11
+             per Jaclyn: ins.organic is one shared, brand-wide analysis (not
+             per-category), so the SAME content is injected into every
+             category's cards below, matching exactly how ins.listing
+             already replicates across every Listing Audit tab. -->
+        <div class="insight-grid">
+          <div class="ppc-opp-card summary-type">
+            <div class="ppc-opp-hd"><div class="ppc-opp-badge med">SUMMARY</div><div class="ppc-opp-title">This Week</div></div>
+            <div class="ppc-opp-body" id="obru-insight-summary"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+          </div>
+          <div class="ppc-opp-card win-type">
+            <div class="ppc-opp-hd"><div class="ppc-opp-badge win">✓ WIN</div></div>
+            <div class="ppc-opp-body" id="obru-insight-win"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+          </div>
           <div class="ppc-opp-card action-type">
             <div class="ppc-opp-hd"><div class="ppc-opp-badge urgent">⚡ ACTION</div></div>
-            <div class="ppc-opp-body"><div style="color:var(--muted);font-size:12px;">No AI-generated action items yet for this category — run analysis, or add manually.</div></div>
+            <div class="ppc-opp-body" id="obru-insight-action"><div style="color:var(--muted);font-size:12px;">No AI-generated action items yet — run analysis, or add manually.</div></div>
           </div>
           <div class="ppc-opp-card opportunity-type">
             <div class="ppc-opp-hd"><div class="ppc-opp-badge high">💡 OPPORTUNITY</div></div>
-            <div class="ppc-opp-body"><div style="color:var(--muted);font-size:12px;">No AI-generated opportunities yet for this category — run analysis, or add manually.</div></div>
+            <div class="ppc-opp-body" id="obru-insight-opportunity"><div style="color:var(--muted);font-size:12px;">No AI-generated opportunities yet — run analysis, or add manually.</div></div>
           </div>
         </div>
         <div class="org-section-title">Fastest Path to Page 1 — Bruise</div>
@@ -5282,14 +5334,27 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <button class="sub-tab" onclick="showSubTab('org-arc','oarc-ranktracker',this); window.initRankTracker('arc');">Rank Tracker</button>
       </div>
       <div class="sub-page active" id="oarc-insights">
-        <div class="insight-grid" style="grid-template-columns:1fr 1fr;">
+        <!-- 4-card layout matching évolis's own pattern — added 2026-08-11
+             per Jaclyn: ins.organic is one shared, brand-wide analysis (not
+             per-category), so the SAME content is injected into every
+             category's cards below, matching exactly how ins.listing
+             already replicates across every Listing Audit tab. -->
+        <div class="insight-grid">
+          <div class="ppc-opp-card summary-type">
+            <div class="ppc-opp-hd"><div class="ppc-opp-badge med">SUMMARY</div><div class="ppc-opp-title">This Week</div></div>
+            <div class="ppc-opp-body" id="oarc-insight-summary"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+          </div>
+          <div class="ppc-opp-card win-type">
+            <div class="ppc-opp-hd"><div class="ppc-opp-badge win">✓ WIN</div></div>
+            <div class="ppc-opp-body" id="oarc-insight-win"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+          </div>
           <div class="ppc-opp-card action-type">
             <div class="ppc-opp-hd"><div class="ppc-opp-badge urgent">⚡ ACTION</div></div>
-            <div class="ppc-opp-body"><div style="color:var(--muted);font-size:12px;">No AI-generated action items yet for this category — run analysis, or add manually.</div></div>
+            <div class="ppc-opp-body" id="oarc-insight-action"><div style="color:var(--muted);font-size:12px;">No AI-generated action items yet — run analysis, or add manually.</div></div>
           </div>
           <div class="ppc-opp-card opportunity-type">
             <div class="ppc-opp-hd"><div class="ppc-opp-badge high">💡 OPPORTUNITY</div></div>
-            <div class="ppc-opp-body"><div style="color:var(--muted);font-size:12px;">No AI-generated opportunities yet for this category — run analysis, or add manually.</div></div>
+            <div class="ppc-opp-body" id="oarc-insight-opportunity"><div style="color:var(--muted);font-size:12px;">No AI-generated opportunities yet — run analysis, or add manually.</div></div>
           </div>
         </div>
         <div class="org-section-title">Fastest Path to Page 1 — ARC</div>
@@ -5340,14 +5405,27 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <button class="sub-tab" onclick="showSubTab('org-bruiserecoveryduo','obrd-ranktracker',this); window.initRankTracker('bruiserecoveryduo');">Rank Tracker</button>
       </div>
       <div class="sub-page active" id="obrd-insights">
-        <div class="insight-grid" style="grid-template-columns:1fr 1fr;">
+        <!-- 4-card layout matching évolis's own pattern — added 2026-08-11
+             per Jaclyn: ins.organic is one shared, brand-wide analysis (not
+             per-category), so the SAME content is injected into every
+             category's cards below, matching exactly how ins.listing
+             already replicates across every Listing Audit tab. -->
+        <div class="insight-grid">
+          <div class="ppc-opp-card summary-type">
+            <div class="ppc-opp-hd"><div class="ppc-opp-badge med">SUMMARY</div><div class="ppc-opp-title">This Week</div></div>
+            <div class="ppc-opp-body" id="obrd-insight-summary"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+          </div>
+          <div class="ppc-opp-card win-type">
+            <div class="ppc-opp-hd"><div class="ppc-opp-badge win">✓ WIN</div></div>
+            <div class="ppc-opp-body" id="obrd-insight-win"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+          </div>
           <div class="ppc-opp-card action-type">
             <div class="ppc-opp-hd"><div class="ppc-opp-badge urgent">⚡ ACTION</div></div>
-            <div class="ppc-opp-body"><div style="color:var(--muted);font-size:12px;">No AI-generated action items yet for this category — run analysis, or add manually.</div></div>
+            <div class="ppc-opp-body" id="obrd-insight-action"><div style="color:var(--muted);font-size:12px;">No AI-generated action items yet — run analysis, or add manually.</div></div>
           </div>
           <div class="ppc-opp-card opportunity-type">
             <div class="ppc-opp-hd"><div class="ppc-opp-badge high">💡 OPPORTUNITY</div></div>
-            <div class="ppc-opp-body"><div style="color:var(--muted);font-size:12px;">No AI-generated opportunities yet for this category — run analysis, or add manually.</div></div>
+            <div class="ppc-opp-body" id="obrd-insight-opportunity"><div style="color:var(--muted);font-size:12px;">No AI-generated opportunities yet — run analysis, or add manually.</div></div>
           </div>
         </div>
         <div class="org-section-title">Fastest Path to Page 1 — Bruise Recovery Duo</div>
@@ -5398,14 +5476,27 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <button class="sub-tab" onclick="showSubTab('org-scarkits','osk-ranktracker',this); window.initRankTracker('scarkits');">Rank Tracker</button>
       </div>
       <div class="sub-page active" id="osk-insights">
-        <div class="insight-grid" style="grid-template-columns:1fr 1fr;">
+        <!-- 4-card layout matching évolis's own pattern — added 2026-08-11
+             per Jaclyn: ins.organic is one shared, brand-wide analysis (not
+             per-category), so the SAME content is injected into every
+             category's cards below, matching exactly how ins.listing
+             already replicates across every Listing Audit tab. -->
+        <div class="insight-grid">
+          <div class="ppc-opp-card summary-type">
+            <div class="ppc-opp-hd"><div class="ppc-opp-badge med">SUMMARY</div><div class="ppc-opp-title">This Week</div></div>
+            <div class="ppc-opp-body" id="osk-insight-summary"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+          </div>
+          <div class="ppc-opp-card win-type">
+            <div class="ppc-opp-hd"><div class="ppc-opp-badge win">✓ WIN</div></div>
+            <div class="ppc-opp-body" id="osk-insight-win"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+          </div>
           <div class="ppc-opp-card action-type">
             <div class="ppc-opp-hd"><div class="ppc-opp-badge urgent">⚡ ACTION</div></div>
-            <div class="ppc-opp-body"><div style="color:var(--muted);font-size:12px;">No AI-generated action items yet for this category — run analysis, or add manually.</div></div>
+            <div class="ppc-opp-body" id="osk-insight-action"><div style="color:var(--muted);font-size:12px;">No AI-generated action items yet — run analysis, or add manually.</div></div>
           </div>
           <div class="ppc-opp-card opportunity-type">
             <div class="ppc-opp-hd"><div class="ppc-opp-badge high">💡 OPPORTUNITY</div></div>
-            <div class="ppc-opp-body"><div style="color:var(--muted);font-size:12px;">No AI-generated opportunities yet for this category — run analysis, or add manually.</div></div>
+            <div class="ppc-opp-body" id="osk-insight-opportunity"><div style="color:var(--muted);font-size:12px;">No AI-generated opportunities yet — run analysis, or add manually.</div></div>
           </div>
         </div>
         <div class="org-section-title">Fastest Path to Page 1 — Scar Kits</div>
@@ -17700,15 +17791,25 @@ function injectInsightsBoxes(ins) {
   // instead of one shared blob in the old #ai-organic-text box. Same
   // ins.organic fields as before — keywords_to_watch maps to the
   // Opportunity card, since "watch" and "opportunity" are the same idea here.
+  // FIXED 2026-08-11 per Jaclyn: this only ever targeted a single set of
+  // IDs (org-insight-summary/win/action/opportunity), which only existed
+  // on évolis's own Activators tab — the other 4 category tabs there have
+  // no matching IDs at all, so they never got populated. ins.organic is
+  // one shared, brand-wide analysis (not per-category), same as
+  // ins.listing below — so the SAME content now gets injected into every
+  // one of Skinuva's 7 category tabs, matching exactly how the listing
+  // insights loop already does this correctly.
   if (ins.organic && ins.organic.summary) {
-    const sumEl = document.getElementById('org-insight-summary');
-    if (sumEl) sumEl.innerHTML = ins.organic.summary;
-    const winEl = document.getElementById('org-insight-win');
-    if (winEl && ins.organic.wins && ins.organic.wins.length) winEl.innerHTML = makeList(ins.organic.wins);
-    const actEl = document.getElementById('org-insight-action');
-    if (actEl && ins.organic.actions && ins.organic.actions.length) actEl.innerHTML = makeList(ins.organic.actions);
-    const oppEl = document.getElementById('org-insight-opportunity');
-    if (oppEl && ins.organic.keywords_to_watch && ins.organic.keywords_to_watch.length) oppEl.innerHTML = makeList(ins.organic.keywords_to_watch);
+    ['osc','oscp','obr','obru','oarc','obrd','osk'].forEach(prefix => {
+      const sumEl = document.getElementById(`${prefix}-insight-summary`);
+      if (sumEl) sumEl.innerHTML = ins.organic.summary;
+      const winEl = document.getElementById(`${prefix}-insight-win`);
+      if (winEl && ins.organic.wins && ins.organic.wins.length) winEl.innerHTML = makeList(ins.organic.wins);
+      const actEl = document.getElementById(`${prefix}-insight-action`);
+      if (actEl && ins.organic.actions && ins.organic.actions.length) actEl.innerHTML = makeList(ins.organic.actions);
+      const oppEl = document.getElementById(`${prefix}-insight-opportunity`);
+      if (oppEl && ins.organic.keywords_to_watch && ins.organic.keywords_to_watch.length) oppEl.innerHTML = makeList(ins.organic.keywords_to_watch);
+    });
   }
   // Weekly Rank Changes table — added 2026-07-23, reads the code-computed
   // (not Claude-computed) rank_changes/new_ppc_converters arrays run-analysis
