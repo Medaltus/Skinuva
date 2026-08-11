@@ -817,7 +817,9 @@ async function runAnalysisForBrand(brand, apiKey) {
 
   const systemPrompt = `You are an expert Amazon brand strategist and listing compliance auditor for Medaltus. Analyzing weekly performance data for ${brandDesc}.
 
-CRITICAL: Respond with a single valid JSON object only. No markdown fences, no preamble, no trailing text after the closing brace. All string values must use escaped quotes if they contain apostrophes or special characters.`;
+CRITICAL: Respond with a single valid JSON object only. No markdown fences, no preamble, no trailing text after the closing brace. All string values must use escaped quotes if they contain apostrophes or special characters.
+
+CRITICAL — ARRAY FORMAT: every JSON array must contain ONLY plain comma-separated values, with NO index number or key written before any item. Correct: ["scar cream","scar","silicone scar sheets"]. WRONG — never do this: [0:"scar cream",1:"scar",2:"silicone scar sheets"]. A numeric index prefix like "0:" or "1:" inside an array is not valid JSON and will break parsing of the entire response.`;
 
   const sqpSection = sqpSection_raw.length
     ? '\n\nSQP Brand Search Query Performance (recent rows):\n' + JSON.stringify(sqpSection_raw)
@@ -1033,10 +1035,32 @@ ${listingCtxTrimmed}`;
   // Attempt 1: as-is (covers the common case — not actually truncated).
   try { insights = JSON.parse(clean0); } catch (e) { lastParseErr = e; }
 
+  // Attempt 1b: added 2026-08-11 after an ACTUAL observed Skinuva failure
+  // (position 18999, stop_reason: end_turn — a complete response, not a
+  // truncated one) pinpointed the exact malformed text: Claude had written
+  // an array like [0:"scar cream",1:"scar",2:"silicone scar sheets"]
+  // instead of ["scar cream","scar","silicone scar sheets"] — a spurious
+  // numeric index prefix before each element, resembling Python's
+  // enumerate() output rather than valid JSON. An unquoted digit-colon
+  // sequence is NEVER valid JSON in any context (a real object key must
+  // be quoted), so stripping any "<digit>:" that appears directly after
+  // "[" or "," is safe regardless of where it shows up — it can only ever
+  // be this exact anti-pattern, never a legitimate structure. Tried before
+  // the truncation-focused repairs below since this fixes a genuine
+  // syntax error in an otherwise-complete response, which those aren't
+  // designed to detect. Also added as an explicit system-prompt warning
+  // above — this is the safety net for whenever that instruction doesn't
+  // get followed.
+  if (!insights) {
+    console.warn(`[run-analysis] ${brand.id} — response has invalid JSON, attempting repair (1/3: numbered-array prefixes)`);
+    const stripped = clean0.replace(/([\[,])\s*\d+:\s*/g, '$1');
+    try { insights = JSON.parse(stripped); } catch (e) { lastParseErr = e; }
+  }
+
   // Attempt 2: the original log_summary-based repair — cheap, and still
   // exactly right when truncation happens to land late in the response.
   if (!insights && !clean0.endsWith('}')) {
-    console.warn(`[run-analysis] ${brand.id} — response may be truncated, attempting repair (1/2: log_summary cut)`);
+    console.warn(`[run-analysis] ${brand.id} — response may be truncated, attempting repair (2/3: log_summary cut)`);
     const lastBrace = clean0.lastIndexOf('"log_summary"');
     if (lastBrace > 0) {
       const attempt = clean0.slice(0, lastBrace) + '"log_summary":"Analysis complete — see organic, PPC and listing sections above."}';
@@ -1047,7 +1071,7 @@ ${listingCtxTrimmed}`;
   // Attempt 3: real bracket/string-tracking repair — works regardless of
   // WHERE the cut happened, unlike attempt 2.
   if (!insights) {
-    console.warn(`[run-analysis] ${brand.id} — attempting repair (2/2: bracket-tracking)`);
+    console.warn(`[run-analysis] ${brand.id} — attempting repair (3/3: bracket-tracking)`);
     try { insights = JSON.parse(repairTruncatedJson(clean0)); } catch (e) { lastParseErr = e; }
   }
 
