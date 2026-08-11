@@ -17998,10 +17998,18 @@ async function runListingAudit() {
             brand:          INSIGHTS_BRAND_TAB,
             sourceSheetId:  SHEET_PRODUCT_INVENTORY_ID,
             auditSheetId:   LISTING_AUDIT_SHEET_ID,
-            keywordSheetId: KEYWORD_STRATEGY_SHEET_ID,
-            skuGidMap:      SKU_KW_GID_MAP,
-            uploadsSheetId: UPLOADS_SHEET_ID,
-            uploadsGid:     UPLOADS_EVOLIS_GID,
+            // keywordSheetId/skuGidMap intentionally omitted — those
+            // pointed at évolis's own per-SKU Keyword Strategy workbook,
+            // which Skinuva doesn't have a real equivalent of yet.
+            // Omitting them is safe: this enrichment is optional
+            // (run-listing-audit.js's own `if (keywordSheetId &&
+            // skuGidMap)` check just skips it silently when missing), so
+            // the core audit still runs correctly, just without the
+            // extra keyword-coverage cross-reference until Skinuva has
+            // its own Keyword Strategy sheet built out.
+            // uploadsSheetId/uploadsGid also omitted — per Jaclyn
+            // 2026-08-11, that manual uploads-log functionality was
+            // replaced by automation and isn't needed at all anymore.
             skuFilter:      skuList   // NEW: only audit these SKUs
           })
         });
