@@ -325,9 +325,31 @@ function computeWhereInListing(keyword, listingRow) {
   return hits.join(', ');
 }
 
-function computeAbaPct(sqpRows, keyword) {
-  const kw = normalizeTerm(keyword);
-  const row = sqpRows.find(r => normalizeTerm(r.search_query || r.keyword) === kw);
+// FIXED 2026-08-11 — confirmed via Vercel logs on a Skinuva run that timed
+// out at the full 300s limit: external API calls (7 OAuth exchanges, 8
+// sheet reads, 1 Claude call) only accounted for ~40s combined, meaning
+// the other ~260s was spent in local computation, not network. This
+// function was the prime suspect and the fix is a clean, safe win either
+// way: it used to do a full sqpRows.find() — a linear scan of the ENTIRE
+// Search Query Performance export — for every single call, and it's
+// called once per tracked keyword in buildRankChanges' main loop (277 for
+// Skinuva). SQP exports are typically huge (every search term with any
+// impression, not just tracked ones — often thousands of rows), so this
+// was O(keywords × sqpRows): 277 keywords against even a modest 10,000-row
+// export is 2.77 million string-normalize-and-compare operations, worse
+// for a larger export. Pre-indexing into a Map once turns that into
+// O(keywords + sqpRows) — 277 lookups against a map built in one pass,
+// regardless of how large the export is.
+function buildSqpIndex(sqpRows) {
+  const map = new Map();
+  sqpRows.forEach(r => {
+    const kw = normalizeTerm(r.search_query || r.keyword);
+    if (kw && !map.has(kw)) map.set(kw, r); // first match wins, same as .find()'s behavior
+  });
+  return map;
+}
+function computeAbaPct(sqpIndex, keyword) {
+  const row = sqpIndex.get(normalizeTerm(keyword));
   if (!row) return null;
   const raw = findField(row, ABA_FIELD_CANDIDATES);
   if (raw === null) return null;
@@ -343,6 +365,7 @@ function buildRankChanges(kwRows, ppcByTerm, sqpRows, listingBySku, comparison) 
   const currSnap = snapshotByKeyword(kwRows, comparison.currDate);
   const prevSnap = snapshotByKeyword(kwRows, comparison.prevDate);
   const allKeywords = new Set([...currSnap.keys(), ...prevSnap.keys()]);
+  const sqpIndex = buildSqpIndex(sqpRows); // built once, not once per keyword — see comment on buildSqpIndex above
 
   const rows = [];
   allKeywords.forEach(kwKey => {
@@ -364,7 +387,7 @@ function buildRankChanges(kwRows, ppcByTerm, sqpRows, listingBySku, comparison) 
       rank_curr_numeric: currRankParsed.numeric, // NOT sent to Claude directly — used to build page1_protects/page1_opportunities and the ranking diagnostic below
       change,
       change_label: label,
-      aba_pct: computeAbaPct(sqpRows, keyword),
+      aba_pct: computeAbaPct(sqpIndex, keyword),
       where_in_listing: computeWhereInListing(keyword, listingRow),
       ppc_signal: formatPpcSignal(ppcEntry),
       ppc_spend: ppcEntry ? Number(ppcEntry.spend.toFixed(2)) : 0,
@@ -621,6 +644,7 @@ function parseNumericCell(raw) {
 
 function buildSkuStrategySnapshots(kwRows, bizRowsFull, sqpRows) {
   const bizBySku = latestBizRowPerSku(bizRowsFull);
+  const sqpIndex = buildSqpIndex(sqpRows); // same fix as buildRankChanges — see comment on buildSqpIndex above
 
   const kwBySku = new Map();
   kwRows.forEach(r => {
@@ -646,7 +670,7 @@ function buildSkuStrategySnapshots(kwRows, bizRowsFull, sqpRows) {
         keyword: r.keyword,
         vol_mo: parseInt(r.search_volume, 10) || null,
         organic_rank: parseRank(r.organic_rank).raw,
-        aba_pct: computeAbaPct(sqpRows, r.keyword),
+        aba_pct: computeAbaPct(sqpIndex, r.keyword),
         competing: findField(r, KEYWORD_COMPETING_CANDIDATES),
         cpc: findField(r, KEYWORD_CPC_CANDIDATES),
       }))
