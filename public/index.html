@@ -14057,7 +14057,28 @@ function getProductMaster() {
         category: stripCategoryBrandPrefix(r['product category'] || r.product_category || ''),
         channel: (r['channel'] || r.channel || '').trim(),
       };
-      if (sku) bySku[sku] = entry;
+      // FIXED 2026-08-11, Skinuva-specific: this SKU appears once per
+      // CHANNEL on the master sheet (Amazon, Walmart, Shopify...), and
+      // only the Amazon row reliably has Product Category filled in —
+      // Walmart/Shopify rows for the same SKU often leave it blank. The
+      // old blind "bySku[sku] = entry" overwrote on every matching row,
+      // so whichever channel happened to appear LAST in the sheet won —
+      // if that was a blank-category Walmart row, it silently wiped out
+      // the correct category an earlier Amazon row had already set,
+      // making that SKU vanish from every category's Performance table
+      // entirely. Now merges: an existing non-blank field is never
+      // replaced by a blank one from a later row, though a later row CAN
+      // still fill in a field the earlier one left blank.
+      if (sku) {
+        const existing = bySku[sku];
+        if (!existing) {
+          bySku[sku] = entry;
+        } else {
+          Object.keys(entry).forEach(k => {
+            if (!existing[k] && entry[k]) existing[k] = entry[k];
+          });
+        }
+      }
       if (asin) byAsin[asin] = entry;
       // Root-SKU index — added 2026-08-11, Skinuva-specific: Amazon's own
       // SKU for a product is often suffixed (e.g. "SVA0001-stickerless",
@@ -14581,21 +14602,24 @@ async function renderCategoryPerformanceTable(containerId, categoryLabel) {
       `<tr><td>${label}</td>${rowsData[key].map((v, i) => `<td${oosBySku[products[i].sku.toUpperCase()] ? ' class="prodcol-oos"' : ''}>${v}</td>`).join('')}</tr>`
     ).join('');
 
-    // Cosmetic — added 2026-08-11 per Jaclyn: with only one product in a
-    // category, the table's default width:100% (from the .perf-compare
-    // class, shared with every other category regardless of product
-    // count) stretched the single product column across the full card
-    // width, leaving a large empty gap between the row labels and the
-    // actual values. Single-product categories instead size the table to
-    // its content and center it, rather than letting it fill the card.
-    const tableStyle = products.length === 1
-      ? 'width:auto;min-width:280px;max-width:420px;margin:0 auto;'
+    // Cosmetic — corrected 2026-08-11 per Jaclyn: the first attempt at
+    // this (margin:0 auto on the whole table) was wrong — it shifted the
+    // row-LABEL column out of its normal position too, not just the
+    // product column. Labels need to stay exactly where they are on every
+    // other category's table; only the single product's data column
+    // should be narrower than a full-width stretch, so its (already
+    // center-aligned, via the existing td{text-align:center} rule) values
+    // sit in the middle of the remaining white space rather than pinned
+    // to the far edge. A <colgroup> constrains just that second column's
+    // width without touching the table's own full-width layout at all.
+    const colgroupHtml = products.length === 1
+      ? '<colgroup><col><col style="width:320px;"></colgroup>'
       : '';
 
     container.innerHTML = `<div class="card">
       <div class="card-title" style="margin-bottom:2px;">Performance — ${OV_MONTH_ABBR[month - 1]} ${year}</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Amazon</div>
-      <div style="overflow-x:auto;"><table class="perf-compare" style="${tableStyle}"><thead>${theadHtml}</thead><tbody>${tbodyHtml}</tbody></table></div>
+      <div style="overflow-x:auto;"><table class="perf-compare">${colgroupHtml}<thead>${theadHtml}</thead><tbody>${tbodyHtml}</tbody></table></div>
     </div>`;
   } catch (err) {
     console.warn(`[CategoryPerf][${categoryLabel}] load failed:`, err.message);
