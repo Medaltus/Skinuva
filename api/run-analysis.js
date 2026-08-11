@@ -787,11 +787,37 @@ CRITICAL: Respond with a single valid JSON object only. No markdown fences, no p
     ? '\n\nAD ORDERS — ASIN-level monthly ad-attributed rollup (same ads, different view — units/spend/sales/ACOS by ASIN by month):\n' + JSON.stringify(adOrdersTrimmed)
     : '';
 
+  // FIXED 2026-08-11 — root cause of the Vercel timeout, confirmed via the
+  // added _lap() timing: ALL local computation finished in under 1 second;
+  // the entire 299+ remaining seconds were spent on the single Claude call,
+  // which never returned before Vercel's 300s function limit killed it. The
+  // prompt was 96,898 characters and asked for a recommended_action for
+  // ALL 278 tracked keywords in one response — raising max_tokens (the
+  // previous fix, now understood to have made this worse, not better) lets
+  // Claude generate a longer response, but generating tokens costs real
+  // wall-clock time; a longer allowed response is a longer time bound, not
+  // a shorter one. This caps how many keywords get a real Claude-written
+  // recommended_action to the highest-priority slice of the ALREADY-sorted
+  // rankChanges (spend-first, then biggest rank change — same ordering
+  // buildRankChanges' own sort already establishes), rather than asking
+  // for one for all 278 in a single call. mergeRecommendedActions' own
+  // existing fallback-when-not-found behavior means every keyword still
+  // gets a recommended_action in the final output — keywords beyond this
+  // cap get the generic fallback text instead of bespoke AI prose, not no
+  // action at all. RANK_CHANGES_PROMPT_CAP is a tunable trade-off between
+  // response completeness and reliability — raise it if 60 later turns out
+  // too conservative once this is confirmed no longer timing out.
+  const RANK_CHANGES_PROMPT_CAP = 60;
+  const rankChangesForPrompt = rankChanges.slice(0, RANK_CHANGES_PROMPT_CAP);
+  if (rankChanges.length > RANK_CHANGES_PROMPT_CAP) {
+    console.log(`[run-analysis] ${brand.id} — capped rank_changes sent to Claude at ${RANK_CHANGES_PROMPT_CAP} of ${rankChanges.length} total (highest-priority slice); remaining keywords get the generic fallback recommended_action.`);
+  }
+
   // Rank changes and new-converter numbers are already computed — Claude is
   // asked ONLY for the prose that goes with them (recommended_action per
   // keyword/term, plus a narrative), never for the numbers themselves.
   const rankChangesSection = comparison.hasHistory
-    ? `\n\nKEYWORD RANK CHANGES — ${comparison.prevDate} vs ${comparison.currDate} (already computed; write recommended_action for each, do not alter the numbers):\n${JSON.stringify(rankChanges.map(r => ({ keyword: r.keyword, vol_mo: r.vol_mo, rank_prev: r.rank_prev, rank_curr: r.rank_curr, change_label: r.change_label, where_in_listing: r.where_in_listing, ppc_signal: r.ppc_signal, aba_pct: r.aba_pct })))}`
+    ? `\n\nKEYWORD RANK CHANGES — ${comparison.prevDate} vs ${comparison.currDate} (already computed; write recommended_action for each, do not alter the numbers)${rankChanges.length > RANK_CHANGES_PROMPT_CAP ? ` — showing the top ${RANK_CHANGES_PROMPT_CAP} of ${rankChanges.length} by priority (spend, then biggest rank change); the rest get a generic fallback action, not omitted from the report entirely` : ''}:\n${JSON.stringify(rankChangesForPrompt.map(r => ({ keyword: r.keyword, vol_mo: r.vol_mo, rank_prev: r.rank_prev, rank_curr: r.rank_curr, change_label: r.change_label, where_in_listing: r.where_in_listing, ppc_signal: r.ppc_signal, aba_pct: r.aba_pct })))}`
     : '\n\nKEYWORD RANK CHANGES: not enough history yet (need at least 2 distinct weekly syncs) — omit rank-change commentary, note this in organic.summary instead.';
 
   const newConvertersSection = newPpcConverters.length
@@ -864,35 +890,57 @@ ${listingCtxTrimmed}`;
 
   _lap(`prompt assembled (userPrompt length: ${userPrompt.length} chars) — starting Claude call`);
 
-  const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+  // Added 2026-08-11 — this call has no defense against hanging: without
+  // an explicit timeout, a stalled connection or a genuinely slow
+  // generation both look identical from the outside (the await just never
+  // returns), and the function sits doing nothing useful until Vercel's
+  // own 300s hard limit kills it with a generic, low-detail 504. This
+  // aborts at 250s — short of Vercel's limit, so the code's OWN error
+  // handling runs (clear message, falls through to the existing repair/
+  // fallback path below) instead of an opaque platform timeout.
+  const claudeController = new AbortController();
+  const claudeTimeoutId = setTimeout(() => claudeController.abort(), 250000);
+
+  let claudeRes;
+  try {
+    claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01'
     },
+    signal: claudeController.signal,
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      // Raised again 2026-08-11 — 12000 (itself already raised once from
-      // 5000 for évolis on 2026-07-28) started truncating for Skinuva:
-      // confirmed via Vercel logs, stop_reason: max_tokens, all JSON
-      // repair attempts failed, fell back to deterministic-only insights
-      // for the 2026-08-11 run. Skinuva tracks 277 keywords (per that
-      // same log's raw output) — since the response includes a keyed
-      // recommended-action sentence per keyword, more tracked keywords
-      // means a longer required response, not a fixed cost. This is a
-      // reactive cap increase, not a structural fix — if Skinuva's
-      // tracked-keyword count keeps growing, the same truncation can
-      // recur at an even higher threshold. A more durable fix would cap
-      // per-keyword prose length more aggressively in the prompt, or
-      // limit recommended_action generation to the highest-priority
-      // keyword tier rather than all 277 — worth considering if this
-      // keeps happening rather than raising the number again each time.
-      max_tokens: 24000,
+      // Lowered back down 2026-08-11 — raising this to 24000 (from 12000,
+      // which itself was already raised once from 5000 for évolis) was
+      // based on an incomplete diagnosis: the earlier truncation was real,
+      // but the actual fix needed was reducing how many keywords need a
+      // generated recommended_action (see RANK_CHANGES_PROMPT_CAP above),
+      // not raising the ceiling further — a higher max_tokens just gives
+      // Claude license to generate an even longer response, which costs
+      // more wall-clock time, not less. Confirmed via _lap() timing that
+      // 24000 caused the FULL 300s function timeout (all local computation
+      // finished in under 1 second; the entire remaining time was the
+      // Claude call itself never returning). 16000 balances: high enough
+      // that the now-capped prompt shouldn't truncate, without inviting a
+      // response so long it risks the same timeout again.
+      max_tokens: 16000,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }]
     })
-  });
+    });
+  } catch (fetchErr) {
+    clearTimeout(claudeTimeoutId);
+    if (fetchErr.name === 'AbortError') {
+      _lap('Claude call aborted — exceeded 250s client-side timeout');
+      console.error(`[run-analysis] ${brand.id} — Claude call aborted after 250s with no response (stalled connection or genuinely too slow). Falling back to deterministic-only insights.`);
+      return buildFallbackInsights({ rankChanges, newPpcConverters, page1Opportunities, rankingDiagnostic, listingImplementationStatus, skuStrategySnapshots, comparison });
+    }
+    throw fetchErr;
+  }
+  clearTimeout(claudeTimeoutId);
 
   if (!claudeRes.ok) {
     const err = await claudeRes.text();
