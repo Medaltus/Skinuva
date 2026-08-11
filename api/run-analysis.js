@@ -208,8 +208,11 @@ module.exports = async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
 
   try {
+    const _handlerT0 = Date.now();
     const insights = await runAnalysisForBrand(brand, apiKey);
+    console.log(`[run-analysis][timing] ${brand.id} — runAnalysisForBrand total: ${Date.now() - _handlerT0}ms`);
     await writeInsightsToSheet(brand, insights);
+    console.log(`[run-analysis][timing] ${brand.id} — writeInsightsToSheet done, total handler time: ${Date.now() - _handlerT0}ms`);
     return res.status(200).json({ ok: true, insights });
   } catch (err) {
     console.error(`[run-analysis] ${brand.id} failed:`, err.message);
@@ -693,6 +696,21 @@ function buildSkuStrategySnapshots(kwRows, bizRowsFull, sqpRows) {
 
 
 async function runAnalysisForBrand(brand, apiKey) {
+  // TEMPORARY TIMING INSTRUMENTATION — added 2026-08-11 after a Skinuva run
+  // hit the full 300s Vercel timeout. The visible External API durations in
+  // Vercel's logs (7 OAuth exchanges, 8 sheet reads, 1 Claude call) only
+  // accounted for ~40s combined, meaning most of the 260s+ gap was spent
+  // somewhere NOT shown as a separate external call — but a first fix
+  // (the sqpRows.find() → Map lookup change elsewhere in this file) turned
+  // out not to hold up once the real SQP row count was confirmed (966 rows
+  // — far too small to explain a multi-minute stall on its own). Rather
+  // than guess at a third hypothesis with no more evidence than the first
+  // two, this logs a timestamp after each major step so the NEXT run's
+  // Vercel logs show exactly where the time actually goes. Remove once the
+  // real bottleneck is found and fixed.
+  const _t0 = Date.now();
+  const _lap = (label) => console.log(`[run-analysis][timing] ${brand.id} — ${label}: ${Date.now() - _t0}ms elapsed`);
+
   const brandDesc = BRAND_DESCRIPTIONS[brand.id] || BRAND_DESCRIPTIONS.default;
 
   const [kwRows, bizRows, sqpRows, ppcRows, adOrdersRows, listingRows, historyRows, productInventoryRows] = await Promise.all([
@@ -705,6 +723,7 @@ async function runAnalysisForBrand(brand, apiKey) {
     readRows(sheets.insights, brand.tabName).catch(() => []),
     readRows(sheets.productInventory, brand.tabName).catch(() => []),
   ]);
+  _lap(`all 8 sheet reads done (kwRows:${kwRows.length} bizRows:${bizRows.length} sqpRows:${sqpRows.length} ppcRows:${ppcRows.length} adOrdersRows:${adOrdersRows.length} listingRows:${listingRows.length} historyRows:${historyRows.length} productInventoryRows:${productInventoryRows.length})`);
 
   const bizTrimmed      = bizRows.slice(-15);
   const ppcTrimmed      = ppcRows.slice(-15); // still sent raw for the PPC section's own prompt, unchanged from before
@@ -719,6 +738,7 @@ async function runAnalysisForBrand(brand, apiKey) {
     if (!existing || (r['audited_at'] || '') > (existing['audited_at'] || '')) latestBySku.set(sku, r);
   });
   const listingCtxTrimmed = JSON.stringify(Array.from(latestBySku.values())).slice(0, 3000);
+  _lap('listingBySku map built');
 
   // Real current listing copy, collapsed to most-recent-date per SKU — same
   // pattern run-listing-audit.js already uses on this same sheet. Needed
@@ -730,6 +750,7 @@ async function runAnalysisForBrand(brand, apiKey) {
     const existing = latestInventoryBySku.get(sku);
     if (!existing || (r.date || '') > (existing.date || '')) latestInventoryBySku.set(sku, r);
   });
+  _lap('productInventory map built');
 
   const historicalCtx = historyRows.length
     ? historyRows.slice(-4).map(r => r['LOG_SUMMARY'] || '').filter(Boolean).join('\n---\n').slice(0, 2000)
@@ -737,17 +758,22 @@ async function runAnalysisForBrand(brand, apiKey) {
 
   // ── The new deterministic layer ──────────────────────────────────────────
   const comparison = pickComparisonDates(kwRows);
+  _lap('pickComparisonDates done');
   const ppcByTerm = aggregatePpcByTerm(ppcRows);
+  _lap('aggregatePpcByTerm done');
   const trackedKeywordSet = new Set(kwRows.map(r => normalizeTerm(r.keyword)));
   const rankChanges = buildRankChanges(kwRows, ppcByTerm, sqpRows, latestBySku, comparison);
+  _lap(`buildRankChanges done (${rankChanges.length} rows)`);
   const newPpcConverters = buildNewPpcConverters(ppcByTerm, trackedKeywordSet);
   const page1Opportunities = buildPage1Opportunities(rankChanges);
   const rankingDiagnostic = buildRankingDiagnostic(rankChanges);
   const listingImplementationStatus = buildListingImplementationStatus(latestBySku, latestInventoryBySku);
+  _lap('newPpcConverters/page1Opportunities/rankingDiagnostic/listingImplementationStatus done');
   // Uses the FULL bizRows, not bizTrimmed (which is sliced to the last 15
   // rows for the general PPC prompt context below) — this needs a real
   // latest-month-per-SKU lookup across all history, not just a recent tail.
   const skuStrategySnapshots = buildSkuStrategySnapshots(kwRows, bizRows, sqpRows);
+  _lap(`buildSkuStrategySnapshots done (${Object.keys(skuStrategySnapshots).length} SKUs)`);
 
   const systemPrompt = `You are an expert Amazon brand strategist and listing compliance auditor for Medaltus. Analyzing weekly performance data for ${brandDesc}.
 
@@ -836,6 +862,8 @@ ${historicalCtx}
 CURRENT LISTING:
 ${listingCtxTrimmed}`;
 
+  _lap(`prompt assembled (userPrompt length: ${userPrompt.length} chars) — starting Claude call`);
+
   const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -872,8 +900,10 @@ ${listingCtxTrimmed}`;
     e.status = 502;
     throw e;
   }
+  _lap('Claude call returned (response.ok)');
 
   const data = await claudeRes.json();
+  _lap('Claude response body parsed as JSON');
   if (data.stop_reason === 'max_tokens') {
     console.warn(`[run-analysis] ${brand.id} — response truncated by max_tokens`);
   }
@@ -920,6 +950,7 @@ ${listingCtxTrimmed}`;
     console.error(`[run-analysis] ${brand.id} — all JSON repair attempts failed. Raw length: ${raw.length}. Last error: ${lastParseErr && lastParseErr.message}. Falling back to deterministic-only insights.`);
     console.error('[run-analysis] Raw (first 500):', clean0.slice(0, 500));
     insights = buildFallbackInsights({ rankChanges, newPpcConverters, page1Opportunities, rankingDiagnostic, listingImplementationStatus, skuStrategySnapshots, comparison });
+    _lap('JSON repair failed, using fallback insights — returning early');
     return insights; // already has rank_changes/etc. attached — skip the merge-back below, it's already in final shape
   }
 
@@ -980,6 +1011,7 @@ ${listingCtxTrimmed}`;
     insights.ppc.strategy_by_sku = merged;
   }
 
+  _lap('merge-back complete — returning insights');
   return insights;
 }
 
