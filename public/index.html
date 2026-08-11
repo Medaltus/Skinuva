@@ -4864,10 +4864,10 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     <div class="sheet-link-menu">
       <button class="sheet-link-btn" onclick="document.getElementById('ppc-sheet-dropdown').classList.toggle('open')">🔗 Source Sheets <span style="font-size:9px;">▾</span></button>
       <div class="sheet-link-dropdown" id="ppc-sheet-dropdown">
-        <a href="https://docs.google.com/spreadsheets/d/1N1OwnBLJ_KUZrz1kq5itQO9qKG0KaXhMmY6FFfdBo3o/edit?gid=1865714213#gid=1865714213" target="_blank" rel="noopener"><span class="sheet-link-icon">🔍</span>Ad Search Terms</a>
-        <a href="https://docs.google.com/spreadsheets/d/1Jkx7Ztnt59eniYtvTnpXB8D7xMnCyjC8b49xB4J59ww/edit?gid=310979287#gid=310979287" target="_blank" rel="noopener"><span class="sheet-link-icon">📊</span>Business Report</a>
-        <a href="https://docs.google.com/spreadsheets/d/1cdqKzqaUFr8MFDWkskpGJ5NQSv9QjVv64ab8P_PPr6s/edit?gid=1672819862#gid=1672819862" target="_blank" rel="noopener"><span class="sheet-link-icon">📦</span>Amazon Products Cache</a>
-        <a href="https://docs.google.com/spreadsheets/d/1geNDQgd_1ensLDyZOuXZBnvQrFT_RC85l9rHHGpgJe4/edit?gid=898118227#gid=898118227" target="_blank" rel="noopener"><span class="sheet-link-icon">🔑</span>Keyword Tracker — évolis (per-keyword)</a>
+        <a href="https://docs.google.com/spreadsheets/d/1N1OwnBLJ_KUZrz1kq5itQO9qKG0KaXhMmY6FFfdBo3o/edit?gid=835261587#gid=835261587" target="_blank" rel="noopener"><span class="sheet-link-icon">🔍</span>Ad Search Terms</a>
+        <a href="https://docs.google.com/spreadsheets/d/1Jkx7Ztnt59eniYtvTnpXB8D7xMnCyjC8b49xB4J59ww/edit?gid=392764444#gid=392764444" target="_blank" rel="noopener"><span class="sheet-link-icon">📊</span>Business Report</a>
+        <a href="https://docs.google.com/spreadsheets/d/1cdqKzqaUFr8MFDWkskpGJ5NQSv9QjVv64ab8P_PPr6s/edit?gid=350687224#gid=350687224" target="_blank" rel="noopener"><span class="sheet-link-icon">📦</span>Amazon Products Cache</a>
+        <a href="https://docs.google.com/spreadsheets/d/1geNDQgd_1ensLDyZOuXZBnvQrFT_RC85l9rHHGpgJe4/edit?gid=832534514#gid=832534514" target="_blank" rel="noopener"><span class="sheet-link-icon">🔑</span>Keyword Tracker — Skinuva (per-keyword)</a>
         <a href="https://docs.google.com/spreadsheets/d/1FPy4Upzf8-S8TovDwPEPul2CHxzK8MGOYtRPOohTPwg/edit?gid=1273080018#gid=1273080018" target="_blank" rel="noopener"><span class="sheet-link-icon">📈</span>PPC Strategy (Run PPC Analysis output)</a>
       </div>
     </div>
@@ -4902,7 +4902,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
           </table>
         </div>
         <div class="ppc-note">
-          ℹ Sessions/Units/Revenue/Conv% pulled live from the Business Report sheet, every product in the catalog (not just activators).
+          ℹ Sessions/Units/Revenue/Conv% pulled live from the Business Report sheet, every product in the catalog.
         </div>
       </div>
 
@@ -4912,12 +4912,9 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
           <div class="ppc-card-title">What Good Looks Like — Benchmark Reference</div>
           <div class="ppc-metric-row"><div class="ppc-metric-lbl">Category ACoS Target</div><div class="ppc-metric-val">30–40%</div></div>
           <div class="ppc-metric-row"><div class="ppc-metric-lbl">TACoS Target</div><div class="ppc-metric-val">10–15%</div></div>
-          <div class="ppc-metric-row"><div class="ppc-metric-lbl">Reverse Activator Conv%</div><div class="ppc-metric-val" style="color:#1db88a;">22.95% ✓</div></div>
-          <div class="ppc-metric-row"><div class="ppc-metric-lbl">Promote Activator Conv%</div><div class="ppc-metric-val" style="color:var(--danger);">3.20% ✗</div></div>
           <div class="ppc-metric-row"><div class="ppc-metric-lbl">Category Conv% Benchmark</div><div class="ppc-metric-val">15–20%</div></div>
-          <div class="ppc-metric-row"><div class="ppc-metric-lbl">Promote Revenue Gap</div><div class="ppc-metric-val" style="color:var(--danger);">~$6,500/mo at 15% conv</div></div>
           <div style="font-size:11.5px;color:var(--muted);margin-top:12px;padding-top:10px;border-top:1px solid var(--border2);line-height:1.65;">
-            At the 15% category benchmark, Promote's 1,125 sessions would yield ~169 units/month vs 36 today — a $6,600/mo revenue gap that is a listing problem, not a traffic problem.
+            The per-product conversion callouts and revenue-gap analysis évolis has here are hand-written observations, not live-loaded data — add Skinuva's own once a similar pattern shows up in the Product Performance table above.
           </div>
         </div>
         <div class="ppc-card">
@@ -4935,27 +4932,39 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 
       <!-- Product type tabs -->
       <div class="sub-tabs">
-        <button class="sub-tab active" onclick="showSubTab('ppc-strategy','ppc-act',this)">Activators</button>
-        <button class="sub-tab" onclick="showSubTab('ppc-strategy','ppc-shampoo',this)">Shampoos</button>
-        <button class="sub-tab" onclick="showSubTab('ppc-strategy','ppc-cond',this)">Conditioners</button>
-        <button class="sub-tab" onclick="showSubTab('ppc-strategy','ppc-mask',this)">Hair Masks</button>
-        <button class="sub-tab" onclick="showSubTab('ppc-strategy','ppc-dry',this)">Dry Shampoo</button>
+        <button class="sub-tab active" onclick="showSubTab('ppc-strategy','ppc-scar',this)">Scar</button>
+        <button class="sub-tab" onclick="showSubTab('ppc-strategy','ppc-scarplus',this)">Scar+</button>
+        <button class="sub-tab" onclick="showSubTab('ppc-strategy','ppc-brite',this)">Brite</button>
+        <button class="sub-tab" onclick="showSubTab('ppc-strategy','ppc-bruise',this)">Bruise</button>
+        <button class="sub-tab" onclick="showSubTab('ppc-strategy','ppc-arc',this)">ARC</button>
+        <button class="sub-tab" onclick="showSubTab('ppc-strategy','ppc-bruiserecoveryduo',this)">Bruise Recovery Duo</button>
+        <button class="sub-tab" onclick="showSubTab('ppc-strategy','ppc-scarkits',this)">Scar Kits</button>
+        <button class="sub-tab" onclick="showSubTab('ppc-strategy','ppc-bundles',this)">Bundles</button>
       </div>
 
-      <div class="sub-page active" id="ppc-act">
-        <div id="ppc-act-container"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+      <div class="sub-page active" id="ppc-scar">
+        <div id="ppc-scar-container"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
       </div>
-      <div class="sub-page" id="ppc-shampoo">
-        <div id="ppc-shampoo-container"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+      <div class="sub-page" id="ppc-scarplus">
+        <div id="ppc-scarplus-container"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
       </div>
-      <div class="sub-page" id="ppc-cond">
-        <div id="ppc-cond-container"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+      <div class="sub-page" id="ppc-brite">
+        <div id="ppc-brite-container"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
       </div>
-      <div class="sub-page" id="ppc-mask">
-        <div id="ppc-mask-container"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+      <div class="sub-page" id="ppc-bruise">
+        <div id="ppc-bruise-container"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
       </div>
-      <div class="sub-page" id="ppc-dry">
-        <div id="ppc-dry-container"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+      <div class="sub-page" id="ppc-arc">
+        <div id="ppc-arc-container"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+      </div>
+      <div class="sub-page" id="ppc-bruiserecoveryduo">
+        <div id="ppc-bruiserecoveryduo-container"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+      </div>
+      <div class="sub-page" id="ppc-scarkits">
+        <div id="ppc-scarkits-container"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+      </div>
+      <div class="sub-page" id="ppc-bundles">
+        <div id="ppc-bundles-container"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
       </div>
 
     </div><!-- /ppc-strategy -->
@@ -15861,24 +15870,49 @@ async function ppcLoadStrategyByProduct() {
     brandRows.forEach(r => {
       const sku = (r.sku || '').trim().toUpperCase();
       if (!sku) return;
-      // Latest date wins if this brand somehow has more than one row per SKU.
-      if (!bySku[sku] || (r.date || '') > (bySku[sku].date || '')) bySku[sku] = r;
+      // Latest date wins if this brand somehow has more than one row per
+      // SKU. isValidDateStr() keeps a garbage date value (this sheet has
+      // a documented history of stray values landing in the wrong
+      // column) from ever beating a real one for "latest."
+      if (!bySku[sku] || (isValidDateStr(r.date) && (!isValidDateStr(bySku[sku].date) || r.date > bySku[sku].date))) bySku[sku] = r;
     });
 
-    Object.keys(REVIEW_CATEGORY_PRODUCTS).forEach(catKey => {
-      const containerId = { activators: 'ppc-act', shampoos: 'ppc-shampoo', conditioners: 'ppc-cond', masks: 'ppc-mask', dryshampoo: 'ppc-dry' }[catKey];
+    // Extracted so the same rendering logic can drive both the 7
+    // hardcoded categories below AND the dynamic Bundles tab.
+    const renderIntoContainer = (containerId, products) => {
       const container = document.getElementById(`${containerId}-container`);
       if (!container) return;
-
-      const products = REVIEW_CATEGORY_PRODUCTS[catKey];
       const cardsHtml = products.map(p => {
         const row = bySku[p.sku];
         if (!row) return `<div class="ppc-strategy-card"><div class="ppc-strategy-hd"><div><div class="ppc-strategy-sku">${escapeHtmlOrg(p.sku)} · ${escapeHtmlOrg(p.asin)}</div><div class="ppc-strategy-name">${escapeHtmlOrg(p.label)}</div></div></div><div class="ppc-strategy-body"><div style="color:var(--muted);font-size:12px;">No PPC analysis run yet for this SKU — click "Run PPC Analysis" on the Insights Log page.</div></div></div>`;
         return ppcRenderStrategyCard(row, p.label);
       }).join('');
-
       container.innerHTML = cardsHtml;
+    };
+
+    Object.keys(REVIEW_CATEGORY_PRODUCTS).forEach(catKey => {
+      const containerId = {
+        scar: 'ppc-scar', scarplus: 'ppc-scarplus', brite: 'ppc-brite',
+        bruise: 'ppc-bruise', arc: 'ppc-arc',
+        bruiserecoveryduo: 'ppc-bruiserecoveryduo', scarkits: 'ppc-scarkits',
+      }[catKey];
+      renderIntoContainer(containerId, REVIEW_CATEGORY_PRODUCTS[catKey]);
     });
+
+    // Bundles — product list is dynamic (getBundleProducts(), built from
+    // Product Short Name), not hardcoded like the 7 categories above —
+    // bundle SKUs/ASINs are opaque Amazon-generated codes not worth
+    // hand-copying. Card rendering itself needs no changes: ppc_strategy
+    // rows for bundle SKUs have the exact same shape as any other
+    // product, as long as Business Report and the OOS cross-reference
+    // both cover them.
+    const bundleProducts = await getBundleProducts();
+    if (bundleProducts.length) {
+      renderIntoContainer('ppc-bundles', bundleProducts);
+    } else {
+      const bundlesContainer = document.getElementById('ppc-bundles-container');
+      if (bundlesContainer) bundlesContainer.innerHTML = '<div style="color:var(--muted);font-size:12px;">No bundle SKUs found on Product Short Name.</div>';
+    }
   } catch (err) {
     console.warn('[PPC] strategy by product failed:', err.message);
   }
@@ -17389,6 +17423,12 @@ function formatLastRun(dateStr) {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return 'Last run: never';
   return 'Last run: ' + d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' });
+}
+// Guards against garbage values in a date column (this sheet has a
+// documented history of stray non-date values landing in date columns)
+// beating a real date in a "most recent wins" comparison.
+function isValidDateStr(s) {
+  return !!s && !isNaN(new Date(s).getTime());
 }
 async function loadLastRunDates() {
   // Run Analysis — most recent row's `date` on SHEET_INSIGHTS's évolis tab.
