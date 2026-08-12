@@ -123,6 +123,19 @@ nav > .nav-btn:not(.active):hover{color:#fff;}
 .kpi-mom.up{color:#1db88a;}
 .kpi-mom.dn{color:var(--danger);}
 .kpi-mom.flat{color:var(--muted);}
+/* Period selector — added 2026-08-12, see évolis handoff doc */
+.kpi-yoy{font-size:12px;margin-top:2px;}
+.kpi-yoy.up{color:#1db88a;}
+.kpi-yoy.dn{color:var(--danger);}
+.kpi-yoy.flat{color:var(--muted);}
+/* .kpi-card's own height above is a fixed px value, not grid stretch —
+   applying this to every card in a KPI row once ANY of them gains a
+   second (YoY) badge line keeps the row visually even, rather than only
+   the YoY cards growing taller than their siblings. */
+.kpi-card.kpi-card-tall{height:148px;}
+.period-pill{border:none;background:transparent;padding:7px 14px;border-radius:999px;font-size:12px;font-weight:600;color:var(--slate);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.period-pill:hover{color:var(--navy);}
+.period-pill.active{background:var(--navy);color:#fff;}
 .pd-event-dates{font-size:13px;color:var(--muted);margin:-8px 0 18px;}
 .pd-top-sellers-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .pd-legend{display:flex;align-items:center;gap:14px;font-size:11px;color:var(--muted);}
@@ -1590,12 +1603,17 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
       <div class="channel-hdr">
         <span id="amazon-hdr-date" style="font-size:11px;color:var(--muted);">📅 Loading…</span>
       </div>
+      <!-- Period selector — added 2026-08-12, see évolis handoff doc -->
+      <div class="period-selector" style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);">Period</span>
+        <div class="period-pills" id="amazon-period-pills" style="display:flex;background:var(--white);border:1px solid var(--border);border-radius:999px;padding:4px;gap:2px;"></div>
+      </div>
       <div class="kpi-row">
-        <div class="kpi-card" id="kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-        <div class="kpi-card" id="kpi-total-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-        <div class="kpi-card" id="kpi-avg-order"><div class="kpi-label">Average Order</div><div class="kpi-value sm">—</div><div class="kpi-mom flat">Loading…</div></div>
-        <div class="kpi-card" id="kpi-units-ads"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-        <div class="kpi-card" id="kpi-units-organic"><div class="kpi-label">Units (Organic)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        <div class="kpi-card kpi-card-tall" id="kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-yoy flat"></div></div>
+        <div class="kpi-card kpi-card-tall" id="kpi-total-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-yoy flat"></div></div>
+        <div class="kpi-card kpi-card-tall" id="kpi-avg-order"><div class="kpi-label">Average Order</div><div class="kpi-value sm">—</div><div class="kpi-mom flat">Loading…</div></div>
+        <div class="kpi-card kpi-card-tall" id="kpi-units-ads"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        <div class="kpi-card kpi-card-tall" id="kpi-units-organic"><div class="kpi-label">Units (Organic)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
       </div>
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -6264,22 +6282,16 @@ async function initSns() {
   }
 
   // ── Aggregate rows for a given year-month ─────────────────────────────────
-  function aggregateMonth(rows, year, month) {
-    const prefix = `${year}-${String(month).padStart(2,'0')}`;
-    const filtered = rows.filter(r => {
-      const d = normalizeDate(r.date).substring(0, 7); // "YYYY-MM"
-      return d === prefix;
-    });
-    if (filtered.length === 0) return null;
-
-    // Unique order IDs
+  // Period selector, added 2026-08-12 (see handoff doc from évolis) — split
+  // the actual aggregation math out from month-filtering, so MTD's partial-
+  // month variant (aggregateMonthThroughDay) can reuse the same math
+  // without duplicating it.
+  function aggregateFilteredRows(filtered) {
+    if (!filtered.length) return null;
     const orderIds = new Set(filtered.map(r => r.order_id).filter(Boolean));
     const totalOrders = orderIds.size;
-
-    // Sum units
     const totalUnits = filtered.reduce((s, r) => s + (parseInt(r.unit_count, 10) || 0), 0);
-
-    // AOV — sum item_price across ALL line items per order_id, then average those sums.
+    // AOV -- sum item_price across ALL line items per order_id, then average those sums.
     // order_total on each row is the line item price only (one SKU), so we must
     // accumulate across rows to get the true per-order total before averaging.
     const orderTotals = {};
@@ -6289,8 +6301,23 @@ async function initSns() {
     });
     const totalRevenue = Object.values(orderTotals).reduce((s, v) => s + v, 0);
     const avgOrder = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-
     return { totalUnits, totalOrders, avgOrder };
+  }
+  function aggregateMonth(rows, year, month) {
+    const prefix = `${year}-${String(month).padStart(2,'0')}`;
+    return aggregateFilteredRows(rows.filter(r => normalizeDate(r.date).substring(0, 7) === prefix));
+  }
+  // MTD support -- filters to the same month AND caps at throughDay, so
+  // "this month so far" can be aggregated with the exact same math as a
+  // full month, just over a partial date range.
+  function aggregateMonthThroughDay(rows, year, month, throughDay) {
+    const prefix = `${year}-${String(month).padStart(2,'0')}`;
+    return aggregateFilteredRows(rows.filter(r => {
+      const d = normalizeDate(r.date);
+      if (d.substring(0, 7) !== prefix) return false;
+      const day = parseInt(d.substring(8, 10), 10);
+      return day > 0 && day <= throughDay;
+    }));
   }
 
   // ── Pct change helper ─────────────────────────────────────────────────────
@@ -6381,41 +6408,21 @@ async function initSns() {
   // loaded yet. Caching the real promise (not a boolean) means every caller,
   // no matter when it calls in, gets back something that only resolves once
   // the chart is actually built. Confirmed 2026-07-14.
+  // Period selector state, added 2026-08-12 — raw rows fetched once,
+  // stored here so switching periods never re-fetches. See handoff doc.
+  let _amzSyncRows = [], _amzHistRows = [], _amzReturnRows = [], _amzAdSummaryRows = [], _amzAdOrdersRowsAll = [];
+  window._amzActivePeriod = 'lastFull';
+
   window.initAmazonLive = function () {
     if (window._amazonLivePromise) return window._amazonLivePromise;
     window._amazonLivePromise = (async function () {
     console.log('[Evolis] initAmazonLive() called');
 
-    const { year, month } = getLastFullMonth();
-    const monthNamesAmz = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const amzHdrEl = document.getElementById('amazon-hdr-date');
-    if (amzHdrEl) {
-      const lastDay = new Date(year, month, 0).getDate();
-      amzHdrEl.textContent = `📅 ${monthNamesAmz[month-1]} 1, ${year} – ${monthNamesAmz[month-1]} ${lastDay}, ${year}`;
-      // Visually hidden — this duplicated the page-sub date above it (and
-      // had a calendar icon nobody wanted). Kept in the DOM rather than
-      // removed because the PDF export still reads its textContent to get
-      // the date range for each Sales-channel page. Per Jaclyn 2026-07-14.
-      amzHdrEl.style.display = 'none';
-    }
-    const salesPageSubEl = document.getElementById('sales-page-sub');
-    if (salesPageSubEl) {
-      const lastDaySub = new Date(year, month, 0).getDate();
-      salesPageSubEl.textContent = `${monthNamesAmz[month-1]} 1 – ${monthNamesAmz[month-1]} ${lastDaySub}, ${year} · Last full month`;
-    }
-    const topbarDateEl = document.getElementById('topbar-date');
-    if (topbarDateEl) {
-      const lastDay2 = new Date(year, month, 0).getDate();
-      topbarDateEl.textContent = `${monthNamesAmz[month-1]} 1 – ${monthNamesAmz[month-1]} ${lastDay2}, ${year}`;
-    }
-
-    // Previous month
-    let prevMonth = month - 1, prevYear = year;
-    if (prevMonth === 0) { prevMonth = 12; prevYear--; }
-
-    // Same month last year
-    const yoyYear  = year - 1;
-    const yoyMonth = month;
+    // Only needed for buildRevenueChart(year) below now — date-range
+    // labels, prevMonth/yoyYear, etc. are all recomputed fresh inside
+    // buildAmazonPeriodConfig() via renderAmazonPeriod('lastFull') at the
+    // end of this function, so no need to duplicate that here too.
+    const { year } = getLastFullMonth();
 
     try {
       // Determine which sheet(s) hold each period:
@@ -6442,8 +6449,11 @@ async function initSns() {
 
       console.log('[Evolis] syncCsv length:', syncCsv.length, 'isCsv:', isCsv(syncCsv));
       console.log('[Evolis] histCsv length:', histCsv.length, 'isCsv:', isCsv(histCsv));
-      const syncRows = isCsv(syncCsv) ? filterRows(parseCsv(syncCsv)) : [];
-      const histRows = isCsv(histCsv) ? filterRows(parseCsv(histCsv)) : [];
+      // Stored at outer (IIFE) scope, not local consts — period selector
+      // (added 2026-08-12) needs these available to renderAmazonPeriod()
+      // on every pill click without re-fetching. See handoff doc.
+      _amzSyncRows = isCsv(syncCsv) ? filterRows(parseCsv(syncCsv)) : [];
+      _amzHistRows = isCsv(histCsv) ? filterRows(parseCsv(histCsv)) : [];
 
       // Current/previous month come from syncRows ONLY — never the
       // historical sheet. Originally this concatenated syncRows +
@@ -6455,76 +6465,25 @@ async function initSns() {
       // current + previous month — that's sufficient on its own. The
       // historical sheet is reserved exclusively for the YoY comparison
       // (prevYoy, below), which genuinely needs data sync's 90-day window
-      // doesn't reach.
+      // doesn't reach. Also now the ONLY source for the Last Year period
+      // itself (added 2026-08-12) — same reasoning applies there.
 
       // Amazon returns — dated by return_date (when the return happened),
       // not the original order date, same convention as the Overview
       // page's returns netting. Returns rows carry their own `asin` column
       // directly (confirmed 2026-08-05), so no SKU→ASIN crosswalk is
       // needed here.
-      const amzReturnRows = isCsv(amzReturnsCsv) ? parseCsv(amzReturnsCsv).filter(isEvolisRow) : [];
-      function aggregateAmzReturnsMonth(rows, y, m) {
-        const prefix = `${y}-${String(m).padStart(2, '0')}`;
-        let totalQty = 0;
-        const byAsin = {};
-        rows.forEach(r => {
-          if (normalizeDate(r.return_date).substring(0, 7) !== prefix) return;
-          const qty = parseInt(r.quantity, 10) || 0;
-          totalQty += qty;
-          const asin = (r.asin || '').trim().toUpperCase();
-          if (asin) byAsin[asin] = (byAsin[asin] || 0) + qty;
-        });
-        return { totalQty, byAsin };
-      }
-      const currReturns = aggregateAmzReturnsMonth(amzReturnRows, year, month);
-      const prevReturns = aggregateAmzReturnsMonth(amzReturnRows, prevYear, prevMonth);
-      const yoyReturns  = aggregateAmzReturnsMonth(amzReturnRows, yoyYear, yoyMonth);
+      _amzReturnRows = isCsv(amzReturnsCsv) ? parseCsv(amzReturnsCsv).filter(isEvolisRow) : [];
+      _amzAdSummaryRows = isCsv(adSummaryCsv) ? parseCsv(adSummaryCsv) : [];
+      _amzAdOrdersRowsAll = isCsv(adOrdersCsv) ? parseCsv(adOrdersCsv) : [];
 
-      const curr     = aggregateMonth(syncRows, year, month);
-      const prev     = aggregateMonth(syncRows, prevYear, prevMonth);
-      const prevYoy  = aggregateMonth(histRows, yoyYear, yoyMonth); // historical for last year
+      renderAmazonPeriodPills('lastFull');
+      renderAmazonPeriod('lastFull');
 
-      // Net returns against Total Units — Units (Organic) derives from
-      // curr.totalUnits (see renderKPIs below), so netting here alone
-      // covers both KPIs.
-      if (curr) curr.totalUnits = Math.max(0, curr.totalUnits - currReturns.totalQty);
-      if (prev) prev.totalUnits = Math.max(0, prev.totalUnits - prevReturns.totalQty);
-      if (prevYoy) prevYoy.totalUnits = Math.max(0, prevYoy.totalUnits - yoyReturns.totalQty);
-
-      if (!curr) {
-        showError(`No Évolis data found for ${year}-${String(month).padStart(2,'0')}. syncRows:${syncRows.length} histRows:${histRows.length}`);
-        return;
-      }
-
-
-      // Parse ad summary — find current month row for KPI adUnits
-      // Columns: year, month, impressions, clicks, spend, sales, acos, roas, ad_units, ctr, cpc, brand, last_updated
-      let adUnitsKpi = 0;
-      let prevAdUnitsKpi = 0;
-      if (isCsv(adSummaryCsv)) {
-        const adRows = parseCsv(adSummaryCsv);
-        const adRow  = adRows.find(r => parseInt(r.year, 10) === year && parseInt(r.month, 10) === month);
-        if (adRow) adUnitsKpi = parseInt(adRow.ad_units, 10) || 0;
-        const prevAdRow = adRows.find(r => parseInt(r.year, 10) === prevYear && parseInt(r.month, 10) === prevMonth);
-        if (prevAdRow) prevAdUnitsKpi = parseInt(prevAdRow.ad_units, 10) || 0;
-      }
-
-      // Parse ad orders — ASIN-level for top products table
-      // Columns: year, month, asin, ad_units, spend, sales, acos, brand, last_updated
-      const adOrderRows = isCsv(adOrdersCsv) ? parseCsv(adOrdersCsv).filter(r =>
-        parseInt(r.year, 10) === year && parseInt(r.month, 10) === month
-      ) : [];
-
-      // Parse prev month ad orders for MOM comparison in table
-      const prevAdOrderRows = isCsv(adOrdersCsv) ? parseCsv(adOrdersCsv).filter(r =>
-        parseInt(r.year, 10) === prevYear && parseInt(r.month, 10) === prevMonth
-      ) : [];
-
-      renderKPIs(curr, prev, prevYoy, adUnitsKpi, prevAdUnitsKpi);
-      setSourceLabel(year, month);
-      buildTopProductsTable(syncRows, year, month, adOrderRows, prevYear, prevMonth, prevAdOrderRows, currReturns.byAsin, prevReturns.byAsin);
-
-      // Revenue chart — fetches from the separate revenue history sheet
+      // Revenue chart — fetches from the separate revenue history sheet.
+      // Not period-aware — always shows the same multi-year trend
+      // regardless of which period pill is selected, per the handoff doc
+      // (only KPIs/date-label/Top Products switch).
       buildRevenueChart(year).catch(e => console.warn('[AmazonChart] Revenue chart failed:', e.message));
 
     } catch (err) {
@@ -6532,6 +6491,177 @@ async function initSns() {
     }
     })();
     return window._amazonLivePromise;
+  };
+
+  function aggregateAmzReturnsMonth(rows, y, m) {
+    const prefix = `${y}-${String(m).padStart(2, '0')}`;
+    let totalQty = 0;
+    const byAsin = {};
+    rows.forEach(r => {
+      if (normalizeDate(r.return_date).substring(0, 7) !== prefix) return;
+      const qty = parseInt(r.quantity, 10) || 0;
+      totalQty += qty;
+      const asin = (r.asin || '').trim().toUpperCase();
+      if (asin) byAsin[asin] = (byAsin[asin] || 0) + qty;
+    });
+    return { totalQty, byAsin };
+  }
+
+  // Same idea, capped at throughDay — needed so MTD's returns-netting is
+  // apples-to-apples with its own partial-month order data.
+  function aggregateAmzReturnsMonthThroughDay(rows, y, m, throughDay) {
+    const prefix = `${y}-${String(m).padStart(2, '0')}`;
+    let totalQty = 0;
+    const byAsin = {};
+    rows.forEach(r => {
+      const d = normalizeDate(r.return_date);
+      if (d.substring(0, 7) !== prefix) return;
+      const day = parseInt(d.substring(8, 10), 10);
+      if (!(day > 0 && day <= throughDay)) return;
+      const qty = parseInt(r.quantity, 10) || 0;
+      totalQty += qty;
+      const asin = (r.asin || '').trim().toUpperCase();
+      if (asin) byAsin[asin] = (byAsin[asin] || 0) + qty;
+    });
+    return { totalQty, byAsin };
+  }
+
+  // ── Period selector — config, render, pills ─────────────────────────────
+  // See handoff doc (évolis, 2026-08-11) for the full pattern this follows.
+  const AMZ_PERIOD_LABELS = { mtd: 'Month to Date', lastFull: 'Last Full Month', prior: 'Prior Month', lastYear: 'Last Year' };
+
+  function buildAmazonPeriodConfig(key) {
+    const { year, month } = getLastFullMonth();
+    let prevMonth = month - 1, prevYear = year;
+    if (prevMonth === 0) { prevMonth = 12; prevYear--; }
+    const yoyYear = year - 1, yoyMonth = month;
+
+    if (key === 'lastFull') {
+      return { year, month, prevYear, prevMonth, yoyYear, yoyMonth, showYoy: true, isPartial: false, isHistorical: false, label: AMZ_PERIOD_LABELS.lastFull };
+    }
+    if (key === 'prior') {
+      let priorPrevMonth = prevMonth - 1, priorPrevYear = prevYear;
+      if (priorPrevMonth === 0) { priorPrevMonth = 12; priorPrevYear--; }
+      return { year: prevYear, month: prevMonth, prevYear: priorPrevYear, prevMonth: priorPrevMonth, yoyYear: null, yoyMonth: null, showYoy: false, isPartial: false, isHistorical: false, label: AMZ_PERIOD_LABELS.prior };
+    }
+    if (key === 'lastYear') {
+      // isHistorical: true — Amazon's sync sheet is only a ~90-day rolling
+      // window, so a genuine "same month, one year back" needs the
+      // separate historical sheet, unlike Website/Walmart (confirmed by
+      // Jaclyn 2026-08-12 to already retain 1+ year on their own single
+      // orders sheet — see those channels' own configs, isHistorical: false).
+      return { year: yoyYear, month: yoyMonth, prevYear: null, prevMonth: null, yoyYear: null, yoyMonth: null, showYoy: false, isPartial: false, isHistorical: true, label: AMZ_PERIOD_LABELS.lastYear };
+    }
+    // mtd
+    const now = new Date();
+    const mtdYear = now.getFullYear(), mtdMonth = now.getMonth() + 1, mtdDay = now.getDate();
+    let mtdPrevMonth = mtdMonth - 1, mtdPrevYear = mtdYear;
+    if (mtdPrevMonth === 0) { mtdPrevMonth = 12; mtdPrevYear--; }
+    return { year: mtdYear, month: mtdMonth, throughDay: mtdDay, prevYear: mtdPrevYear, prevMonth: mtdPrevMonth, yoyYear: null, yoyMonth: null, showYoy: false, isPartial: true, isHistorical: false, label: AMZ_PERIOD_LABELS.mtd };
+  }
+
+  window.renderAmazonPeriod = function (key) {
+    window._amzActivePeriod = key;
+    const cfg = buildAmazonPeriodConfig(key);
+    const monthNamesAmz = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    // Source rows for this period — Last Year reads the historical sheet
+    // exclusively; every other period reads the sync sheet exclusively.
+    // Never both at once for the same period — that's the exact bug this
+    // whole doc exists to warn against (see comment above _amzSyncRows).
+    const orderRows = cfg.isHistorical ? _amzHistRows : _amzSyncRows;
+
+    // ── Date-range label ──
+    const amzHdrEl = document.getElementById('amazon-hdr-date');
+    const salesPageSubEl = document.getElementById('sales-page-sub');
+    const topbarDateEl = document.getElementById('topbar-date');
+    let rangeText, subText;
+    if (cfg.isPartial) {
+      rangeText = `📅 ${monthNamesAmz[cfg.month-1]} 1 – ${cfg.throughDay}, ${cfg.year}`;
+      subText = `${monthNamesAmz[cfg.month-1]} 1 – ${cfg.throughDay}, ${cfg.year} · Month to date`;
+    } else {
+      const lastDay = new Date(cfg.year, cfg.month, 0).getDate();
+      rangeText = `📅 ${monthNamesAmz[cfg.month-1]} 1, ${cfg.year} – ${monthNamesAmz[cfg.month-1]} ${lastDay}, ${cfg.year}`;
+      subText = `${monthNamesAmz[cfg.month-1]} 1 – ${monthNamesAmz[cfg.month-1]} ${lastDay}, ${cfg.year} · ${cfg.label}`;
+    }
+    if (amzHdrEl) {
+      amzHdrEl.textContent = rangeText; // stays visually hidden — PDF export reads its textContent only
+      amzHdrEl.style.display = 'none';
+    }
+    if (salesPageSubEl) salesPageSubEl.textContent = subText;
+    if (topbarDateEl) topbarDateEl.textContent = rangeText.replace('📅 ', '');
+
+    // ── Aggregate current/prev/YoY ──
+    const currReturns = cfg.isPartial
+      ? aggregateAmzReturnsMonthThroughDay(_amzReturnRows, cfg.year, cfg.month, cfg.throughDay)
+      : aggregateAmzReturnsMonth(_amzReturnRows, cfg.year, cfg.month);
+    const prevReturns = cfg.prevYear
+      ? aggregateAmzReturnsMonth(_amzReturnRows, cfg.prevYear, cfg.prevMonth)
+      : { totalQty: 0, byAsin: {} };
+
+    const curr = cfg.isPartial
+      ? aggregateMonthThroughDay(orderRows, cfg.year, cfg.month, cfg.throughDay)
+      : aggregateMonth(orderRows, cfg.year, cfg.month);
+    // Prior-period comparison always reads the sync sheet — even for MTD's
+    // "same number of days into last month" comparison — since prevMonth
+    // for every non-lastYear period is always within the sync sheet's
+    // ~90-day window.
+    const prev = cfg.prevYear
+      ? (cfg.isPartial
+          ? aggregateMonthThroughDay(_amzSyncRows, cfg.prevYear, cfg.prevMonth, cfg.throughDay)
+          : aggregateMonth(_amzSyncRows, cfg.prevYear, cfg.prevMonth))
+      : null;
+    const prevYoy = cfg.showYoy ? aggregateMonth(_amzHistRows, cfg.yoyYear, cfg.yoyMonth) : null;
+    if (prevYoy) {
+      const yoyReturns = aggregateAmzReturnsMonth(_amzReturnRows, cfg.yoyYear, cfg.yoyMonth);
+      prevYoy.totalUnits = Math.max(0, prevYoy.totalUnits - yoyReturns.totalQty);
+    }
+
+    if (curr) curr.totalUnits = Math.max(0, curr.totalUnits - currReturns.totalQty);
+    if (prev) prev.totalUnits = Math.max(0, prev.totalUnits - prevReturns.totalQty);
+
+    if (!curr) {
+      showError(`No Évolis data found for ${cfg.year}-${String(cfg.month).padStart(2,'0')}.`);
+      return;
+    }
+
+    // ── Ad units KPI ──
+    let adUnitsKpi = 0, prevAdUnitsKpi = 0;
+    const adRow = _amzAdSummaryRows.find(r => parseInt(r.year, 10) === cfg.year && parseInt(r.month, 10) === cfg.month);
+    if (adRow) adUnitsKpi = parseInt(adRow.ad_units, 10) || 0;
+    if (cfg.prevYear) {
+      const prevAdRow = _amzAdSummaryRows.find(r => parseInt(r.year, 10) === cfg.prevYear && parseInt(r.month, 10) === cfg.prevMonth);
+      if (prevAdRow) prevAdUnitsKpi = parseInt(prevAdRow.ad_units, 10) || 0;
+    }
+
+    renderKPIs(curr, prev, prevYoy, adUnitsKpi, cfg.prevYear ? prevAdUnitsKpi : null);
+    setSourceLabel(cfg.year, cfg.month);
+
+    // ── Top Selling Products ──
+    // Last Year's ad-orders-by-ASIN breakdown isn't confirmed to retain a
+    // full year of history the same way the orders historical sheet does
+    // (open question from the handoff doc, not verified for Skinuva) — showing
+    // a plain note instead of a table that might silently be incomplete.
+    if (cfg.isHistorical) {
+      const tbody = document.getElementById('tp-tbody');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Per-product breakdown not available for Last Year — ad-orders history is not confirmed to reach back this far. Showing headline KPIs only for this period.</td></tr>';
+    } else {
+      const adOrderRows = _amzAdOrdersRowsAll.filter(r => parseInt(r.year, 10) === cfg.year && parseInt(r.month, 10) === cfg.month);
+      const prevAdOrderRows = cfg.prevYear ? _amzAdOrdersRowsAll.filter(r => parseInt(r.year, 10) === cfg.prevYear && parseInt(r.month, 10) === cfg.prevMonth) : [];
+      buildTopProductsTable(orderRows, cfg.year, cfg.month, adOrderRows, cfg.prevYear, cfg.prevMonth, prevAdOrderRows, currReturns.byAsin, prevReturns.byAsin);
+    }
+  };
+
+  function renderAmazonPeriodPills(activeKey) {
+    const container = document.getElementById('amazon-period-pills');
+    if (!container) return;
+    container.innerHTML = Object.entries(AMZ_PERIOD_LABELS).map(([key, label]) =>
+      `<button class="period-pill${key === activeKey ? ' active' : ''}" data-period="${key}" onclick="window.__amazonSelectPeriod('${key}')">${label}</button>`
+    ).join('');
+  }
+  window.__amazonSelectPeriod = function (key) {
+    renderAmazonPeriodPills(key);
+    window.renderAmazonPeriod(key);
   };
 
   // ── Revenue chart ─────────────────────────────────────────────────────────
@@ -19629,6 +19759,7 @@ async function loadAuditResultsFromSheet() {
     if (btn) { btn.disabled = true; btn.classList.add('pdfx-loading'); }
 
     let root = null;
+    let _pdfPriorAmazonPeriod = 'lastFull';
 
     try {
       // A PDF export shouldn't silently produce blank chart cards just
@@ -19695,6 +19826,20 @@ async function loadAuditResultsFromSheet() {
       if (initPromises.length) {
         console.log('[pdf-export] awaiting', initPromises.length, 'chart data load(s) before building PDF');
         await Promise.all(initPromises);
+      }
+
+      // Period selector fix — added 2026-08-12, see évolis handoff doc
+      // (gotcha #4). Once a period selector exists, this same date-range
+      // element becomes period-aware — without this, the PDF would
+      // silently reflect whatever period a user happened to leave
+      // selected, not necessarily Last Full Month. Force it back right
+      // before capture, restore whatever was selected afterward so the
+      // person doesn't see their own on-screen selection change and stay
+      // changed.
+      const _pdfPriorAmazonPeriod = window._amzActivePeriod || 'lastFull';
+      if (includeSections.amazon && typeof window.renderAmazonPeriod === 'function' && _pdfPriorAmazonPeriod !== 'lastFull') {
+        console.log('[pdf-export] forcing Amazon to Last Full Month for capture (was:', _pdfPriorAmazonPeriod, ')');
+        window.renderAmazonPeriod('lastFull');
       }
 
       // Defensive backstop only at this point — the real fix is the promise
@@ -19892,10 +20037,20 @@ async function loadAuditResultsFromSheet() {
 
       root.style.display = 'none';
       root.style.position = ''; root.style.top = ''; root.style.left = ''; root.style.zIndex = ''; root.style.opacity = '';
+      // Restore whatever period the user actually had selected — see the
+      // force-to-lastFull comment above. Without this, a person watching
+      // the export happen would see their own on-screen period selection
+      // silently change and stay changed.
+      if (includeSections.amazon && typeof window.renderAmazonPeriod === 'function' && _pdfPriorAmazonPeriod !== 'lastFull') {
+        window.renderAmazonPeriod(_pdfPriorAmazonPeriod);
+      }
       if (btn) { btn.disabled = false; btn.classList.remove('pdfx-loading'); }
     } catch (err) {
       console.error('[pdf-export] failed:', err);
       if (root) { root.style.display = 'none'; root.style.position = ''; root.style.top = ''; root.style.left = ''; root.style.zIndex = ''; root.style.opacity = ''; }
+      if (typeof _pdfPriorAmazonPeriod !== 'undefined' && includeSections && includeSections.amazon && typeof window.renderAmazonPeriod === 'function' && _pdfPriorAmazonPeriod !== 'lastFull') {
+        window.renderAmazonPeriod(_pdfPriorAmazonPeriod);
+      }
       if (btn) { btn.disabled = false; btn.classList.remove('pdfx-loading'); }
       alert('PDF export failed — check the console for details.');
     }
