@@ -1672,21 +1672,37 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
            PDF export (which only ever reads those IDs) picks up Customer
            data automatically without any export-side changes. This
            sub-tab split is Skinuva-specific and should NOT be replicated
-           to other brands by default. -->
-      <div class="sub-tabs" style="margin-bottom:16px;">
-        <button class="sub-tab active" onclick="showWebOrderType('customer', this)">Customer</button>
-        <button class="sub-tab" onclick="showWebOrderType('physician', this)">Physician</button>
-        <button class="sub-tab" onclick="showWebOrderType('international', this)">International</button>
-        <button class="sub-tab" onclick="showWebOrderType('samples', this)">Samples</button>
+           to other brands by default.
+
+           Period selector — added 2026-08-12, see évolis handoff doc.
+           Positioned per Jaclyn: its own fully separate pill box, on the
+           same row as the order-type sub-tabs (not the outer channel
+           tabs, since each of the 4 order types needs its own
+           independent period selector) — same height, right side.
+           .sub-tabs already has its own pill-shaped background/border, so
+           this needs its own wrapping row rather than living inside that
+           same box. Content is swapped by showWebOrderType() below
+           depending on which order-type tab is active. -->
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+        <div class="sub-tabs" style="margin-bottom:0;">
+          <button class="sub-tab active" onclick="showWebOrderType('customer', this)">Customer</button>
+          <button class="sub-tab" onclick="showWebOrderType('physician', this)">Physician</button>
+          <button class="sub-tab" onclick="showWebOrderType('international', this)">International</button>
+          <button class="sub-tab" onclick="showWebOrderType('samples', this)">Samples</button>
+        </div>
+        <div class="period-selector" id="web-period-selector" style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);">Period</span>
+          <div class="period-pills" id="web-period-pills" style="display:flex;background:var(--white);border:1px solid var(--border);border-radius:999px;padding:4px;gap:2px;"></div>
+        </div>
       </div>
 
       <div class="web-order-type-page active" id="web-ordertype-customer">
         <div class="kpi-row">
-          <div class="kpi-card" id="web-kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-          <div class="kpi-card" id="web-kpi-total-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-          <div class="kpi-card" id="web-kpi-avg-order"><div class="kpi-label">Average Order</div><div class="kpi-value sm">—</div><div class="kpi-mom flat">Loading…</div></div>
-          <div class="kpi-card" id="web-kpi-units-ads"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-          <div class="kpi-card" id="web-kpi-units-organic"><div class="kpi-label">Units (Organic)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card kpi-card-tall" id="web-kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-yoy flat"></div></div>
+          <div class="kpi-card kpi-card-tall" id="web-kpi-total-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-yoy flat"></div></div>
+          <div class="kpi-card kpi-card-tall" id="web-kpi-avg-order"><div class="kpi-label">Average Order</div><div class="kpi-value sm">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card kpi-card-tall" id="web-kpi-units-ads"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card kpi-card-tall" id="web-kpi-units-organic"><div class="kpi-label">Units (Organic)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
         </div>
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -1724,11 +1740,11 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 
       <div class="web-order-type-page" id="web-ordertype-physician" style="display:none;">
         <div class="kpi-row">
-          <div class="kpi-card" id="webphys-kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-          <div class="kpi-card" id="webphys-kpi-total-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-          <div class="kpi-card" id="webphys-kpi-avg-order"><div class="kpi-label">Average Order</div><div class="kpi-value sm">—</div><div class="kpi-mom flat">Loading…</div></div>
-          <div class="kpi-card" id="webphys-kpi-units-ads"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-          <div class="kpi-card" id="webphys-kpi-units-organic"><div class="kpi-label">Units (Organic)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card kpi-card-tall" id="webphys-kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-yoy flat"></div></div>
+          <div class="kpi-card kpi-card-tall" id="webphys-kpi-total-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-yoy flat"></div></div>
+          <div class="kpi-card kpi-card-tall" id="webphys-kpi-avg-order"><div class="kpi-label">Average Order</div><div class="kpi-value sm">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card kpi-card-tall" id="webphys-kpi-units-ads"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card kpi-card-tall" id="webphys-kpi-units-organic"><div class="kpi-label">Units (Organic)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
         </div>
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -1751,11 +1767,11 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 
       <div class="web-order-type-page" id="web-ordertype-international" style="display:none;">
         <div class="kpi-row">
-          <div class="kpi-card" id="webintl-kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-          <div class="kpi-card" id="webintl-kpi-total-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-          <div class="kpi-card" id="webintl-kpi-avg-order"><div class="kpi-label">Average Order</div><div class="kpi-value sm">—</div><div class="kpi-mom flat">Loading…</div></div>
-          <div class="kpi-card" id="webintl-kpi-units-ads"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-          <div class="kpi-card" id="webintl-kpi-units-organic"><div class="kpi-label">Units (Organic)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card kpi-card-tall" id="webintl-kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-yoy flat"></div></div>
+          <div class="kpi-card kpi-card-tall" id="webintl-kpi-total-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-yoy flat"></div></div>
+          <div class="kpi-card kpi-card-tall" id="webintl-kpi-avg-order"><div class="kpi-label">Average Order</div><div class="kpi-value sm">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card kpi-card-tall" id="webintl-kpi-units-ads"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card kpi-card-tall" id="webintl-kpi-units-organic"><div class="kpi-label">Units (Organic)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
         </div>
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -1778,11 +1794,11 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 
       <div class="web-order-type-page" id="web-ordertype-samples" style="display:none;">
         <div class="kpi-row">
-          <div class="kpi-card" id="websamp-kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-          <div class="kpi-card" id="websamp-kpi-total-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-          <div class="kpi-card" id="websamp-kpi-avg-order"><div class="kpi-label">Average Order</div><div class="kpi-value sm">—</div><div class="kpi-mom flat">Loading…</div></div>
-          <div class="kpi-card" id="websamp-kpi-units-ads"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-          <div class="kpi-card" id="websamp-kpi-units-organic"><div class="kpi-label">Units (Organic)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card kpi-card-tall" id="websamp-kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-yoy flat"></div></div>
+          <div class="kpi-card kpi-card-tall" id="websamp-kpi-total-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-yoy flat"></div></div>
+          <div class="kpi-card kpi-card-tall" id="websamp-kpi-avg-order"><div class="kpi-label">Average Order</div><div class="kpi-value sm">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card kpi-card-tall" id="websamp-kpi-units-ads"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card kpi-card-tall" id="websamp-kpi-units-organic"><div class="kpi-label">Units (Organic)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
         </div>
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -5720,6 +5736,12 @@ function showChannel(page, channelId, btn) {
     if (type === 'physician' && typeof window.initWebPhysicianLive === 'function') window.initWebPhysicianLive();
     if (type === 'international' && typeof window.initWebInternationalLive === 'function') window.initWebInternationalLive();
     if (type === 'samples' && typeof window.initWebSamplesLive === 'function') window.initWebSamplesLive();
+
+    // Period selector — added 2026-08-12, see évolis handoff doc. Each
+    // order type remembers its own last-selected period independently
+    // (window._webActivePeriodByType) — switching tabs doesn't reset it
+    // back to Last Full Month.
+    if (typeof window.renderWebPeriodPills === 'function') window.renderWebPeriodPills(type);
   }
 
 
@@ -7034,20 +7056,13 @@ async function initSns() {
   // whose sku starts with this prefix count -- used to split Customer
   // (C-), Physician (P-), and International (I-) order types apart.
   // Undefined/omitted = no filter (kept for any other call site).
-  function aggregateMonth(rows, year, month, skuPrefix) {
-    const prefix = `${year}-${String(month).padStart(2,'0')}`;
-    const filtered = rows.filter(r => {
-      const d = normalizeDate(r.date).substring(0, 7);
-      if (d !== prefix || !isValidRow(r)) return false;
-      if (skuPrefix && !(r.sku || '').trim().toUpperCase().startsWith(skuPrefix)) return false;
-      return true;
-    });
+  // Period selector, added 2026-08-12 (see évolis handoff doc) — split
+  // the actual aggregation math out from month-filtering, so MTD's
+  // partial-month variant can reuse the same math without duplicating it.
+  function aggregateFilteredRowsWeb(filtered) {
     if (!filtered.length) return null;
-
     const orderIds  = new Set(filtered.map(r => r.order_id).filter(Boolean));
     const totalUnits = filtered.reduce((s, r) => s + (parseInt(r.unit_count, 10) || 0), 0);
-
-    // AOV: sum item_price per unique order_id, then average
     const orderTotals = {};
     filtered.forEach(r => {
       if (!r.order_id) return;
@@ -7055,8 +7070,28 @@ async function initSns() {
     });
     const totalRevenue = Object.values(orderTotals).reduce((s, v) => s + v, 0);
     const avgOrder     = orderIds.size > 0 ? totalRevenue / orderIds.size : 0;
-
     return { totalUnits, totalOrders: orderIds.size, avgOrder };
+  }
+  function aggregateMonth(rows, year, month, skuPrefix) {
+    const prefix = `${year}-${String(month).padStart(2,'0')}`;
+    return aggregateFilteredRowsWeb(rows.filter(r => {
+      const d = normalizeDate(r.date).substring(0, 7);
+      if (d !== prefix || !isValidRow(r)) return false;
+      if (skuPrefix && !(r.sku || '').trim().toUpperCase().startsWith(skuPrefix)) return false;
+      return true;
+    }));
+  }
+  function aggregateMonthThroughDay(rows, year, month, throughDay, skuPrefix) {
+    const prefix = `${year}-${String(month).padStart(2,'0')}`;
+    return aggregateFilteredRowsWeb(rows.filter(r => {
+      if (!isValidRow(r)) return false;
+      const d = normalizeDate(r.date);
+      if (d.substring(0, 7) !== prefix) return false;
+      const day = parseInt(d.substring(8, 10), 10);
+      if (!(day > 0 && day <= throughDay)) return false;
+      if (skuPrefix && !(r.sku || '').trim().toUpperCase().startsWith(skuPrefix)) return false;
+      return true;
+    }));
   }
 
   function pct(current, previous) {
@@ -7083,6 +7118,7 @@ async function initSns() {
   }
 
   // Aggregate ad conversions for a given year-month from ads sheet rows
+  // Aggregate ad conversions for a given year-month from ads sheet rows
   function aggregateAdMonth(adsRows, year, month) {
     const prefix = `${year}-${String(month).padStart(2,'0')}`;
     const filtered = adsRows.filter(r => (r.date || '').substring(0,7) === prefix);
@@ -7097,6 +7133,20 @@ async function initSns() {
       .reduce((s, r) => s + (parseFloat(r.conversions) || 0), 0);
     return { totalConversions: Math.round(totalConversions), prevConversions: Math.round(prevConversions) };
   }
+  // MTD variant, added 2026-08-12 -- caps both current and comparison
+  // periods at the same day-of-month, so "this month so far" compares
+  // apples-to-apples against "last month, same number of days in."
+  function aggregateAdMonthThroughDay(adsRows, year, month, throughDay, prevYear, prevMonth) {
+    const dayFilter = (r, y, m) => {
+      const d = (r.date || '');
+      if (d.substring(0, 7) !== `${y}-${String(m).padStart(2,'0')}`) return false;
+      const day = parseInt(d.substring(8, 10), 10);
+      return day > 0 && day <= throughDay;
+    };
+    const totalConversions = adsRows.filter(r => dayFilter(r, year, month)).reduce((s, r) => s + (parseFloat(r.conversions) || 0), 0);
+    const prevConversions = adsRows.filter(r => dayFilter(r, prevYear, prevMonth)).reduce((s, r) => s + (parseFloat(r.conversions) || 0), 0);
+    return { totalConversions: Math.round(totalConversions), prevConversions: Math.round(prevConversions) };
+  }
 
   // ── Generic order-type loader — Skinuva-specific (2026-08-10) ────────────
   // Customer/Physician/International tabs all share this same logic, just
@@ -7104,24 +7154,30 @@ async function initSns() {
   // IDs. idPrefix: 'web' (Customer, original unchanged IDs so PDF export
   // keeps working untouched), 'webphys' (Physician), 'webintl'
   // (International). skuPrefix: 'C-', 'P-', 'I-' respectively.
-  async function loadWebOrderTypeTab(skuPrefix, idPrefix) {
-    const { year, month } = getLastFullMonth();
-    let prevMonth = month - 1, prevYear = year;
-    if (prevMonth === 0) { prevMonth = 12; prevYear--; }
+  // ── Period selector — shared fetch, per-order-type render ───────────────
+  // See handoff doc (evolis, 2026-08-11). Website differs from Amazon/
+  // Walmart: 4 independent order-type tabs (Customer/Physician/
+  // International/Samples, Skinuva-specific), each needing its OWN period
+  // selector -- but all 4 read from the exact SAME 3 sheets (orders, ads,
+  // shopping), just filtered by a different SKU prefix afterward. So this
+  // fetches ONCE (shared across all 4 tabs AND all 4 periods, per the
+  // core "fetch once" requirement) rather than the old loadWebOrderTypeTab
+  // pattern, which re-fetched on every single tab switch.
+  let _webAllRowsRaw = [], _webAdsRowsRaw = [], _webShoppingRowsRaw = [];
+  let _webDataPromise = null;
+  window._webActivePeriodByType = { customer: 'lastFull', physician: 'lastFull', international: 'lastFull', samples: 'lastFull' };
 
-    if (idPrefix === 'web') {
-      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      const hdrEl = document.getElementById('web-hdr-date');
-      if (hdrEl) {
-        const lastDay = new Date(year, month, 0).getDate();
-        hdrEl.textContent = `📅 ${monthNames[month-1]} 1, ${year} – ${monthNames[month-1]} ${lastDay}, ${year}`;
-        hdrEl.style.display = 'none'; // duplicated page-sub above; kept in DOM for PDF export only
-      }
-    }
+  const WEB_TYPE_MAP = {
+    customer:      { skuPrefix: 'C-', idPrefix: 'web' },      // Customer keeps the ORIGINAL unprefixed IDs -- PDF export depends on this
+    physician:     { skuPrefix: 'P-', idPrefix: 'webphys' },
+    international: { skuPrefix: 'I-', idPrefix: 'webintl' },
+    samples:       { skuPrefix: 'S-', idPrefix: 'websamp' },
+  };
+  const WEB_PERIOD_LABELS = { mtd: 'Month to Date', lastFull: 'Last Full Month', prior: 'Prior Month', lastYear: 'Last Year' };
 
-    const tbodyId = idPrefix + (idPrefix === 'web' ? '-tp-tbody' : '-tp-tbody');
-
-    try {
+  function ensureWebDataFetched() {
+    if (_webDataPromise) return _webDataPromise;
+    _webDataPromise = (async () => {
       const [csv, adsCsv, shoppingCsv] = await Promise.all([
         fetch(sheetCsvUrl(SHOPIFY_SHEET_ID, SHOPIFY_SHEET_GID) + `&_cb=${Date.now()}`)
           .then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
@@ -7130,99 +7186,198 @@ async function initSns() {
         fetch(sheetCsvUrl(SHOPIFY_SHEET_ID, SHOPIFY_SHOPPING_GID) + `&_cb=${Date.now()}`)
           .then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
       ]);
-
-      if (!isCsv(csv)) {
-        showWebError(`Could not load website data. Check sheet permissions.`, tbodyId);
-        return;
-      }
-
-      const allRows = parseCsv(csv);
-      const adsRows = isCsv(adsCsv) ? parseCsv(adsCsv) : [];
-      const shoppingRows = isCsv(shoppingCsv) ? parseCsv(shoppingCsv) : [];
-      const curr    = aggregateMonth(allRows, year, month, skuPrefix);
-      const prev    = aggregateMonth(allRows, prevYear, prevMonth, skuPrefix);
-      // Ad conversions (Units Ads KPI source) are campaign-level, not
-      // resolvable to a specific order-type SKU prefix — same figure
-      // shown on all three tabs. Only the Shopping-tab-based per-SKU ad
-      // breakdown used in the product table can actually be prefix-split.
-      const ads     = aggregateAdMonth(adsRows, year, month);
-
-      const fmt  = n => (n ?? 0).toLocaleString();
-      const fmt2 = n => parseFloat(n ?? 0).toFixed(2);
-
-      if (!curr) {
-        setKpiValue(idPrefix + '-kpi-total-units',   '0');
-        setKpiValue(idPrefix + '-kpi-total-orders',  '0');
-        setKpiValue(idPrefix + '-kpi-avg-order',     '$0.00');
-        setKpiValue(idPrefix + '-kpi-units-ads',     '—');
-        setKpiValue(idPrefix + '-kpi-units-organic', '0');
-        const tb = document.getElementById(tbodyId);
-        if (tb) tb.innerHTML =
-          '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--slate);font-style:italic;font-size:12px;">No data for this period.</td></tr>';
-        if (idPrefix === 'web') {
-          buildWebChart(year).catch(e => console.warn('[WebChart] failed:', e.message));
-        } else {
-          buildWebChartFromOrders(allRows, year, skuPrefix, idPrefix).catch(e => console.warn('[WebChart:'+idPrefix+'] failed:', e.message));
-        }
-        return;
-      }
-
-      const adUnits      = ads.totalConversions;
-      const prevAdUnits  = ads.prevConversions;
-      const orgUnits     = Math.max(0, curr.totalUnits - adUnits);
-      const prevOrgUnits = Math.max(0, (prev ? prev.totalUnits : 0) - prevAdUnits);
-
-      setKpiValue(idPrefix + '-kpi-total-units', fmt(curr.totalUnits));
-      setBadgeWeb(idPrefix + '-kpi-total-units', '.kpi-mom', prev ? pct(curr.totalUnits, prev.totalUnits) : null, 'MOM');
-
-      setKpiValue(idPrefix + '-kpi-total-orders', fmt(curr.totalOrders));
-      setBadgeWeb(idPrefix + '-kpi-total-orders', '.kpi-mom', prev ? pct(curr.totalOrders, prev.totalOrders) : null, 'MOM');
-
-      setKpiValue(idPrefix + '-kpi-avg-order', '$' + fmt2(curr.avgOrder));
-      setBadgeWeb(idPrefix + '-kpi-avg-order', '.kpi-mom', prev ? pct(Math.round(curr.avgOrder * 100), Math.round(prev.avgOrder * 100)) : null, 'MOM');
-
-      setKpiValue(idPrefix + '-kpi-units-ads', adUnits > 0 ? fmt(adUnits) : '—');
-      setBadgeWeb(idPrefix + '-kpi-units-ads', '.kpi-mom', adUnits > 0 && prev ? pct(adUnits, prevAdUnits) : null, 'MOM');
-
-      setKpiValue(idPrefix + '-kpi-units-organic', fmt(orgUnits));
-      setBadgeWeb(idPrefix + '-kpi-units-organic', '.kpi-mom', prev ? pct(orgUnits, prevOrgUnits) : null, 'MOM');
-
-      if (idPrefix === 'web') {
-        buildWebChart(year).catch(e => console.warn('[WebChart] failed:', e.message));
-      } else {
-        buildWebChartFromOrders(allRows, year, skuPrefix, idPrefix).catch(e => console.warn('[WebChart:'+idPrefix+'] failed:', e.message));
-      }
-      buildWebTopProducts(allRows, adsRows, shoppingRows, year, month, prevYear, prevMonth, skuPrefix, idPrefix);
-
-    } catch (err) {
-      console.error('[WebLive:'+idPrefix+']', err.message);
-      showWebError(`Error: ${err.message}`, tbodyId);
-    }
+      _webAllRowsRaw = isCsv(csv) ? parseCsv(csv) : [];
+      _webAdsRowsRaw = isCsv(adsCsv) ? parseCsv(adsCsv) : [];
+      _webShoppingRowsRaw = isCsv(shoppingCsv) ? parseCsv(shoppingCsv) : [];
+      if (!isCsv(csv)) throw new Error('Could not load website data. Check sheet permissions.');
+    })();
+    return _webDataPromise;
   }
+
+  function buildWebPeriodConfig(key) {
+    const { year, month } = getLastFullMonth();
+    let prevMonth = month - 1, prevYear = year;
+    if (prevMonth === 0) { prevMonth = 12; prevYear--; }
+    const yoyYear = year - 1, yoyMonth = month;
+
+    if (key === 'lastFull') {
+      return { year, month, prevYear, prevMonth, yoyYear, yoyMonth, showYoy: true, isPartial: false, label: WEB_PERIOD_LABELS.lastFull };
+    }
+    if (key === 'prior') {
+      let priorPrevMonth = prevMonth - 1, priorPrevYear = prevYear;
+      if (priorPrevMonth === 0) { priorPrevMonth = 12; priorPrevYear--; }
+      return { year: prevYear, month: prevMonth, prevYear: priorPrevYear, prevMonth: priorPrevMonth, yoyYear: null, yoyMonth: null, showYoy: false, isPartial: false, label: WEB_PERIOD_LABELS.prior };
+    }
+    if (key === 'lastYear') {
+      // Website's single orders sheet retains 1+ year of history
+      // (confirmed by Jaclyn 2026-08-12) -- unlike Amazon, no separate
+      // historical sheet needed; Last Year just reads _webAllRowsRaw like
+      // every other period.
+      return { year: yoyYear, month: yoyMonth, prevYear: null, prevMonth: null, yoyYear: null, yoyMonth: null, showYoy: false, isPartial: false, label: WEB_PERIOD_LABELS.lastYear };
+    }
+    // mtd
+    const now = new Date();
+    const mtdYear = now.getFullYear(), mtdMonth = now.getMonth() + 1, mtdDay = now.getDate();
+    let mtdPrevMonth = mtdMonth - 1, mtdPrevYear = mtdYear;
+    if (mtdPrevMonth === 0) { mtdPrevMonth = 12; mtdPrevYear--; }
+    return { year: mtdYear, month: mtdMonth, throughDay: mtdDay, prevYear: mtdPrevYear, prevMonth: mtdPrevMonth, yoyYear: null, yoyMonth: null, showYoy: false, isPartial: true, label: WEB_PERIOD_LABELS.mtd };
+  }
+
+  window.renderWebPeriod = async function (orderType, key) {
+    const { skuPrefix, idPrefix } = WEB_TYPE_MAP[orderType];
+    window._webActivePeriodByType[orderType] = key;
+    const cfg = buildWebPeriodConfig(key);
+    const tbodyId = idPrefix + '-tp-tbody';
+
+    try {
+      await ensureWebDataFetched();
+    } catch (err) {
+      showWebError(`Error: ${err.message}`, tbodyId);
+      return;
+    }
+
+    // Customer's date header doubles as the PDF export's date-range
+    // source -- Physician/International/Samples have no PDF equivalent,
+    // so only Customer needs this.
+    if (idPrefix === 'web') {
+      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const hdrEl = document.getElementById('web-hdr-date');
+      if (hdrEl) {
+        let rangeText;
+        if (cfg.isPartial) {
+          rangeText = `📅 ${monthNames[cfg.month-1]} 1 – ${cfg.throughDay}, ${cfg.year}`;
+        } else {
+          const lastDay = new Date(cfg.year, cfg.month, 0).getDate();
+          rangeText = `📅 ${monthNames[cfg.month-1]} 1, ${cfg.year} – ${monthNames[cfg.month-1]} ${lastDay}, ${cfg.year}`;
+        }
+        hdrEl.textContent = rangeText;
+        hdrEl.style.display = 'none'; // stays visually hidden -- PDF export reads its textContent only
+      }
+    }
+
+    const curr = cfg.isPartial
+      ? aggregateMonthThroughDay(_webAllRowsRaw, cfg.year, cfg.month, cfg.throughDay, skuPrefix)
+      : aggregateMonth(_webAllRowsRaw, cfg.year, cfg.month, skuPrefix);
+    const prev = cfg.prevYear
+      ? (cfg.isPartial
+          ? aggregateMonthThroughDay(_webAllRowsRaw, cfg.prevYear, cfg.prevMonth, cfg.throughDay, skuPrefix)
+          : aggregateMonth(_webAllRowsRaw, cfg.prevYear, cfg.prevMonth, skuPrefix))
+      : null;
+    const prevYoy = cfg.showYoy ? aggregateMonth(_webAllRowsRaw, cfg.yoyYear, cfg.yoyMonth, skuPrefix) : null;
+
+    // Ad conversions -- campaign-level, not resolvable to a specific
+    // order-type SKU prefix, same figure regardless of which tab is active.
+    const ads = cfg.isPartial
+      ? aggregateAdMonthThroughDay(_webAdsRowsRaw, cfg.year, cfg.month, cfg.throughDay, cfg.prevYear, cfg.prevMonth)
+      : aggregateAdMonth(_webAdsRowsRaw, cfg.year, cfg.month);
+
+    const fmt  = n => (n ?? 0).toLocaleString();
+    const fmt2 = n => parseFloat(n ?? 0).toFixed(2);
+
+    if (!curr) {
+      setKpiValue(idPrefix + '-kpi-total-units',   '0');
+      setBadgeWeb(idPrefix + '-kpi-total-units', '.kpi-yoy', null, 'YOY');
+      setKpiValue(idPrefix + '-kpi-total-orders',  '0');
+      setBadgeWeb(idPrefix + '-kpi-total-orders', '.kpi-yoy', null, 'YOY');
+      setKpiValue(idPrefix + '-kpi-avg-order',     '$0.00');
+      setKpiValue(idPrefix + '-kpi-units-ads',     '—');
+      setKpiValue(idPrefix + '-kpi-units-organic', '0');
+      const tb = document.getElementById(tbodyId);
+      if (tb) tb.innerHTML =
+        '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--slate);font-style:italic;font-size:12px;">No data for this period.</td></tr>';
+      if (idPrefix === 'web') {
+        buildWebChart(cfg.year).catch(e => console.warn('[WebChart] failed:', e.message));
+      } else {
+        buildWebChartFromOrders(_webAllRowsRaw, cfg.year, skuPrefix, idPrefix).catch(e => console.warn('[WebChart:'+idPrefix+'] failed:', e.message));
+      }
+      return;
+    }
+
+    const adUnits      = ads.totalConversions;
+    const prevAdUnits  = ads.prevConversions;
+    const orgUnits     = Math.max(0, curr.totalUnits - adUnits);
+    const prevOrgUnits = Math.max(0, (prev ? prev.totalUnits : 0) - prevAdUnits);
+
+    setKpiValue(idPrefix + '-kpi-total-units', fmt(curr.totalUnits));
+    setBadgeWeb(idPrefix + '-kpi-total-units', '.kpi-mom', prev ? pct(curr.totalUnits, prev.totalUnits) : null, 'MOM');
+    setBadgeWeb(idPrefix + '-kpi-total-units', '.kpi-yoy', prevYoy ? pct(curr.totalUnits, prevYoy.totalUnits) : null, 'YOY');
+
+    setKpiValue(idPrefix + '-kpi-total-orders', fmt(curr.totalOrders));
+    setBadgeWeb(idPrefix + '-kpi-total-orders', '.kpi-mom', prev ? pct(curr.totalOrders, prev.totalOrders) : null, 'MOM');
+    setBadgeWeb(idPrefix + '-kpi-total-orders', '.kpi-yoy', prevYoy ? pct(curr.totalOrders, prevYoy.totalOrders) : null, 'YOY');
+
+    setKpiValue(idPrefix + '-kpi-avg-order', '$' + fmt2(curr.avgOrder));
+    setBadgeWeb(idPrefix + '-kpi-avg-order', '.kpi-mom', prev ? pct(Math.round(curr.avgOrder * 100), Math.round(prev.avgOrder * 100)) : null, 'MOM');
+
+    setKpiValue(idPrefix + '-kpi-units-ads', adUnits > 0 ? fmt(adUnits) : '—');
+    setBadgeWeb(idPrefix + '-kpi-units-ads', '.kpi-mom', adUnits > 0 && prev ? pct(adUnits, prevAdUnits) : null, 'MOM');
+
+    setKpiValue(idPrefix + '-kpi-units-organic', fmt(orgUnits));
+    setBadgeWeb(idPrefix + '-kpi-units-organic', '.kpi-mom', prev ? pct(orgUnits, prevOrgUnits) : null, 'MOM');
+
+    // Chart -- not period-aware, matches Amazon/Walmart's own convention
+    // (always shows the multi-year trend regardless of selected period).
+    if (idPrefix === 'web') {
+      buildWebChart(cfg.year).catch(e => console.warn('[WebChart] failed:', e.message));
+    } else {
+      buildWebChartFromOrders(_webAllRowsRaw, cfg.year, skuPrefix, idPrefix).catch(e => console.warn('[WebChart:'+idPrefix+'] failed:', e.message));
+    }
+
+    // Top Selling Products -- Last Year's per-SKU ad breakdown (shopping
+    // tab) isn't confirmed to retain a full year the same way the orders
+    // sheet does (same open question as Amazon's ad-orders sheet) --
+    // showing a note instead of a table that might silently be incomplete.
+    if (key === 'lastYear') {
+      const tbody = document.getElementById(tbodyId);
+      if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Per-product breakdown not available for Last Year — ad/shopping data is not confirmed to reach back this far. Showing headline KPIs only for this period.</td></tr>';
+    } else {
+      buildWebTopProducts(_webAllRowsRaw, _webAdsRowsRaw, _webShoppingRowsRaw, cfg.year, cfg.month, cfg.prevYear, cfg.prevMonth, skuPrefix, idPrefix);
+    }
+  };
+
+  function renderWebPeriodPills(orderType) {
+    const container = document.getElementById('web-period-pills');
+    if (!container) return;
+    const activeKey = window._webActivePeriodByType[orderType] || 'lastFull';
+    container.innerHTML = Object.entries(WEB_PERIOD_LABELS).map(([key, label]) =>
+      `<button class="period-pill${key === activeKey ? ' active' : ''}" data-period="${key}" onclick="window.__webSelectPeriod('${orderType}','${key}')">${label}</button>`
+    ).join('');
+  }
+  window.renderWebPeriodPills = renderWebPeriodPills;
+  window.__webSelectPeriod = function (orderType, key) {
+    renderWebPeriodPills(orderType);
+    window.renderWebPeriod(orderType, key);
+  };
 
   window.initWebLive = function () {
     if (window._webLivePromise) return window._webLivePromise;
-    window._webLivePromise = loadWebOrderTypeTab('C-', 'web');
+    window._webLivePromise = (async () => {
+      renderWebPeriodPills('customer');
+      await window.renderWebPeriod('customer', 'lastFull');
+    })();
     return window._webLivePromise;
   };
 
   window.initWebPhysicianLive = function () {
     if (window._webPhysLivePromise) return window._webPhysLivePromise;
-    window._webPhysLivePromise = loadWebOrderTypeTab('P-', 'webphys');
+    window._webPhysLivePromise = window.renderWebPeriod('physician', window._webActivePeriodByType.physician || 'lastFull');
     return window._webPhysLivePromise;
   };
 
   window.initWebInternationalLive = function () {
     if (window._webIntlLivePromise) return window._webIntlLivePromise;
-    window._webIntlLivePromise = loadWebOrderTypeTab('I-', 'webintl');
+    window._webIntlLivePromise = window.renderWebPeriod('international', window._webActivePeriodByType.international || 'lastFull');
     return window._webIntlLivePromise;
   };
 
   window.initWebSamplesLive = function () {
     if (window._webSampLivePromise) return window._webSampLivePromise;
-    window._webSampLivePromise = loadWebOrderTypeTab('S-', 'websamp');
+    window._webSampLivePromise = window.renderWebPeriod('samples', window._webActivePeriodByType.samples || 'lastFull');
     return window._webSampLivePromise;
   };
+
+
+  // ── Revenue chart — computed from orders sheet ────────────────────────────
 
 
   // ── Revenue chart — computed from orders sheet ────────────────────────────
@@ -19886,6 +20041,7 @@ async function loadAuditResultsFromSheet() {
     let root = null;
     let _pdfPriorAmazonPeriod = 'lastFull';
     let _pdfPriorWalmartPeriod = 'lastFull';
+    let _pdfPriorWebPeriod = 'lastFull';
 
     try {
       // A PDF export shouldn't silently produce blank chart cards just
@@ -19972,6 +20128,14 @@ async function loadAuditResultsFromSheet() {
       if (includeSections.walmart && typeof window.renderWalmartPeriod === 'function' && _pdfPriorWalmartPeriod !== 'lastFull') {
         console.log('[pdf-export] forcing Walmart to Last Full Month for capture (was:', _pdfPriorWalmartPeriod, ')');
         window.renderWalmartPeriod('lastFull');
+      }
+      // Same fix for Website — Customer tab only, since PDF export only
+      // ever reads Customer's element IDs (#web-hdr-date etc), never
+      // Physician/International/Samples.
+      _pdfPriorWebPeriod = (window._webActivePeriodByType && window._webActivePeriodByType.customer) || 'lastFull';
+      if (includeSections.website && typeof window.renderWebPeriod === 'function' && _pdfPriorWebPeriod !== 'lastFull') {
+        console.log('[pdf-export] forcing Website Customer to Last Full Month for capture (was:', _pdfPriorWebPeriod, ')');
+        window.renderWebPeriod('customer', 'lastFull');
       }
 
       // Defensive backstop only at this point — the real fix is the promise
@@ -20179,6 +20343,9 @@ async function loadAuditResultsFromSheet() {
       if (includeSections.walmart && typeof window.renderWalmartPeriod === 'function' && _pdfPriorWalmartPeriod !== 'lastFull') {
         window.renderWalmartPeriod(_pdfPriorWalmartPeriod);
       }
+      if (includeSections.website && typeof window.renderWebPeriod === 'function' && _pdfPriorWebPeriod !== 'lastFull') {
+        window.renderWebPeriod('customer', _pdfPriorWebPeriod);
+      }
       if (btn) { btn.disabled = false; btn.classList.remove('pdfx-loading'); }
     } catch (err) {
       console.error('[pdf-export] failed:', err);
@@ -20195,6 +20362,9 @@ async function loadAuditResultsFromSheet() {
       }
       if (typeof window.renderWalmartPeriod === 'function' && _pdfPriorWalmartPeriod !== 'lastFull') {
         window.renderWalmartPeriod(_pdfPriorWalmartPeriod);
+      }
+      if (typeof window.renderWebPeriod === 'function' && _pdfPriorWebPeriod !== 'lastFull') {
+        window.renderWebPeriod('customer', _pdfPriorWebPeriod);
       }
       if (btn) { btn.disabled = false; btn.classList.remove('pdfx-loading'); }
       alert('PDF export failed — check the console for details.');
