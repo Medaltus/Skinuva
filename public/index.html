@@ -7236,6 +7236,29 @@ async function initSns() {
       return;
     }
 
+    // FIXED 2026-08-12 -- confirmed real bug: #sales-page-sub (the shared
+    // page-level subtitle under "Sales") was never updated anywhere in
+    // this function, for ANY order type. It's a shared element also
+    // written by Amazon's/Walmart's own period functions, so it was
+    // permanently stuck showing whatever Amazon happened to render last
+    // (e.g. always "Last Full Month" from page load) regardless of what
+    // was actually selected on the Website tab. Updated for all 4 order
+    // types now, not just Customer -- unlike the PDF-only #web-hdr-date
+    // below, this label is genuinely meant to reflect whatever's
+    // currently on screen, matching Amazon/Walmart's own behavior.
+    const monthNamesAll = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const salesPageSubEl = document.getElementById('sales-page-sub');
+    if (salesPageSubEl) {
+      let subText;
+      if (cfg.isPartial) {
+        subText = `${monthNamesAll[cfg.month-1]} 1 – ${cfg.throughDay}, ${cfg.year} · Month to date`;
+      } else {
+        const lastDaySub = new Date(cfg.year, cfg.month, 0).getDate();
+        subText = `${monthNamesAll[cfg.month-1]} 1 – ${monthNamesAll[cfg.month-1]} ${lastDaySub}, ${cfg.year} · ${cfg.label}`;
+      }
+      salesPageSubEl.textContent = subText;
+    }
+
     // Customer's date header doubles as the PDF export's date-range
     // source -- Physician/International/Samples have no PDF equivalent,
     // so only Customer needs this.
@@ -7275,13 +7298,23 @@ async function initSns() {
     const fmt2 = n => parseFloat(n ?? 0).toFixed(2);
 
     if (!curr) {
+      // FIXED 2026-08-12 -- confirmed real bug: this branch cleared
+      // .kpi-yoy but never .kpi-mom, so a stale MOM percentage from
+      // whatever period was rendered right before this one stayed
+      // displayed alongside the new (correct) "0" value -- e.g. showing
+      // "0" units with a leftover "+7% MOM" from the previous period.
       setKpiValue(idPrefix + '-kpi-total-units',   '0');
+      setBadgeWeb(idPrefix + '-kpi-total-units', '.kpi-mom', null, 'MOM');
       setBadgeWeb(idPrefix + '-kpi-total-units', '.kpi-yoy', null, 'YOY');
       setKpiValue(idPrefix + '-kpi-total-orders',  '0');
+      setBadgeWeb(idPrefix + '-kpi-total-orders', '.kpi-mom', null, 'MOM');
       setBadgeWeb(idPrefix + '-kpi-total-orders', '.kpi-yoy', null, 'YOY');
       setKpiValue(idPrefix + '-kpi-avg-order',     '$0.00');
+      setBadgeWeb(idPrefix + '-kpi-avg-order', '.kpi-mom', null, 'MOM');
       setKpiValue(idPrefix + '-kpi-units-ads',     '—');
+      setBadgeWeb(idPrefix + '-kpi-units-ads', '.kpi-mom', null, 'MOM');
       setKpiValue(idPrefix + '-kpi-units-organic', '0');
+      setBadgeWeb(idPrefix + '-kpi-units-organic', '.kpi-mom', null, 'MOM');
       const tb = document.getElementById(tbodyId);
       if (tb) tb.innerHTML =
         '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--slate);font-style:italic;font-size:12px;">No data for this period.</td></tr>';
@@ -7345,8 +7378,14 @@ async function initSns() {
   }
   window.renderWebPeriodPills = renderWebPeriodPills;
   window.__webSelectPeriod = function (orderType, key) {
-    renderWebPeriodPills(orderType);
+    // FIXED 2026-08-12 -- confirmed real bug: renderWebPeriodPills reads
+    // window._webActivePeriodByType[orderType] to decide which pill shows
+    // as active, but that value is only updated INSIDE renderWebPeriod --
+    // calling the pills render first meant it always used the PREVIOUS
+    // period, lagging one click behind every time. Swapped the order so
+    // the state is updated before the pills read it.
     window.renderWebPeriod(orderType, key);
+    renderWebPeriodPills(orderType);
   };
 
   window.initWebLive = function () {
@@ -10945,7 +10984,7 @@ async function mxMfcLoadKpis() {
 async function mxMfcLoadShippedChart() {
   const footer = document.getElementById('mx-mfc-chart-footer');
   try {
-    const csv = await fetch(ovCsvUrl(OV_FULFILLMENT_DAILY_SHEET_ID, '356984145')).then(r => r.ok ? r.text() : '').catch(() => '');
+    const csv = await fetch(ovCsvUrl(OV_FULFILLMENT_DAILY_SHEET_ID, '779753291')).then(r => r.ok ? r.text() : '').catch(() => '');
     const rows = parseCsvToRows(csv).filter(r => {
       const day = new Date((r.date || '') + 'T12:00:00').getDay();
       return day !== 0 && day !== 6;
@@ -16884,16 +16923,45 @@ window.initOosLog = async function() {
 
 const OV_FULFILLMENT_DAILY_SHEET_ID = '17ZTBMaZrZ6avFoHte8M_Zi1a_xhE3nZUnbn21EtRRRY'; // SHEET_FULFILLMENT_DAILY_SHIPMENTS
 const OV_FULFILLMENT_STATES_SHEET_ID = '1YYhGDwFqHb0wo0D_YzpsPemh5qX-lfv1aQYxTK9bgug'; // SHEET_FULFILLMENT_STATES
-// FIXED 2026-08-12 per Jaclyn — the gid passed to all 3 ffLoadStatesGeneric
-// calls below was hardcoded to '402779529' (évolis's own tab on this
-// shared, multi-brand sheet), left over unchanged from when this
-// dashboard was built from évolis's codebase. This meant the Fulfillment
-// map was showing évolis's order-by-state data on Skinuva's own
-// dashboard the whole time — explaining why its numbers didn't
-// reconcile with the real Total Orders KPI above it. Corrected to
-// Skinuva's own tab GID (1762705401) at all 3 call sites (internal
-// Fulfillment page, internal Marketing Fulfillment/CS page, and the
-// external partner-facing version — all three were affected identically).
+// ═══════════════════════════════════════════════════════════════════
+// ⚠️ READ THIS BEFORE REPLICATING THIS FILE FOR A NEW BRAND ⚠️
+//
+// FOUND 2026-08-12 (Skinuva) — the file IDs above are correct (both
+// sheets are shared/multi-brand, one tab per brand), but the GID passed
+// alongside each one at every call site below is a HARDCODED LITERAL
+// STRING, not routed through window.SHEET_CFG the way the rest of this
+// dashboard's sheet references are. When this file gets copied to build
+// a new brand's dashboard, these literals carry over UNCHANGED — meaning
+// the new brand's Fulfillment map and "Shipped Website Orders" KPI will
+// silently keep showing THIS brand's (or whichever brand this was copied
+// from) data, with no error, no blank state, nothing that visibly looks
+// wrong. The only symptom is numbers that don't reconcile with the rest
+// of the dashboard — exactly what happened here, and it took a manual
+// "why don't these add up" investigation to catch.
+//
+// Both sheets were affected:
+//   - SHEET_FULFILLMENT_STATES: gid was hardcoded to '402779529' at all
+//     3 ffLoadStatesGeneric call sites (internal Fulfillment page,
+//     internal Marketing Fulfillment/CS page, external partner-facing
+//     version). Skinuva's real gid is '1762705401'.
+//   - SHEET_FULFILLMENT_DAILY_SHIPMENTS: TWO different tabs, TWO
+//     different hardcoded gids — '356984145' for the raw daily-shipments
+//     data (feeds the chart) at 4 call sites, and '106183169' for the
+//     separate "_kpis" tab (shipped_orders_30d, avg_cost_7d, etc.) at 3
+//     call sites. Skinuva's real gid for the raw-data tab is
+//     '779753291' — the _kpis gid ('106183169') turned out to already
+//     be correct for Skinuva, which is exactly the trap: some of these
+//     hardcoded values will coincidentally already be right for the next
+//     brand too, so a quick spot-check isn't reliable — every single
+//     hardcoded gid needs to be verified against that brand's own sheet,
+//     not assumed correct just because a couple of them happen to match.
+//
+// FOR THE NEXT BRAND: search this file for every gid used alongside
+// OV_FULFILLMENT_DAILY_SHEET_ID and OV_FULFILLMENT_STATES_SHEET_ID
+// (search for "OV_FULFILLMENT_" to find them all) and confirm each one
+// against that brand's own Google Sheet tabs before assuming any of them
+// are already correct.
+// ═══════════════════════════════════════════════════════════════════
 
 const FF_SP = {
   WA:"M102,7.6L106.4,9L116.1,11.8L124.7,13.7L144.7,19.4L167.7,25L182.9,28.2L169.2,91.8L156.8,88.3L141.3,84.7L126.1,84.8L125.6,83.4L120,85.6L115.4,84.8L113.3,83.3L112,83.9L107.2,83.8L105.5,82.4L100.3,80.3L99.5,80.5L95.1,78.9L93.2,80.8L87,80.5L81,76.3L81.8,75.4L81.9,67.7L79.7,63.9L75.6,63.3L74.9,60.8L72.6,60.3L69,61.5L66.8,58.3L67.1,55.4L69.9,55.1L71.5,51L68.9,49.9L69,46.2L73.4,45.6L70.7,42.8L69.2,35.7L69.9,32.8L69.9,24.9L68.1,21.6L70.3,12.2L72.4,12.7L74.9,15.6L77.6,18.2L80.8,20.2L85.4,22.3L88.4,22.9L91.4,24.4L94.7,25.3L97,25.2L97,22.8L98.3,21.6L100.4,20.3L100.7,21.5L101.1,23.2L98.8,23.7L98.5,25.8L100.2,27.3L101.4,29.7L102,31.6L103.5,31.5L103.6,30.2L102.7,28.9L102.2,25.7L103,23.9L102.3,22.4L102.3,20.2L104.1,16.6L103,14L100.6,9.2L100.9,8.4L102,7.6Z",
@@ -17005,7 +17073,7 @@ async function ffLoadKpis() {
 async function ffLoadShippedChart() {
   const footer = document.getElementById('ff-chart-footer');
   try {
-    const csv = await fetch(ovCsvUrl(OV_FULFILLMENT_DAILY_SHEET_ID, '356984145')).then(r => r.ok ? r.text() : '').catch(() => '');
+    const csv = await fetch(ovCsvUrl(OV_FULFILLMENT_DAILY_SHEET_ID, '779753291')).then(r => r.ok ? r.text() : '').catch(() => '');
     const rows = parseCsvToRows(csv).filter(r => {
       const day = new Date((r.date || '') + 'T12:00:00').getDay();
       return day !== 0 && day !== 6; // weekends filtered defensively — the cron no longer writes them going forward, but old rows may still exist
@@ -17273,7 +17341,7 @@ async function mfcLoadKpis() {
     // than read from the _kpis tab's shipped_orders_30d — that figure is a
     // rolling 30-day aggregate, not a calendar-month one, and doesn't line
     // up with the rest of this report's fixed month.
-    const dailyCsv = await fetch(ovCsvUrl(OV_FULFILLMENT_DAILY_SHEET_ID, '356984145')).then(r => r.ok ? r.text() : '').catch(() => '');
+    const dailyCsv = await fetch(ovCsvUrl(OV_FULFILLMENT_DAILY_SHEET_ID, '779753291')).then(r => r.ok ? r.text() : '').catch(() => '');
     const dailyRows = parseCsvToRows(dailyCsv).filter(r => {
       const d = new Date((r.date || '') + 'T12:00:00');
       if (isNaN(d)) return false;
@@ -17312,7 +17380,7 @@ async function mfcLoadShippedChart() {
     const lblChart = document.getElementById('mfc-lbl-chart');
     if (lblChart) lblChart.textContent = `Website Orders Shipped by Date • ${monthLabel}`;
 
-    const csv = await fetch(ovCsvUrl(OV_FULFILLMENT_DAILY_SHEET_ID, '356984145')).then(r => r.ok ? r.text() : '').catch(() => '');
+    const csv = await fetch(ovCsvUrl(OV_FULFILLMENT_DAILY_SHEET_ID, '779753291')).then(r => r.ok ? r.text() : '').catch(() => '');
     const rows = parseCsvToRows(csv).filter(r => {
       const d = new Date((r.date || '') + 'T12:00:00');
       if (isNaN(d)) return false;
