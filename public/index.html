@@ -6525,6 +6525,42 @@ async function initSns() {
       _amzAdSummaryRows = isCsv(adSummaryCsv) ? parseCsv(adSummaryCsv) : [];
       _amzAdOrdersRowsAll = isCsv(adOrdersCsv) ? parseCsv(adOrdersCsv) : [];
 
+      // FIXED 2026-08-12 per Jaclyn — Canadian orders were coming through
+      // the US Amazon Seller API sync, inflating every KPI on this page
+      // with orders that don't actually belong to the amazon.com
+      // marketplace. Cross-references every row's ASIN against the
+      // "channel" column (Product Short Name master sheet, reused via the
+      // existing getProductMaster() rather than a second fetch) and
+      // excludes anything not EXACTLY "amazon" — "amazon.ca"/"amazon.uk"
+      // rows are real, valid data for THOSE marketplaces, just not this
+      // one. Applied to every Amazon data source that has per-ASIN
+      // granularity: sync rows, historical rows (used for Last Year/YoY),
+      // returns, and ad-orders (used for the Top Products table's Units
+      // (Ads)/(Organic) split).
+      //
+      // NOT applied to _amzAdSummaryRows (feeds the page-level "Units
+      // (Ads)" KPI specifically) — that sheet is a pre-aggregated
+      // brand-and-month rollup with NO per-ASIN column at all, so there's
+      // nothing to filter client-side. If Canadian ad spend/units are
+      // ALSO leaking into that sheet, this fix does not catch it — that
+      // would need a fix at the sync-advertising cron itself, not here.
+      try {
+        const master = await getProductMaster();
+        const isUsAmazonAsin = asin => {
+          const entry = master.byAsin[(asin || '').trim().toUpperCase()];
+          if (!entry) return true; // unknown ASIN — don't silently drop data we can't classify; only exclude confirmed non-US-Amazon channels
+          return (entry.channel || '').trim().toLowerCase() === 'amazon';
+        };
+        const beforeSync = _amzSyncRows.length, beforeHist = _amzHistRows.length, beforeReturns = _amzReturnRows.length, beforeAdOrders = _amzAdOrdersRowsAll.length;
+        _amzSyncRows = _amzSyncRows.filter(r => isUsAmazonAsin(r.asin));
+        _amzHistRows = _amzHistRows.filter(r => isUsAmazonAsin(r.asin));
+        _amzReturnRows = _amzReturnRows.filter(r => isUsAmazonAsin(r.asin));
+        _amzAdOrdersRowsAll = _amzAdOrdersRowsAll.filter(r => isUsAmazonAsin(r.asin || r.sku));
+        console.log(`[Evolis] Channel filter (amazon.com only): sync ${beforeSync}→${_amzSyncRows.length}, hist ${beforeHist}→${_amzHistRows.length}, returns ${beforeReturns}→${_amzReturnRows.length}, adOrders ${beforeAdOrders}→${_amzAdOrdersRowsAll.length}`);
+      } catch (e) {
+        console.warn('[Evolis] Channel filter failed, showing unfiltered data:', e.message);
+      }
+
       renderAmazonPeriodPills('lastFull');
       renderAmazonPeriod('lastFull');
 
@@ -7046,8 +7082,31 @@ async function initSns() {
   }
 
   function isValidRow(r) {
+    // FIXED 2026-08-12 per Jaclyn -- two real gaps found: 'voided' orders
+    // were falling through as valid (same problem class as
+    // refunded/cancelled, which WERE already excluded -- a voided order
+    // means the payment authorization was cancelled before capture, the
+    // customer was never actually charged). Added alongside the existing
+    // financial_status checks.
+    //
+    // Also added a SEPARATE check on fulfillment_status (a different
+    // Shopify field entirely -- financial_status is about whether money
+    // moved, fulfillment_status is about whether it's shipped) to exclude
+    // unfulfilled orders per Jaclyn's explicit choice to only count sales
+    // once shipped, not merely once paid.
+    //
+    // NOTE: 'fulfillment_status' as the column name is inferred from
+    // Shopify's own REST API field naming, which financial_status already
+    // matches exactly -- strong but not 100% confirmed evidence the sync
+    // cron preserves Shopify's native field names for this one too. If
+    // this doesn't correctly filter unfulfilled rows after deploying,
+    // check the actual column header in the orders sheet against this
+    // exact name.
     const status = (r.financial_status || r.status || '').toLowerCase();
-    return status !== 'refunded' && status !== 'cancelled' && status !== 'canceled';
+    if (status === 'refunded' || status === 'cancelled' || status === 'canceled' || status === 'voided') return false;
+    const fulfillmentStatus = (r.fulfillment_status || '').toLowerCase();
+    if (fulfillmentStatus === 'unfulfilled') return false;
+    return true;
   }
 
   // Aggregate KPIs for a given year-month from all rows
@@ -8579,9 +8638,28 @@ async function initSns() {
       return `<span class="tp-mom-flat">—</span>`;
     }
 
-    // Fetch product names + Walmart Item ID -> SKU mapping (column I) —
+    // Fetch product names + Walmart Item ID -> SKU mapping (column I) --
     // added 2026-08-06 per Jaclyn, same Product Short Name sheet already
     // fetched here for names, just also capturing column I now.
+    //
+    // FIXED 2026-08-12 per Jaclyn -- SVA0003/SVA0001 (and any other SKU
+    // whose real catalog entry has a suffix, e.g. "SVA0003-stickerless"
+    // or "SVA0003.2pk") were falling back to showing the raw SKU instead
+    // of a real product name. Root cause: this only ever tried an EXACT
+    // match against skuNameMap, but skuUnits above strips
+    // -STICKERLESS/-STICKER suffixes before aggregating, while the name
+    // map here was keyed by whatever the sheet's column B literally says
+    // (often WITH a suffix) -- a lookup for the stripped "SVA0003" simply
+    // never matched the sheet's own "SVA0003-STICKERLESS" key. Not a
+    // Walmart Item ID problem at all -- itemIdToSku below is unrelated to
+    // this. Fixed the same way buildWebTopProducts already handles this
+    // (see its own rootSku()): index the name map by BOTH the exact SKU
+    // and its root form (leading letters+digits, stripping any suffix),
+    // then try both when looking a name up below.
+    function rootSku(s) {
+      const m = (s || '').match(/^[A-Z]+\d+/);
+      return m ? m[0] : s;
+    }
     let skuNameMap = {};
     let itemIdToSku = {};
     try {
@@ -8592,6 +8670,15 @@ async function initSns() {
           const lines = csv.trim().split('\n');
           for (let i = 1; i < lines.length; i++) {
             const cols = parseCsvLine(lines[i]);
+            const sku  = (cols[1] || '').replace(/^"|"$/g,'').trim().toUpperCase().replace(/-SF$/i,'');
+            const name = (cols[2] || '').replace(/^"|"$/g,'').trim();
+            const walmartItemId = (cols[8] || '').replace(/^"|"$/g,'').trim();
+            if (sku && name) {
+              skuNameMap[sku] = name;
+              const root = rootSku(sku);
+              if (root && !skuNameMap[root]) skuNameMap[root] = name;
+            }
+            if (walmartItemId && sku) itemIdToSku[walmartItemId] = sku;
             const sku  = (cols[1] || '').replace(/^"|"$/g,'').trim().toUpperCase().replace(/-SF$/i,'');
             const name = (cols[2] || '').replace(/^"|"$/g,'').trim();
             const walmartItemId = (cols[8] || '').replace(/^"|"$/g,'').trim();
@@ -8634,7 +8721,7 @@ async function initSns() {
     let totalAdUnits = 0, totalOrgUnits = 0, totalAdUnitsPrev = 0, totalOrgUnitsPrev = 0;
     tbody.innerHTML = '';
     sorted.forEach(([sku, units], idx) => {
-      const name      = skuNameMap[sku] || sku;
+      const name      = skuNameMap[sku] || skuNameMap[rootSku(sku)] || sku;
       const prevUnits = skuUnitsPrev[sku] || 0;
       // Ad units capped at that SKU's own total units this month — never
       // allowed to exceed what actually sold, same convention already
@@ -9356,8 +9443,31 @@ async function initSns() {
   }
 
   function isValidRow(r) {
+    // FIXED 2026-08-12 per Jaclyn -- two real gaps found: 'voided' orders
+    // were falling through as valid (same problem class as
+    // refunded/cancelled, which WERE already excluded -- a voided order
+    // means the payment authorization was cancelled before capture, the
+    // customer was never actually charged). Added alongside the existing
+    // financial_status checks.
+    //
+    // Also added a SEPARATE check on fulfillment_status (a different
+    // Shopify field entirely -- financial_status is about whether money
+    // moved, fulfillment_status is about whether it's shipped) to exclude
+    // unfulfilled orders per Jaclyn's explicit choice to only count sales
+    // once shipped, not merely once paid.
+    //
+    // NOTE: 'fulfillment_status' as the column name is inferred from
+    // Shopify's own REST API field naming, which financial_status already
+    // matches exactly -- strong but not 100% confirmed evidence the sync
+    // cron preserves Shopify's native field names for this one too. If
+    // this doesn't correctly filter unfulfilled rows after deploying,
+    // check the actual column header in the orders sheet against this
+    // exact name.
     const status = (r.financial_status || r.status || '').toLowerCase();
-    return status !== 'refunded' && status !== 'cancelled' && status !== 'canceled';
+    if (status === 'refunded' || status === 'cancelled' || status === 'canceled' || status === 'voided') return false;
+    const fulfillmentStatus = (r.fulfillment_status || '').toLowerCase();
+    if (fulfillmentStatus === 'unfulfilled') return false;
+    return true;
   }
 
   // Aggregate KPIs for a given year-month from all rows
@@ -10200,9 +10310,28 @@ async function initSns() {
       return `<span class="tp-mom-flat">—</span>`;
     }
 
-    // Fetch product names + Walmart Item ID -> SKU mapping (column I) —
+    // Fetch product names + Walmart Item ID -> SKU mapping (column I) --
     // added 2026-08-06 per Jaclyn, same Product Short Name sheet already
     // fetched here for names, just also capturing column I now.
+    //
+    // FIXED 2026-08-12 per Jaclyn -- SVA0003/SVA0001 (and any other SKU
+    // whose real catalog entry has a suffix, e.g. "SVA0003-stickerless"
+    // or "SVA0003.2pk") were falling back to showing the raw SKU instead
+    // of a real product name. Root cause: this only ever tried an EXACT
+    // match against skuNameMap, but skuUnits above strips
+    // -STICKERLESS/-STICKER suffixes before aggregating, while the name
+    // map here was keyed by whatever the sheet's column B literally says
+    // (often WITH a suffix) -- a lookup for the stripped "SVA0003" simply
+    // never matched the sheet's own "SVA0003-STICKERLESS" key. Not a
+    // Walmart Item ID problem at all -- itemIdToSku below is unrelated to
+    // this. Fixed the same way buildWebTopProducts already handles this
+    // (see its own rootSku()): index the name map by BOTH the exact SKU
+    // and its root form (leading letters+digits, stripping any suffix),
+    // then try both when looking a name up below.
+    function rootSku(s) {
+      const m = (s || '').match(/^[A-Z]+\d+/);
+      return m ? m[0] : s;
+    }
     let skuNameMap = {};
     let itemIdToSku = {};
     try {
@@ -10213,6 +10342,15 @@ async function initSns() {
           const lines = csv.trim().split('\n');
           for (let i = 1; i < lines.length; i++) {
             const cols = parseCsvLine(lines[i]);
+            const sku  = (cols[1] || '').replace(/^"|"$/g,'').trim().toUpperCase().replace(/-SF$/i,'');
+            const name = (cols[2] || '').replace(/^"|"$/g,'').trim();
+            const walmartItemId = (cols[8] || '').replace(/^"|"$/g,'').trim();
+            if (sku && name) {
+              skuNameMap[sku] = name;
+              const root = rootSku(sku);
+              if (root && !skuNameMap[root]) skuNameMap[root] = name;
+            }
+            if (walmartItemId && sku) itemIdToSku[walmartItemId] = sku;
             const sku  = (cols[1] || '').replace(/^"|"$/g,'').trim().toUpperCase().replace(/-SF$/i,'');
             const name = (cols[2] || '').replace(/^"|"$/g,'').trim();
             const walmartItemId = (cols[8] || '').replace(/^"|"$/g,'').trim();
@@ -10255,7 +10393,7 @@ async function initSns() {
     let totalAdUnits = 0, totalOrgUnits = 0, totalAdUnitsPrev = 0, totalOrgUnitsPrev = 0;
     tbody.innerHTML = '';
     sorted.forEach(([sku, units], idx) => {
-      const name      = skuNameMap[sku] || sku;
+      const name      = skuNameMap[sku] || skuNameMap[rootSku(sku)] || sku;
       const prevUnits = skuUnitsPrev[sku] || 0;
       // Ad units capped at that SKU's own NET (returns-adjusted) units
       // this month — never allowed to exceed what actually stuck as a
