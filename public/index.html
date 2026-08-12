@@ -1540,6 +1540,10 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     </div>
     <div class="page-hd">
       <div><div class="page-title">Sales</div><div class="page-sub" id="sales-page-sub">May 1 – May 31, 2026 · Last full month</div></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="staging-note" id="sales-report-status">◎ Draft</span>
+        <button class="btn-approve" id="sales-approve-btn" style="background:var(--green);border-color:var(--green);color:#fff;">✓ Approved &amp; Ready</button>
+      </div>
     </div>
 
     <div class="channel-tabs-row">
@@ -1549,9 +1553,16 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <button class="ch-tab" onclick="showChannel('sales','s-website',this)">Website</button>
         <button class="ch-tab" onclick="showChannel('sales','s-walmart',this)">Walmart</button>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span class="staging-note" id="sales-report-status">◎ Draft</span>
-        <button class="btn-approve" id="sales-approve-btn" style="background:var(--green);border-color:var(--green);color:#fff;">✓ Approved &amp; Ready</button>
+      <!-- Period selector — added 2026-08-12, moved here 2026-08-12 per
+           Jaclyn so it sits on the same row as the channel tabs instead of
+           its own row inside each channel page. Shared container: content
+           is swapped by showChannel() below depending on which channel tab
+           is active (Amazon/Website/Walmart each have their own period
+           logic; Overview has none, so the container is just emptied and
+           hidden there). -->
+      <div class="period-selector" id="sales-period-selector" style="display:none;align-items:center;gap:10px;">
+        <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);">Period</span>
+        <div class="period-pills" id="sales-period-pills" style="display:flex;background:var(--white);border:1px solid var(--border);border-radius:999px;padding:4px;gap:2px;"></div>
       </div>
     </div>
 
@@ -1602,11 +1613,6 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     <div class="channel-page" id="s-amazon">
       <div class="channel-hdr">
         <span id="amazon-hdr-date" style="font-size:11px;color:var(--muted);">📅 Loading…</span>
-      </div>
-      <!-- Period selector — added 2026-08-12, see évolis handoff doc -->
-      <div class="period-selector" style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-        <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);">Period</span>
-        <div class="period-pills" id="amazon-period-pills" style="display:flex;background:var(--white);border:1px solid var(--border);border-radius:999px;padding:4px;gap:2px;"></div>
       </div>
       <div class="kpi-row">
         <div class="kpi-card kpi-card-tall" id="kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-yoy flat"></div></div>
@@ -5650,6 +5656,23 @@ function showChannel(page, channelId, btn) {
     if (channelId === 's-amazon')        initAmazonLive();
     if (channelId === 's-website')       initWebLive();
     if (channelId === 's-walmart')       initWalmartLive();
+
+    // Shared period-selector container — added 2026-08-12, moved onto the
+    // channel-tabs row per Jaclyn. Each Sales channel with its own period
+    // logic re-populates and shows it on activation; Overview (no period
+    // concept) hides it. Website/Walmart will call their own render-pills
+    // function here once built — Amazon's is the only one wired so far.
+    if (page === 'sales') {
+      const periodSelector = document.getElementById('sales-period-selector');
+      if (periodSelector) {
+        if (channelId === 's-amazon') {
+          periodSelector.style.display = 'flex';
+          if (typeof window.renderAmazonPeriodPills === 'function') window.renderAmazonPeriodPills(window._amzActivePeriod || 'lastFull');
+        } else {
+          periodSelector.style.display = 'none';
+        }
+      }
+    }
     if (channelId.indexOf('x-') === 0)   window.initSalesExternalPage();
     if (channelId.indexOf('mx-') === 0)  window.initMarketingExternalPage();
     if (channelId.indexOf('ix-') === 0)  window.initInventoryExternalPage();
@@ -6653,12 +6676,13 @@ async function initSns() {
   };
 
   function renderAmazonPeriodPills(activeKey) {
-    const container = document.getElementById('amazon-period-pills');
+    const container = document.getElementById('sales-period-pills');
     if (!container) return;
     container.innerHTML = Object.entries(AMZ_PERIOD_LABELS).map(([key, label]) =>
       `<button class="period-pill${key === activeKey ? ' active' : ''}" data-period="${key}" onclick="window.__amazonSelectPeriod('${key}')">${label}</button>`
     ).join('');
   }
+  window.renderAmazonPeriodPills = renderAmazonPeriodPills;
   window.__amazonSelectPeriod = function (key) {
     renderAmazonPeriodPills(key);
     window.renderAmazonPeriod(key);
