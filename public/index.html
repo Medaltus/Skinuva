@@ -11002,7 +11002,7 @@ async function mxMfcLoadShippedChart() {
 }
 
 async function mxMfcLoadStates() {
-  await ffLoadStatesGeneric(OV_FULFILLMENT_STATES_SHEET_ID, '402779529', 'mx-mfc-us-svg', 'mx-mfc-map-tip', 'mx-mfc-state-table-body', 'mx-mfc-map-footer');
+  await ffLoadStatesGeneric(OV_FULFILLMENT_STATES_SHEET_ID, '1762705401', 'mx-mfc-us-svg', 'mx-mfc-map-tip', 'mx-mfc-state-table-body', 'mx-mfc-map-footer');
 }
 
 async function mxMfcLoadComplianceCases() {
@@ -16884,6 +16884,16 @@ window.initOosLog = async function() {
 
 const OV_FULFILLMENT_DAILY_SHEET_ID = '17ZTBMaZrZ6avFoHte8M_Zi1a_xhE3nZUnbn21EtRRRY'; // SHEET_FULFILLMENT_DAILY_SHIPMENTS
 const OV_FULFILLMENT_STATES_SHEET_ID = '1YYhGDwFqHb0wo0D_YzpsPemh5qX-lfv1aQYxTK9bgug'; // SHEET_FULFILLMENT_STATES
+// FIXED 2026-08-12 per Jaclyn — the gid passed to all 3 ffLoadStatesGeneric
+// calls below was hardcoded to '402779529' (évolis's own tab on this
+// shared, multi-brand sheet), left over unchanged from when this
+// dashboard was built from évolis's codebase. This meant the Fulfillment
+// map was showing évolis's order-by-state data on Skinuva's own
+// dashboard the whole time — explaining why its numbers didn't
+// reconcile with the real Total Orders KPI above it. Corrected to
+// Skinuva's own tab GID (1762705401) at all 3 call sites (internal
+// Fulfillment page, internal Marketing Fulfillment/CS page, and the
+// external partner-facing version — all three were affected identically).
 
 const FF_SP = {
   WA:"M102,7.6L106.4,9L116.1,11.8L124.7,13.7L144.7,19.4L167.7,25L182.9,28.2L169.2,91.8L156.8,88.3L141.3,84.7L126.1,84.8L125.6,83.4L120,85.6L115.4,84.8L113.3,83.3L112,83.9L107.2,83.8L105.5,82.4L100.3,80.3L99.5,80.5L95.1,78.9L93.2,80.8L87,80.5L81,76.3L81.8,75.4L81.9,67.7L79.7,63.9L75.6,63.3L74.9,60.8L72.6,60.3L69,61.5L66.8,58.3L67.1,55.4L69.9,55.1L71.5,51L68.9,49.9L69,46.2L73.4,45.6L70.7,42.8L69.2,35.7L69.9,32.8L69.9,24.9L68.1,21.6L70.3,12.2L72.4,12.7L74.9,15.6L77.6,18.2L80.8,20.2L85.4,22.3L88.4,22.9L91.4,24.4L94.7,25.3L97,25.2L97,22.8L98.3,21.6L100.4,20.3L100.7,21.5L101.1,23.2L98.8,23.7L98.5,25.8L100.2,27.3L101.4,29.7L102,31.6L103.5,31.5L103.6,30.2L102.7,28.9L102.2,25.7L103,23.9L102.3,22.4L102.3,20.2L104.1,16.6L103,14L100.6,9.2L100.9,8.4L102,7.6Z",
@@ -17169,7 +17179,7 @@ async function ffLoadStatesGeneric(sheetId, gid, svgId, tipId, tbodyId, footerId
 }
 
 async function ffLoadStates() {
-  await ffLoadStatesGeneric(OV_FULFILLMENT_STATES_SHEET_ID, '402779529', 'ff-us-svg', 'ff-map-tip', 'ff-state-table-body', 'ff-map-footer');
+  await ffLoadStatesGeneric(OV_FULFILLMENT_STATES_SHEET_ID, '1762705401', 'ff-us-svg', 'ff-map-tip', 'ff-state-table-body', 'ff-map-footer');
 }
 
 window.initFulfillmentPage = async function() {
@@ -17374,7 +17384,7 @@ async function mfcLoadShippedChart() {
 }
 
 async function mfcLoadStates() {
-  await ffLoadStatesGeneric(OV_FULFILLMENT_STATES_SHEET_ID, '402779529', 'mfc-us-svg', 'mfc-map-tip', 'mfc-state-table-body', 'mfc-map-footer');
+  await ffLoadStatesGeneric(OV_FULFILLMENT_STATES_SHEET_ID, '1762705401', 'mfc-us-svg', 'mfc-map-tip', 'mfc-state-table-body', 'mfc-map-footer');
 }
 
 // Returns Processed + return rate. Rate = returns in the last 30 days ÷
