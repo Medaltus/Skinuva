@@ -6531,12 +6531,29 @@ async function initSns() {
       // marketplace. Cross-references every row's ASIN against the
       // "channel" column (Product Short Name master sheet, reused via the
       // existing getProductMaster() rather than a second fetch) and
-      // excludes anything not EXACTLY "amazon" — "amazon.ca"/"amazon.uk"
-      // rows are real, valid data for THOSE marketplaces, just not this
-      // one. Applied to every Amazon data source that has per-ASIN
-      // granularity: sync rows, historical rows (used for Last Year/YoY),
-      // returns, and ad-orders (used for the Top Products table's Units
-      // (Ads)/(Organic) split).
+      // excludes anything not tagged for the amazon.com marketplace —
+      // "amazon.ca"/"amazon.uk" rows are real, valid data for THOSE
+      // marketplaces, just not this one. Applied to every Amazon data
+      // source that has per-ASIN granularity: sync rows, historical rows
+      // (used for Last Year/YoY), returns, and ad-orders (used for the
+      // Top Products table's Units (Ads)/(Organic) split).
+      //
+      // REVISED same day, still 2026-08-12 — the first version of this
+      // filter used a strict equality check (channel === 'amazon'),
+      // which broke the ENTIRE page down to a single surviving ASIN.
+      // Root cause, confirmed with Jaclyn: this column isn't single-value
+      // — a real cell can read "Amazon / Walmart" (multi-channel,
+      // slash-separated) for a SKU sold on both. Strict equality against
+      // "amazon" only ever matched a cell containing the bare word
+      // "Amazon" and nothing else, which is apparently rare — almost
+      // every real row failed the check and got excluded, leaving only
+      // ASINs absent from the master sheet entirely (which hit the "can't
+      // classify, don't exclude" fallback below). Fixed by splitting on
+      // "/" and checking whether any individual token, trimmed and
+      // lowercased, is EXACTLY "amazon" — matching a bare "Amazon" cell,
+      // matching "Amazon" as one token of "Amazon / Walmart", while still
+      // correctly rejecting a token like "amazon.ca" or "amazon uk" (not
+      // an exact match to "amazon" even after lowercasing).
       //
       // NOT applied to _amzAdSummaryRows (feeds the page-level "Units
       // (Ads)" KPI specifically) — that sheet is a pre-aggregated
@@ -6549,7 +6566,8 @@ async function initSns() {
         const isUsAmazonAsin = asin => {
           const entry = master.byAsin[(asin || '').trim().toUpperCase()];
           if (!entry) return true; // unknown ASIN — don't silently drop data we can't classify; only exclude confirmed non-US-Amazon channels
-          return (entry.channel || '').trim().toLowerCase() === 'amazon';
+          const tokens = (entry.channel || '').split('/').map(t => t.trim().toLowerCase());
+          return tokens.includes('amazon');
         };
         const beforeSync = _amzSyncRows.length, beforeHist = _amzHistRows.length, beforeReturns = _amzReturnRows.length, beforeAdOrders = _amzAdOrdersRowsAll.length;
         _amzSyncRows = _amzSyncRows.filter(r => isUsAmazonAsin(r.asin));
