@@ -6962,7 +6962,7 @@ async function initSns() {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${idx + 1}.</td>
-        <td>${name}</td>
+        <td>${name}<div style="font-size:10px;color:var(--muted);font-family:monospace;margin-top:2px;">${asin}</div></td>
         <td><div class="tp-cell"><span class="tp-units">${units.toLocaleString()}</span>${momSpan(units, prevUnits)}</div></td>
         <td><div class="tp-cell"><span class="tp-units">${adUnits.toLocaleString()}</span>${momSpan(adUnits, prevAdUnits)}</div></td>
         <td><div class="tp-cell"><span class="tp-units">${orgUnits.toLocaleString()}</span>${momSpan(orgUnits, prevOrgUnits)}</div></td>`;
@@ -9274,7 +9274,7 @@ async function initSns() {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${idx + 1}.</td>
-        <td>${name}</td>
+        <td>${name}<div style="font-size:10px;color:var(--muted);font-family:monospace;margin-top:2px;">${asin}</div></td>
         <td><div class="tp-cell"><span class="tp-units">${units.toLocaleString()}</span>${momSpan(units, prevUnits)}</div></td>
         <td><div class="tp-cell"><span class="tp-units">${adUnits.toLocaleString()}</span>${momSpan(adUnits, prevAdUnits)}</div></td>
         <td><div class="tp-cell"><span class="tp-units">${orgUnits.toLocaleString()}</span>${momSpan(orgUnits, prevOrgUnits)}</div></td>`;
