@@ -8679,11 +8679,6 @@ async function initSns() {
               if (root && !skuNameMap[root]) skuNameMap[root] = name;
             }
             if (walmartItemId && sku) itemIdToSku[walmartItemId] = sku;
-            const sku  = (cols[1] || '').replace(/^"|"$/g,'').trim().toUpperCase().replace(/-SF$/i,'');
-            const name = (cols[2] || '').replace(/^"|"$/g,'').trim();
-            const walmartItemId = (cols[8] || '').replace(/^"|"$/g,'').trim();
-            if (sku && name) skuNameMap[sku] = name;
-            if (walmartItemId && sku) itemIdToSku[walmartItemId] = sku;
           }
         }
       }
@@ -10350,11 +10345,6 @@ async function initSns() {
               const root = rootSku(sku);
               if (root && !skuNameMap[root]) skuNameMap[root] = name;
             }
-            if (walmartItemId && sku) itemIdToSku[walmartItemId] = sku;
-            const sku  = (cols[1] || '').replace(/^"|"$/g,'').trim().toUpperCase().replace(/-SF$/i,'');
-            const name = (cols[2] || '').replace(/^"|"$/g,'').trim();
-            const walmartItemId = (cols[8] || '').replace(/^"|"$/g,'').trim();
-            if (sku && name) skuNameMap[sku] = name;
             if (walmartItemId && sku) itemIdToSku[walmartItemId] = sku;
           }
         }
