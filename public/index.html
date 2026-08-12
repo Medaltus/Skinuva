@@ -18105,8 +18105,39 @@ async function runListingAudit() {
       groups[groupKey].push(sku);
     }
 
-    const groupList = Object.entries(groups);
-    console.log('[listing-audit] Groups:', groupList.map(([k,v]) => k + '(' + v.length + ')').join(', '));
+    const groupListRaw = Object.entries(groups);
+    console.log('[listing-audit] Groups:', groupListRaw.map(([k,v]) => k + '(' + v.length + ')').join(', '));
+
+    // FIXED 2026-08-12 — confirmed via Vercel logs: the 'activator'
+    // fallback bucket above is leftover évolis hair-care terminology
+    // (shampoo/conditioner/mask/dry-shampoo) that none of Skinuva's real
+    // products match, so nearly every Skinuva SKU without a proper
+    // item_type_keyword falls into that one catch-all group — 19+ SKUs
+    // processed sequentially (one Claude call per SKU, ~15-18s each) in a
+    // single /api/run-listing-audit call, which hit Vercel's 300s function
+    // limit right at the end. Rather than patch this with more fragile
+    // name-guessing specific to Skinuva's product line (which would just
+    // break again for the next brand or the next new SKU name), this
+    // splits ANY oversized group into smaller batches regardless of how
+    // it was categorized — a structural fix that holds up regardless of
+    // whether the category grouping above is semantically meaningful.
+    const MAX_SKUS_PER_BATCH = 8; // ~15-18s/SKU sequentially × 8 ≈ 120-145s, comfortable margin under the 300s limit including sheet-read overhead
+    const groupList = [];
+    groupListRaw.forEach(([groupKey, skuList]) => {
+      if (skuList.length <= MAX_SKUS_PER_BATCH) {
+        groupList.push([groupKey, skuList]);
+      } else {
+        for (let i = 0; i < skuList.length; i += MAX_SKUS_PER_BATCH) {
+          const chunk = skuList.slice(i, i + MAX_SKUS_PER_BATCH);
+          const batchNum = Math.floor(i / MAX_SKUS_PER_BATCH) + 1;
+          const totalBatches = Math.ceil(skuList.length / MAX_SKUS_PER_BATCH);
+          groupList.push([`${groupKey} (batch ${batchNum}/${totalBatches})`, chunk]);
+        }
+      }
+    });
+    if (groupList.length !== groupListRaw.length) {
+      console.log(`[listing-audit] Split oversized group(s) into ${groupList.length} total batches (max ${MAX_SKUS_PER_BATCH} SKUs each).`);
+    }
 
     // ── Step 2: Run one API call per group ────────────────────────────────────
     let totalSkus = 0;
