@@ -6917,7 +6917,6 @@ async function initSns() {
       if (!qty) continue;
       asinUnits[asin] = (asinUnits[asin] || 0) + qty;
     }
-
     // Net Amazon returns against gross per-ASIN units — added 2026-08-05
     // per Jaclyn. Returns rows carry their own `asin` column directly (no
     // SKU crosswalk needed). Floored at 0 per ASIN so a heavily-returned
@@ -8711,6 +8710,24 @@ async function initSns() {
         }
       }
     } catch (e) { console.warn('[WalmartTopProducts] Name lookup failed:', e.message); }
+    // Diagnostic added 2026-08-13 -- confirmed both the SHEET_CONFIG env
+    // var value AND the Product Short Name crosswalk entries are correct
+    // for Skinuva's Walmart ad item_ids, yet ad sales still weren't
+    // showing. Rather than guess at a third theory blind, this logs
+    // exactly what got built so the next live check shows the real
+    // problem directly -- e.g. if itemIdToSku's keys don't exactly match
+    // the ad sheet's item_id values character-for-character (extra
+    // whitespace, a trailing .0 from Sheets treating the ID as a number,
+    // etc.), this will show it immediately.
+    console.log('[WalmartAdCrosswalk][qa] itemIdToSku entries built:', Object.keys(itemIdToSku).length, '-- sample:', Object.fromEntries(Object.entries(itemIdToSku).slice(0, 5)));
+    console.log('[WalmartAdCrosswalk][qa] itemIdToSku has known ad item_ids?', {
+      '18361968282': itemIdToSku['18361968282'],
+      '2845245210': itemIdToSku['2845245210'],
+      '18338462957': itemIdToSku['18338462957'],
+      '16652500743': itemIdToSku['16652500743'],
+      '18294371734': itemIdToSku['18294371734'],
+      '15910810049': itemIdToSku['15910810049'],
+    });
 
     // Walmart ad units by SKU — added 2026-08-06 per Jaclyn. Joined via
     // item_id -> sku (itemIdToSku above), same month-scoping as units.
@@ -9278,7 +9295,6 @@ async function initSns() {
       if (!qty) continue;
       asinUnits[asin] = (asinUnits[asin] || 0) + qty;
     }
-
     // Net Amazon returns against gross per-ASIN units — added 2026-08-05
     // per Jaclyn, mirroring the internal Amazon Sales page fix. Floored at
     // 0 per ASIN; only nets against ASINs that actually had gross units
@@ -10282,7 +10298,7 @@ async function initSns() {
 
     const tbody = document.getElementById('x-wtp-tbody');
     if (!monthRows.length) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--slate);font-style:italic;font-size:12px;">No data for this period.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--slate);font-style:italic;font-size:12px;">No data for this period.</td></tr>';
       return { totalAdUnits: 0, totalOrgUnits: 0, totalAdUnitsPrev: 0, totalOrgUnitsPrev: 0 };
     }
 
@@ -10378,6 +10394,24 @@ async function initSns() {
         }
       }
     } catch (e) { console.warn('[WalmartTopProducts] Name lookup failed:', e.message); }
+    // Diagnostic added 2026-08-13 -- confirmed both the SHEET_CONFIG env
+    // var value AND the Product Short Name crosswalk entries are correct
+    // for Skinuva's Walmart ad item_ids, yet ad sales still weren't
+    // showing. Rather than guess at a third theory blind, this logs
+    // exactly what got built so the next live check shows the real
+    // problem directly -- e.g. if itemIdToSku's keys don't exactly match
+    // the ad sheet's item_id values character-for-character (extra
+    // whitespace, a trailing .0 from Sheets treating the ID as a number,
+    // etc.), this will show it immediately.
+    console.log('[WalmartAdCrosswalk][qa] itemIdToSku entries built:', Object.keys(itemIdToSku).length, '-- sample:', Object.fromEntries(Object.entries(itemIdToSku).slice(0, 5)));
+    console.log('[WalmartAdCrosswalk][qa] itemIdToSku has known ad item_ids?', {
+      '18361968282': itemIdToSku['18361968282'],
+      '2845245210': itemIdToSku['2845245210'],
+      '18338462957': itemIdToSku['18338462957'],
+      '16652500743': itemIdToSku['16652500743'],
+      '18294371734': itemIdToSku['18294371734'],
+      '15910810049': itemIdToSku['15910810049'],
+    });
 
     // Walmart ad units by SKU — added 2026-08-06 per Jaclyn. Joined via
     // item_id -> sku (itemIdToSku above), same month-scoping as units.
