@@ -6528,39 +6528,51 @@ async function initSns() {
       // FIXED 2026-08-12 per Jaclyn — Canadian orders were coming through
       // the US Amazon Seller API sync, inflating every KPI on this page
       // with orders that don't actually belong to the amazon.com
-      // marketplace. Cross-references every row's ASIN against the
-      // "channel" column (Product Short Name master sheet, reused via the
-      // existing getProductMaster() rather than a second fetch) and
-      // excludes anything not tagged for the amazon.com marketplace —
-      // "amazon.ca"/"amazon.uk" rows are real, valid data for THOSE
-      // marketplaces, just not this one. Applied to every Amazon data
-      // source that has per-ASIN granularity: sync rows, historical rows
-      // (used for Last Year/YoY), returns, and ad-orders (used for the
-      // Top Products table's Units (Ads)/(Organic) split).
+      // marketplace.
       //
-      // REVISED same day, still 2026-08-12 — the first version of this
-      // filter used a strict equality check (channel === 'amazon'),
-      // which broke the ENTIRE page down to a single surviving ASIN.
-      // Root cause, confirmed with Jaclyn: this column isn't single-value
-      // — a real cell can read "Amazon / Walmart" (multi-channel,
-      // slash-separated) for a SKU sold on both. Strict equality against
-      // "amazon" only ever matched a cell containing the bare word
-      // "Amazon" and nothing else, which is apparently rare — almost
-      // every real row failed the check and got excluded, leaving only
-      // ASINs absent from the master sheet entirely (which hit the "can't
-      // classify, don't exclude" fallback below). Fixed by splitting on
-      // "/" and checking whether any individual token, trimmed and
-      // lowercased, is EXACTLY "amazon" — matching a bare "Amazon" cell,
-      // matching "Amazon" as one token of "Amazon / Walmart", while still
-      // correctly rejecting a token like "amazon.ca" or "amazon uk" (not
-      // an exact match to "amazon" even after lowercasing).
+      // REVISED 2026-08-13, third pass — moved from an ASIN cross-
+      // reference against the Product Short Name sheet to checking each
+      // order row's OWN channel/marketplace column directly, confirmed by
+      // Jaclyn to now be populated on the Orders (rolling) sheet itself.
+      // This is more accurate than the ASIN-based version: it reflects
+      // the actual marketplace THAT SPECIFIC ORDER happened on, rather
+      // than inferring it from whichever channels the ASIN is generally
+      // listed under (an ASIN could in principle be legitimately ordered
+      // from more than one marketplace; per-row is ground truth, per-ASIN
+      // was only ever an approximation). Also simpler — no second fetch,
+      // no combined-value parsing.
+      //
+      // Per Jaclyn: a blank channel/marketplace means amazon.com (older
+      // rows predate this column being populated by the cron) — NOT
+      // unknown/exclude. Only rows explicitly tagged for another
+      // marketplace (contains ".ca", ".uk", etc.) get excluded.
+      //
+      // NOT changed: _amzReturnRows and _amzAdOrdersRowsAll still use the
+      // OLDER ASIN-based Product Short Name lookup below — those sheets
+      // aren't confirmed to have their own channel/marketplace column the
+      // way the Orders sheet now does. If they turn out to have one too,
+      // switching them to the same row-level check this block uses would
+      // be more accurate, same as the change made here.
       //
       // NOT applied to _amzAdSummaryRows (feeds the page-level "Units
       // (Ads)" KPI specifically) — that sheet is a pre-aggregated
-      // brand-and-month rollup with NO per-ASIN column at all, so there's
-      // nothing to filter client-side. If Canadian ad spend/units are
-      // ALSO leaking into that sheet, this fix does not catch it — that
-      // would need a fix at the sync-advertising cron itself, not here.
+      // brand-and-month rollup with NO per-ASIN/per-marketplace column at
+      // all, so there's nothing to filter client-side. If Canadian ad
+      // spend/units are ALSO leaking into that sheet, this fix does not
+      // catch it — that would need a fix at the sync-advertising cron
+      // itself, not here.
+      const isUsAmazonOrderRow = row => {
+        const channel = (row.channel || '').trim().toLowerCase();
+        const marketplace = (row.marketplace || '').trim().toLowerCase();
+        if (!channel && !marketplace) return true; // blank = amazon.com, per Jaclyn
+        if (channel.includes('.ca') || channel.includes('.uk') || marketplace.includes('.ca') || marketplace.includes('.uk')) return false;
+        return true;
+      };
+      const beforeSync = _amzSyncRows.length, beforeHist = _amzHistRows.length;
+      _amzSyncRows = _amzSyncRows.filter(isUsAmazonOrderRow);
+      _amzHistRows = _amzHistRows.filter(isUsAmazonOrderRow);
+      console.log(`[Evolis] Channel filter (amazon.com only, row-level): sync ${beforeSync}→${_amzSyncRows.length}, hist ${beforeHist}→${_amzHistRows.length}`);
+
       try {
         const master = await getProductMaster();
         const isUsAmazonAsin = asin => {
@@ -6569,14 +6581,12 @@ async function initSns() {
           const tokens = (entry.channel || '').split('/').map(t => t.trim().toLowerCase());
           return tokens.includes('amazon');
         };
-        const beforeSync = _amzSyncRows.length, beforeHist = _amzHistRows.length, beforeReturns = _amzReturnRows.length, beforeAdOrders = _amzAdOrdersRowsAll.length;
-        _amzSyncRows = _amzSyncRows.filter(r => isUsAmazonAsin(r.asin));
-        _amzHistRows = _amzHistRows.filter(r => isUsAmazonAsin(r.asin));
+        const beforeReturns = _amzReturnRows.length, beforeAdOrders = _amzAdOrdersRowsAll.length;
         _amzReturnRows = _amzReturnRows.filter(r => isUsAmazonAsin(r.asin));
         _amzAdOrdersRowsAll = _amzAdOrdersRowsAll.filter(r => isUsAmazonAsin(r.asin || r.sku));
-        console.log(`[Evolis] Channel filter (amazon.com only): sync ${beforeSync}→${_amzSyncRows.length}, hist ${beforeHist}→${_amzHistRows.length}, returns ${beforeReturns}→${_amzReturnRows.length}, adOrders ${beforeAdOrders}→${_amzAdOrdersRowsAll.length}`);
+        console.log(`[Evolis] Channel filter (amazon.com only, ASIN-based fallback): returns ${beforeReturns}→${_amzReturnRows.length}, adOrders ${beforeAdOrders}→${_amzAdOrdersRowsAll.length}`);
       } catch (e) {
-        console.warn('[Evolis] Channel filter failed, showing unfiltered data:', e.message);
+        console.warn('[Evolis] Channel filter (returns/adOrders) failed, showing unfiltered data:', e.message);
       }
 
       renderAmazonPeriodPills('lastFull');
