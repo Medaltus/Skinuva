@@ -8759,14 +8759,27 @@ async function initSns() {
         console.log('[WalmartAdFilter][qa] targetYear/targetMonth:', targetYear, targetMonth, '-- total wmtAdRows:', wmtAdRows.length);
         console.log('[WalmartAdFilter][qa] raw year/month values for known item_ids:', wmtAdRows.filter(r => ['18361968282','2845245210','18338462957','16652500743','18294371734','15910810049'].includes((r.item_id||'').trim())).map(r => ({item_id: r.item_id, year: r.year, month: r.month, ad_units: r.ad_units})));
         wmtAdRows.filter(r => parseInt(r.year, 10) === targetYear && parseInt(r.month, 10) === targetMonth).forEach(r => {
-          const sku = itemIdToSku[(r.item_id || '').trim()];
-          if (!sku) return; // no Walmart Item ID -> SKU mapping for this row — skipped, not guessed
+          // FIXED 2026-08-13 per Jaclyn -- confirmed real bug via
+          // diagnostic: itemIdToSku returns SKUs WITH the -STICKERLESS/
+          // -STICKER suffix intact (e.g. "SVA0004-STICKERLESS"), but
+          // skuUnits above strips that same suffix off (e.g. "SVA0004")
+          // before ever reaching the lookup at Math.min(skuAdUnits[sku]...)
+          // below. The keys never matched, so every ad-units lookup
+          // silently fell back to 0 regardless of correct underlying
+          // data -- this is why both the crosswalk and the year/month
+          // filter checked out fine in isolation, yet the final number
+          // was always zero. Stripped here to match skuUnits' own
+          // convention exactly.
+          const rawSku = itemIdToSku[(r.item_id || '').trim()];
+          if (!rawSku) return; // no Walmart Item ID -> SKU mapping for this row -- skipped, not guessed
+          const sku = rawSku.replace(/-STICKERLESS$/i,'').replace(/-STICKER$/i,'');
           skuAdUnits[sku] = (skuAdUnits[sku] || 0) + (parseInt(r.ad_units, 10) || 0);
         });
         if (prevYear && prevMonth) {
           wmtAdRows.filter(r => parseInt(r.year, 10) === prevYear && parseInt(r.month, 10) === prevMonth).forEach(r => {
-            const sku = itemIdToSku[(r.item_id || '').trim()];
-            if (!sku) return;
+            const rawSku = itemIdToSku[(r.item_id || '').trim()];
+            if (!rawSku) return;
+            const sku = rawSku.replace(/-STICKERLESS$/i,'').replace(/-STICKER$/i,'');
             skuAdUnitsPrev[sku] = (skuAdUnitsPrev[sku] || 0) + (parseInt(r.ad_units, 10) || 0);
           });
         }
@@ -10461,14 +10474,27 @@ async function initSns() {
         console.log('[WalmartAdFilter][qa] targetYear/targetMonth:', targetYear, targetMonth, '-- total wmtAdRows:', wmtAdRows.length);
         console.log('[WalmartAdFilter][qa] raw year/month values for known item_ids:', wmtAdRows.filter(r => ['18361968282','2845245210','18338462957','16652500743','18294371734','15910810049'].includes((r.item_id||'').trim())).map(r => ({item_id: r.item_id, year: r.year, month: r.month, ad_units: r.ad_units})));
         wmtAdRows.filter(r => parseInt(r.year, 10) === targetYear && parseInt(r.month, 10) === targetMonth).forEach(r => {
-          const sku = itemIdToSku[(r.item_id || '').trim()];
-          if (!sku) return; // no Walmart Item ID -> SKU mapping for this row — skipped, not guessed
+          // FIXED 2026-08-13 per Jaclyn -- confirmed real bug via
+          // diagnostic: itemIdToSku returns SKUs WITH the -STICKERLESS/
+          // -STICKER suffix intact (e.g. "SVA0004-STICKERLESS"), but
+          // skuUnits above strips that same suffix off (e.g. "SVA0004")
+          // before ever reaching the lookup at Math.min(skuAdUnits[sku]...)
+          // below. The keys never matched, so every ad-units lookup
+          // silently fell back to 0 regardless of correct underlying
+          // data -- this is why both the crosswalk and the year/month
+          // filter checked out fine in isolation, yet the final number
+          // was always zero. Stripped here to match skuUnits' own
+          // convention exactly.
+          const rawSku = itemIdToSku[(r.item_id || '').trim()];
+          if (!rawSku) return; // no Walmart Item ID -> SKU mapping for this row -- skipped, not guessed
+          const sku = rawSku.replace(/-STICKERLESS$/i,'').replace(/-STICKER$/i,'');
           skuAdUnits[sku] = (skuAdUnits[sku] || 0) + (parseInt(r.ad_units, 10) || 0);
         });
         if (prevYear && prevMonth) {
           wmtAdRows.filter(r => parseInt(r.year, 10) === prevYear && parseInt(r.month, 10) === prevMonth).forEach(r => {
-            const sku = itemIdToSku[(r.item_id || '').trim()];
-            if (!sku) return;
+            const rawSku = itemIdToSku[(r.item_id || '').trim()];
+            if (!rawSku) return;
+            const sku = rawSku.replace(/-STICKERLESS$/i,'').replace(/-STICKER$/i,'');
             skuAdUnitsPrev[sku] = (skuAdUnitsPrev[sku] || 0) + (parseInt(r.ad_units, 10) || 0);
           });
         }
