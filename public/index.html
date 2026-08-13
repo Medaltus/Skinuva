@@ -8697,6 +8697,17 @@ async function initSns() {
           const lines = csv.trim().split('\n');
           for (let i = 1; i < lines.length; i++) {
             const cols = parseCsvLine(lines[i]);
+            // FIXED 2026-08-13 per Jaclyn -- this loop had NO brand filter
+            // at all, reading every row of the shared, multi-brand
+            // Product Short Name sheet regardless of brand. Confirmed via
+            // the diagnostic log added earlier: the crosswalk's own
+            // sample entries were things like "EVO0005"/"EVO0008" -- not
+            // just Skinuva's SVA-prefixed rows. Column D = Brand (index
+            // 3, 0-indexed) per the sheet's own layout -- restricting to
+            // Skinuva here matches the same brand-isolation convention
+            // used everywhere else in this file.
+            const rowBrand = (cols[3] || '').replace(/^"|"$/g,'').trim().toLowerCase();
+            if (rowBrand !== 'skinuva') continue;
             const sku  = (cols[1] || '').replace(/^"|"$/g,'').trim().toUpperCase().replace(/-SF$/i,'');
             const name = (cols[2] || '').replace(/^"|"$/g,'').trim();
             const walmartItemId = (cols[8] || '').replace(/^"|"$/g,'').trim();
@@ -8740,6 +8751,13 @@ async function initSns() {
       const wmtAdCsv = await fetch(sheetCsvUrl(WALMART_AD_ORDERS_SHEET_ID, WALMART_AD_ORDERS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => '');
       if (isCsv(wmtAdCsv)) {
         const wmtAdRows = parseCsv(wmtAdCsv);
+        // Diagnostic added 2026-08-13 -- crosswalk confirmed working
+        // (all 6 known item_ids resolve correctly), so the remaining
+        // suspect is this year/month filter. Logs the raw values so a
+        // parsing/type mismatch (e.g. a blank-year duplicate row vs a
+        // real one, or year stored as "2026.0") shows up directly.
+        console.log('[WalmartAdFilter][qa] targetYear/targetMonth:', targetYear, targetMonth, '-- total wmtAdRows:', wmtAdRows.length);
+        console.log('[WalmartAdFilter][qa] raw year/month values for known item_ids:', wmtAdRows.filter(r => ['18361968282','2845245210','18338462957','16652500743','18294371734','15910810049'].includes((r.item_id||'').trim())).map(r => ({item_id: r.item_id, year: r.year, month: r.month, ad_units: r.ad_units})));
         wmtAdRows.filter(r => parseInt(r.year, 10) === targetYear && parseInt(r.month, 10) === targetMonth).forEach(r => {
           const sku = itemIdToSku[(r.item_id || '').trim()];
           if (!sku) return; // no Walmart Item ID -> SKU mapping for this row — skipped, not guessed
@@ -10381,6 +10399,17 @@ async function initSns() {
           const lines = csv.trim().split('\n');
           for (let i = 1; i < lines.length; i++) {
             const cols = parseCsvLine(lines[i]);
+            // FIXED 2026-08-13 per Jaclyn -- this loop had NO brand filter
+            // at all, reading every row of the shared, multi-brand
+            // Product Short Name sheet regardless of brand. Confirmed via
+            // the diagnostic log added earlier: the crosswalk's own
+            // sample entries were things like "EVO0005"/"EVO0008" -- not
+            // just Skinuva's SVA-prefixed rows. Column D = Brand (index
+            // 3, 0-indexed) per the sheet's own layout -- restricting to
+            // Skinuva here matches the same brand-isolation convention
+            // used everywhere else in this file.
+            const rowBrand = (cols[3] || '').replace(/^"|"$/g,'').trim().toLowerCase();
+            if (rowBrand !== 'skinuva') continue;
             const sku  = (cols[1] || '').replace(/^"|"$/g,'').trim().toUpperCase().replace(/-SF$/i,'');
             const name = (cols[2] || '').replace(/^"|"$/g,'').trim();
             const walmartItemId = (cols[8] || '').replace(/^"|"$/g,'').trim();
@@ -10424,6 +10453,13 @@ async function initSns() {
       const wmtAdCsv = await fetch(sheetCsvUrl(WALMART_AD_ORDERS_SHEET_ID, WALMART_AD_ORDERS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => '');
       if (isCsv(wmtAdCsv)) {
         const wmtAdRows = parseCsv(wmtAdCsv);
+        // Diagnostic added 2026-08-13 -- crosswalk confirmed working
+        // (all 6 known item_ids resolve correctly), so the remaining
+        // suspect is this year/month filter. Logs the raw values so a
+        // parsing/type mismatch (e.g. a blank-year duplicate row vs a
+        // real one, or year stored as "2026.0") shows up directly.
+        console.log('[WalmartAdFilter][qa] targetYear/targetMonth:', targetYear, targetMonth, '-- total wmtAdRows:', wmtAdRows.length);
+        console.log('[WalmartAdFilter][qa] raw year/month values for known item_ids:', wmtAdRows.filter(r => ['18361968282','2845245210','18338462957','16652500743','18294371734','15910810049'].includes((r.item_id||'').trim())).map(r => ({item_id: r.item_id, year: r.year, month: r.month, ad_units: r.ad_units})));
         wmtAdRows.filter(r => parseInt(r.year, 10) === targetYear && parseInt(r.month, 10) === targetMonth).forEach(r => {
           const sku = itemIdToSku[(r.item_id || '').trim()];
           if (!sku) return; // no Walmart Item ID -> SKU mapping for this row — skipped, not guessed
