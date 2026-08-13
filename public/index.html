@@ -6427,7 +6427,7 @@ async function initSns() {
   function setSourceLabel(year, month) {
     const el = document.getElementById('amazon-products-source');
     const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    if (el) el.textContent = `Google Sheets cache · Évolis · ${monthNames[month-1]} ${year}`;
+    if (el) el.textContent = `Google Sheets cache · Skinuva · ${monthNames[month-1]} ${year}`;
   }
 
   // ── Error display ─────────────────────────────────────────────────────────
@@ -6960,7 +6960,7 @@ async function initSns() {
     const prevAsinAdUnitsMap = {};
     prevAdOrderRows.forEach(r => {
       const asin = (r.asin || r.sku || '').trim().toUpperCase();
-      if (asin) prevAsinAdUnitsMap[asin] = (prevAsinAdUnitsMap[asin] || 0) + (parseInt(r.ad_units, 10) || 0);
+      if (asin) prevAsinAdUnitsMap[asin] = (prevAsinAdUnitsMap[asin] || 0) + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0);
     });
 
     // Helper: inline stacked MOM badge (renders inside same <td> as the number)
@@ -6975,7 +6975,7 @@ async function initSns() {
     const asinAdUnitsMap = {};
     adOrderRows.forEach(r => {
       const asin = (r.asin || r.sku || '').trim().toUpperCase();
-      if (asin) asinAdUnitsMap[asin] = (asinAdUnitsMap[asin] || 0) + (parseInt(r.ad_units, 10) || 0);
+      if (asin) asinAdUnitsMap[asin] = (asinAdUnitsMap[asin] || 0) + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0);
     });
 
     // Fetch product name lookup sheet.
@@ -7035,7 +7035,7 @@ async function initSns() {
     // Update source label
     const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const srcEl = document.getElementById('amazon-products-source');
-    if (srcEl) srcEl.textContent = `Google Sheets cache · Évolis · ${monthNames[targetMonth - 1]} ${targetYear}`;
+    if (srcEl) srcEl.textContent = `Google Sheets cache · Skinuva · ${monthNames[targetMonth - 1]} ${targetYear}`;
   }
 
   // ══════════════════════════════════════════════════════════════════════════════
@@ -8773,14 +8773,14 @@ async function initSns() {
           const rawSku = itemIdToSku[(r.item_id || '').trim()];
           if (!rawSku) return; // no Walmart Item ID -> SKU mapping for this row -- skipped, not guessed
           const sku = rawSku.replace(/-STICKERLESS$/i,'').replace(/-STICKER$/i,'');
-          skuAdUnits[sku] = (skuAdUnits[sku] || 0) + (parseInt(r.ad_units, 10) || 0);
+          skuAdUnits[sku] = (skuAdUnits[sku] || 0) + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0);
         });
         if (prevYear && prevMonth) {
           wmtAdRows.filter(r => parseInt(r.year, 10) === prevYear && parseInt(r.month, 10) === prevMonth).forEach(r => {
             const rawSku = itemIdToSku[(r.item_id || '').trim()];
             if (!rawSku) return;
             const sku = rawSku.replace(/-STICKERLESS$/i,'').replace(/-STICKER$/i,'');
-            skuAdUnitsPrev[sku] = (skuAdUnitsPrev[sku] || 0) + (parseInt(r.ad_units, 10) || 0);
+            skuAdUnitsPrev[sku] = (skuAdUnitsPrev[sku] || 0) + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0);
           });
         }
       }
@@ -8816,7 +8816,7 @@ async function initSns() {
     });
 
     const srcEl = document.getElementById('walmart-products-source');
-    if (srcEl) srcEl.textContent = `Google Sheets cache · Évolis · ${monthNames[targetMonth-1]} ${targetYear}`;
+    if (srcEl) srcEl.textContent = `Google Sheets cache · Skinuva · ${monthNames[targetMonth-1]} ${targetYear}`;
 
     return { totalAdUnits, totalOrgUnits, totalAdUnitsPrev, totalOrgUnitsPrev };
   }
@@ -9025,7 +9025,7 @@ async function initSns() {
   function setSourceLabel(year, month) {
     const el = document.getElementById('x-amazon-products-source');
     const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    if (el) el.textContent = `Google Sheets cache · Évolis · ${monthNames[month-1]} ${year}`;
+    if (el) el.textContent = `Google Sheets cache · Skinuva · ${monthNames[month-1]} ${year}`;
   }
 
   // ── Error display ─────────────────────────────────────────────────────────
@@ -9366,7 +9366,7 @@ async function initSns() {
     const prevAsinAdUnitsMap = {};
     prevAdOrderRows.forEach(r => {
       const asin = (r.asin || r.sku || '').trim().toUpperCase();
-      if (asin) prevAsinAdUnitsMap[asin] = (prevAsinAdUnitsMap[asin] || 0) + (parseInt(r.ad_units, 10) || 0);
+      if (asin) prevAsinAdUnitsMap[asin] = (prevAsinAdUnitsMap[asin] || 0) + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0);
     });
 
     // Helper: inline stacked MOM badge (renders inside same <td> as the number)
@@ -9381,7 +9381,7 @@ async function initSns() {
     const asinAdUnitsMap = {};
     adOrderRows.forEach(r => {
       const asin = (r.asin || r.sku || '').trim().toUpperCase();
-      if (asin) asinAdUnitsMap[asin] = (asinAdUnitsMap[asin] || 0) + (parseInt(r.ad_units, 10) || 0);
+      if (asin) asinAdUnitsMap[asin] = (asinAdUnitsMap[asin] || 0) + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0);
     });
 
     // Fetch product name lookup sheet.
@@ -9441,7 +9441,7 @@ async function initSns() {
     // Update source label
     const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const srcEl = document.getElementById('x-amazon-products-source');
-    if (srcEl) srcEl.textContent = `Google Sheets cache · Évolis · ${monthNames[targetMonth - 1]} ${targetYear}`;
+    if (srcEl) srcEl.textContent = `Google Sheets cache · Skinuva · ${monthNames[targetMonth - 1]} ${targetYear}`;
   }
 
 
@@ -9966,7 +9966,7 @@ async function initSns() {
 
     const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const srcEl = document.getElementById('x-web-products-source');
-    if (srcEl) srcEl.textContent = `Google Sheets cache · Évolis · ${monthNames[targetMonth-1]} ${targetYear} · Ads column = Shopping-campaign conversions only, may be blank where a SKU has no Shopping-campaign data yet`;
+    if (srcEl) srcEl.textContent = `Google Sheets cache · Skinuva · ${monthNames[targetMonth-1]} ${targetYear} · Ads column = Shopping-campaign conversions only, may be blank where a SKU has no Shopping-campaign data yet`;
   }
 
   function showWebError(msg) {
@@ -10488,14 +10488,14 @@ async function initSns() {
           const rawSku = itemIdToSku[(r.item_id || '').trim()];
           if (!rawSku) return; // no Walmart Item ID -> SKU mapping for this row -- skipped, not guessed
           const sku = rawSku.replace(/-STICKERLESS$/i,'').replace(/-STICKER$/i,'');
-          skuAdUnits[sku] = (skuAdUnits[sku] || 0) + (parseInt(r.ad_units, 10) || 0);
+          skuAdUnits[sku] = (skuAdUnits[sku] || 0) + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0);
         });
         if (prevYear && prevMonth) {
           wmtAdRows.filter(r => parseInt(r.year, 10) === prevYear && parseInt(r.month, 10) === prevMonth).forEach(r => {
             const rawSku = itemIdToSku[(r.item_id || '').trim()];
             if (!rawSku) return;
             const sku = rawSku.replace(/-STICKERLESS$/i,'').replace(/-STICKER$/i,'');
-            skuAdUnitsPrev[sku] = (skuAdUnitsPrev[sku] || 0) + (parseInt(r.ad_units, 10) || 0);
+            skuAdUnitsPrev[sku] = (skuAdUnitsPrev[sku] || 0) + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0);
           });
         }
       }
@@ -10532,7 +10532,7 @@ async function initSns() {
     });
 
     const srcEl = document.getElementById('x-walmart-products-source');
-    if (srcEl) srcEl.textContent = `Google Sheets cache · Évolis · ${monthNames[targetMonth-1]} ${targetYear}`;
+    if (srcEl) srcEl.textContent = `Google Sheets cache · Skinuva · ${monthNames[targetMonth-1]} ${targetYear}`;
 
     return { totalAdUnits, totalOrgUnits, totalAdUnitsPrev, totalOrgUnitsPrev };
   }
@@ -13304,7 +13304,7 @@ async function initSnsExternal() {
   function sumAdUnits(rows, year) {
     return rows
       .filter(r => String(r.Year || r.year).trim() === String(year) && (r.brand || '').trim().toLowerCase() === BRAND)
-      .reduce((s, r) => s + (parseInt(r.ad_units, 10) || 0), 0);
+      .reduce((s, r) => s + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0), 0);
   }
 
   // ASIN → name lookup, same source/columns as the existing Top Products
@@ -13749,7 +13749,7 @@ async function initSnsExternal() {
   function sumAdUnits(rows, year) {
     return rows
       .filter(r => String(r.Year || r.year).trim() === String(year) && (r.brand || '').trim().toLowerCase() === BRAND)
-      .reduce((s, r) => s + (parseInt(r.ad_units, 10) || 0), 0);
+      .reduce((s, r) => s + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0), 0);
   }
 
   async function getProductNames() {
@@ -21205,7 +21205,7 @@ async function loadAuditResultsFromSheet() {
         if (isCsv(wmtAdOrdersCsvForOrders)) {
           walmartAdUnitsThisMonth = parseCsv(wmtAdOrdersCsvForOrders)
             .filter(r => parseInt(r.year, 10) === now.getFullYear() && parseInt(r.month, 10) === now.getMonth() + 1)
-            .reduce((s, r) => s + (parseInt(r.ad_units, 10) || 0), 0);
+            .reduce((s, r) => s + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0), 0);
         }
       } catch (e) { console.warn('[Evolis][overview] Walmart ad units (for Ad-Driven Orders) lookup failed:', e.message); }
 
@@ -21295,14 +21295,14 @@ async function loadAuditResultsFromSheet() {
             .forEach(r => {
               const asin = (r.asin || '').trim().toUpperCase();
               if (!asin) return;
-              adUnitsByAsin[asin] = (adUnitsByAsin[asin] || 0) + (parseInt(r.ad_units, 10) || 0);
+              adUnitsByAsin[asin] = (adUnitsByAsin[asin] || 0) + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0);
             });
           // Same month used for the Organic Units MOM comparison below.
           adRows2All.filter(r => parseInt(r.year, 10) === lastMonthYear && parseInt(r.month, 10) === lastMonthNum)
             .forEach(r => {
               const asin = (r.asin || '').trim().toUpperCase();
               if (!asin) return;
-              adUnitsByAsinPrev[asin] = (adUnitsByAsinPrev[asin] || 0) + (parseInt(r.ad_units, 10) || 0);
+              adUnitsByAsinPrev[asin] = (adUnitsByAsinPrev[asin] || 0) + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0);
             });
         }
       } catch (e) { console.warn('[Evolis][overview] ad units lookup failed:', e.message); }
@@ -21323,13 +21323,13 @@ async function loadAuditResultsFromSheet() {
             .forEach(r => {
               const asin = walmartItemIdToAsinMap[(r.item_id || '').trim()];
               if (!asin) return; // no Walmart Item ID -> ASIN mapping for this row — skipped, not guessed
-              wmtAdUnitsByAsin[asin] = (wmtAdUnitsByAsin[asin] || 0) + (parseInt(r.ad_units, 10) || 0);
+              wmtAdUnitsByAsin[asin] = (wmtAdUnitsByAsin[asin] || 0) + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0);
             });
           wmtAdRows2All.filter(r => parseInt(r.year, 10) === lastMonthYear && parseInt(r.month, 10) === lastMonthNum)
             .forEach(r => {
               const asin = walmartItemIdToAsinMap[(r.item_id || '').trim()];
               if (!asin) return;
-              wmtAdUnitsByAsinPrev[asin] = (wmtAdUnitsByAsinPrev[asin] || 0) + (parseInt(r.ad_units, 10) || 0);
+              wmtAdUnitsByAsinPrev[asin] = (wmtAdUnitsByAsinPrev[asin] || 0) + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0);
             });
         }
       } catch (e) { console.warn('[Evolis][overview] Walmart per-ASIN ad units lookup failed:', e.message); }
