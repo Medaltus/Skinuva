@@ -6020,25 +6020,25 @@ async function initSns() {
 
   try {
     const [totalsCsv, retentionCsv] = await Promise.all([
-      fetch(csvUrl(TOTALS_SHEET_ID, TOTALS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Evolis][subscriptions] totals sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis][subscriptions] totals sheet fetch error:', e.message), '')),
-      fetch(csvUrl(RETENTION_SHEET_ID, RETENTION_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Evolis][subscriptions] retention sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis][subscriptions] retention sheet fetch error:', e.message), '')),
+      fetch(csvUrl(TOTALS_SHEET_ID, TOTALS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Skinuva][subscriptions] totals sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva][subscriptions] totals sheet fetch error:', e.message), '')),
+      fetch(csvUrl(RETENTION_SHEET_ID, RETENTION_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Skinuva][subscriptions] retention sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva][subscriptions] retention sheet fetch error:', e.message), '')),
     ]);
 
     // ── Active Subscriptions: bar chart + KPI ───────────────────────────
     if (looksLikeCsv(totalsCsv)) {
       const rows = csvToRows(totalsCsv);
-      console.log('[Evolis][subscriptions] totals sheet columns:', rows.length ? Object.keys(rows[0]) : '(no rows)');
-      console.log('[Evolis][subscriptions] totals sheet total row count (before any filtering):', rows.length);
+      console.log('[Skinuva][subscriptions] totals sheet columns:', rows.length ? Object.keys(rows[0]) : '(no rows)');
+      console.log('[Skinuva][subscriptions] totals sheet total row count (before any filtering):', rows.length);
 
       const brandRows = rows.filter(isEvolisRow);
       const useRows = brandRows.length ? brandRows : rows;
-      console.log('[Evolis][subscriptions] rows after brand filter:', useRows.length, '(', rows.length - useRows.length, 'dropped by brand filter )');
+      console.log('[Skinuva][subscriptions] rows after brand filter:', useRows.length, '(', rows.length - useRows.length, 'dropped by brand filter )');
 
       const withDate = useRows.map(r => ({ row: r, y: parseInt(r.year, 10), m: parseInt(r.month, 10) }));
       const sortable = withDate.length > 0 && withDate.every(x => !isNaN(x.y) && !isNaN(x.m));
       if (sortable) withDate.sort((a, b) => (a.y - b.y) || (a.m - b.m));
       if (withDate.length) {
-        console.log('[Evolis][subscriptions] full year/month range present in sheet (regardless of whether total_subscriptions is populated):',
+        console.log('[Skinuva][subscriptions] full year/month range present in sheet (regardless of whether total_subscriptions is populated):',
           withDate[0].y + '-' + withDate[0].m, 'to', withDate[withDate.length - 1].y + '-' + withDate[withDate.length - 1].m);
       }
 
@@ -6055,7 +6055,7 @@ async function initSns() {
         years.push(x.y);
       });
       if (skipped.length) {
-        console.warn('[Evolis][subscriptions] skipped', skipped.length, 'row(s) with no usable total_subscriptions value — these months are NOT in the chart:', skipped.join(', '));
+        console.warn('[Skinuva][subscriptions] skipped', skipped.length, 'row(s) with no usable total_subscriptions value — these months are NOT in the chart:', skipped.join(', '));
       }
 
       // Trailing 13 months only — chronologically sorted already, so this
@@ -6066,7 +6066,7 @@ async function initSns() {
       const trimmedValues = values.slice(-TRAILING_MONTHS);
       const trimmedYears  = years.slice(-TRAILING_MONTHS);
 
-      console.log('[Evolis][subscriptions] months actually plotted on the chart (trailing', TRAILING_MONTHS, 'of', labels.length, 'available):', trimmedLabels.join(', '));
+      console.log('[Skinuva][subscriptions] months actually plotted on the chart (trailing', TRAILING_MONTHS, 'of', labels.length, 'available):', trimmedLabels.join(', '));
 
       if (values.length) {
         // Color by calendar year: 2024 sand, 2025 slate, 2026 navy. Falls
@@ -6103,16 +6103,16 @@ async function initSns() {
           }
         }
       } else {
-        console.warn('[Evolis][subscriptions] no total_subscriptions values matched in totals sheet — check TOTALS_GID/column name. Available columns:', rows.length ? Object.keys(rows[0]) : '(none)');
+        console.warn('[Skinuva][subscriptions] no total_subscriptions values matched in totals sheet — check TOTALS_GID/column name. Available columns:', rows.length ? Object.keys(rows[0]) : '(none)');
       }
     } else {
-      console.warn('[Evolis][subscriptions] totals sheet did not return CSV (check it is published/shared, and TOTALS_GID is correct).');
+      console.warn('[Skinuva][subscriptions] totals sheet did not return CSV (check it is published/shared, and TOTALS_GID is correct).');
     }
 
     // ── Subscribe & Save Retention KPI ───────────────────────────────────
     if (looksLikeCsv(retentionCsv)) {
       const rows = csvToRows(retentionCsv);
-      console.log('[Evolis][subscriptions] retention sheet columns:', rows.length ? Object.keys(rows[0]) : '(no rows)');
+      console.log('[Skinuva][subscriptions] retention sheet columns:', rows.length ? Object.keys(rows[0]) : '(no rows)');
       // Strict, explicit brand match on this sheet's own 'brand' column —
       // NOT the shared isEvolisRow() helper, and deliberately NO fallback
       // to "use all rows" if zero match. Confirmed 2026-07-28: this sheet
@@ -6122,10 +6122,10 @@ async function initSns() {
       // showing nothing. Logging every row's actual brand value so a
       // future mismatch (e.g. a casing/accent variant) is visible
       // immediately instead of silently falling back to wrong data again.
-      console.log('[Evolis][subscriptions] retention sheet — raw brand value per row:', JSON.stringify(rows.map(r => ({ year: r.year, month: r.month, brand: r.brand }))));
+      console.log('[Skinuva][subscriptions] retention sheet — raw brand value per row:', JSON.stringify(rows.map(r => ({ year: r.year, month: r.month, brand: r.brand }))));
       const stripAccentsSns = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       const useRows = rows.filter(r => stripAccentsSns(r.brand).toLowerCase().trim() === (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase());
-      console.log('[Evolis][subscriptions] retention rows — total:', rows.length, '— after STRICT brand filter (no fallback):', useRows.length, '— raw year/month per row:', JSON.stringify(useRows.map(r => ({ year: r.year, month: r.month }))));
+      console.log('[Skinuva][subscriptions] retention rows — total:', rows.length, '— after STRICT brand filter (no fallback):', useRows.length, '— raw year/month per row:', JSON.stringify(useRows.map(r => ({ year: r.year, month: r.month }))));
 
       // MOM only works if this sheet actually has more than one dated row
       // per brand (i.e. it's historical, not a single current snapshot).
@@ -6134,7 +6134,7 @@ async function initSns() {
       const withDateR = useRows.map(r => ({ row: r, y: parseInt(r.year, 10), m: parseInt(r.month, 10) }));
       const hasHistory = withDateR.length > 1 && withDateR.every(x => !isNaN(x.y) && !isNaN(x.m));
       if (!hasHistory) {
-        console.warn('[Evolis][subscriptions] hasHistory=false — reason:', withDateR.length <= 1 ? ('only ' + withDateR.length + ' row(s) after brand filter, need 2+') : 'year/month not parsing as numbers on every row — check column names/values above');
+        console.warn('[Skinuva][subscriptions] hasHistory=false — reason:', withDateR.length <= 1 ? ('only ' + withDateR.length + ' row(s) after brand filter, need 2+') : 'year/month not parsing as numbers on every row — check column names/values above');
       }
       if (hasHistory) withDateR.sort((a, b) => (a.y - b.y) || (a.m - b.m));
 
@@ -6172,7 +6172,7 @@ async function initSns() {
       const retentionPrevVal = readRetention(prevBrandRow);
 
       if (retentionVal !== null) {
-        console.log('[Evolis][subscriptions] raw retention value:', retentionVal, '— history available for MOM:', hasHistory); console.log('[Evolis][subscriptions] DEBUG brandRow:', JSON.stringify(brandRow), '— prevBrandRow:', JSON.stringify(prevBrandRow), '— all rows w/ y/m/retention:', JSON.stringify(withDateR.map(x => ({y:x.y, m:x.m, retention_90_day: x.row.retention_90_day}))));
+        console.log('[Skinuva][subscriptions] raw retention value:', retentionVal, '— history available for MOM:', hasHistory); console.log('[Skinuva][subscriptions] DEBUG brandRow:', JSON.stringify(brandRow), '— prevBrandRow:', JSON.stringify(prevBrandRow), '— all rows w/ y/m/retention:', JSON.stringify(withDateR.map(x => ({y:x.y, m:x.m, retention_90_day: x.row.retention_90_day}))));
         if (retentionKpiEl) retentionKpiEl.textContent = Math.round(retentionVal) + '%';
         // 2026-07-16: was a fragile CSS positional selector
         // ('#m-opportunities .kpi-row .kpi-card:nth-child(2) .kpi-mom') that
@@ -6196,19 +6196,19 @@ async function initSns() {
           } else {
             retMomEl.className = 'kpi-mom flat';
             retMomEl.textContent = '—';
-            if (!hasHistory) console.warn('[Evolis][subscriptions] retention sheet appears to be a single current-value snapshot (no year/month history per brand) — MOM left blank rather than fabricated.');
+            if (!hasHistory) console.warn('[Skinuva][subscriptions] retention sheet appears to be a single current-value snapshot (no year/month history per brand) — MOM left blank rather than fabricated.');
           }
         } else {
-          console.warn('[Evolis][subscriptions] retMomEl not found — retentionKpiEl has no nextElementSibling, check #kpi-retention markup.');
+          console.warn('[Skinuva][subscriptions] retMomEl not found — retentionKpiEl has no nextElementSibling, check #kpi-retention markup.');
         }
       } else {
-        console.warn('[Evolis][subscriptions] no retention value matched in retention sheet — check RETENTION_GID/column name. Available columns:', rows.length ? Object.keys(rows[0]) : '(none)');
+        console.warn('[Skinuva][subscriptions] no retention value matched in retention sheet — check RETENTION_GID/column name. Available columns:', rows.length ? Object.keys(rows[0]) : '(none)');
       }
     } else {
-      console.warn('[Evolis][subscriptions] retention sheet did not return CSV (check it is published/shared, and RETENTION_GID is correct).');
+      console.warn('[Skinuva][subscriptions] retention sheet did not return CSV (check it is published/shared, and RETENTION_GID is correct).');
     }
   } catch (err) {
-    console.error('[Evolis][subscriptions] fetch/parse failed:', err);
+    console.error('[Skinuva][subscriptions] fetch/parse failed:', err);
   }
 }
 
@@ -6464,7 +6464,7 @@ async function initSns() {
   window.initAmazonLive = function () {
     if (window._amazonLivePromise) return window._amazonLivePromise;
     window._amazonLivePromise = (async function () {
-    console.log('[Evolis] initAmazonLive() called');
+    console.log('[Skinuva] initAmazonLive() called');
 
     // Only needed for buildRevenueChart(year) below now — date-range
     // labels, prevMonth/yoyYear, etc. are all recomputed fresh inside
@@ -6480,12 +6480,12 @@ async function initSns() {
       const SYNC_GID = window.SHEET_CFG.SHEET_ORDERS.gid;
       const HIST_GID = window.SHEET_CFG.SHEET_ORDERS_HISTORICAL.gid;
 
-      console.log('[Evolis] Starting fetch...');
+      console.log('[Skinuva] Starting fetch...');
       const [syncCsv, histCsv, adSummaryCsv, adOrdersCsv, amzReturnsCsv] = await Promise.all([
-        fetch(sheetCsvUrl(SYNC_SHEET_ID, SYNC_GID)).then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), '')),
-        fetch(sheetCsvUrl(HISTORICAL_SHEET_ID, HIST_GID)).then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), '')),
-        fetch(sheetCsvUrl(AD_SUMMARY_SHEET_ID, AD_SUMMARY_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), '')),
-        fetch(sheetCsvUrl(AD_ORDERS_SHEET_ID,  AD_ORDERS_GID)  + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), '')),
+        fetch(sheetCsvUrl(SYNC_SHEET_ID, SYNC_GID)).then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
+        fetch(sheetCsvUrl(HISTORICAL_SHEET_ID, HIST_GID)).then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
+        fetch(sheetCsvUrl(AD_SUMMARY_SHEET_ID, AD_SUMMARY_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
+        fetch(sheetCsvUrl(AD_ORDERS_SHEET_ID,  AD_ORDERS_GID)  + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
         // Amazon Returns — added 2026-08-05 per Jaclyn, to exclude returned
         // units from Total Units / Units (Organic) / Top Selling Products
         // on this (internal) Amazon Sales page. OV_RETURNS_SHEET_ID /
@@ -6495,8 +6495,8 @@ async function initSns() {
         fetch(sheetCsvUrl(OV_RETURNS_SHEET_ID, OV_RETURNS_EVOLIS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
       ]);
 
-      console.log('[Evolis] syncCsv length:', syncCsv.length, 'isCsv:', isCsv(syncCsv));
-      console.log('[Evolis] histCsv length:', histCsv.length, 'isCsv:', isCsv(histCsv));
+      console.log('[Skinuva] syncCsv length:', syncCsv.length, 'isCsv:', isCsv(syncCsv));
+      console.log('[Skinuva] histCsv length:', histCsv.length, 'isCsv:', isCsv(histCsv));
       // Stored at outer (IIFE) scope, not local consts — period selector
       // (added 2026-08-12) needs these available to renderAmazonPeriod()
       // on every pill click without re-fetching. See handoff doc.
@@ -6571,15 +6571,21 @@ async function initSns() {
       const beforeSync = _amzSyncRows.length, beforeHist = _amzHistRows.length;
       _amzSyncRows = _amzSyncRows.filter(isUsAmazonOrderRow);
       _amzHistRows = _amzHistRows.filter(isUsAmazonOrderRow);
-      console.log(`[Evolis] Channel filter (amazon.com only, row-level): sync ${beforeSync}→${_amzSyncRows.length}, hist ${beforeHist}→${_amzHistRows.length}`);
+      console.log(`[Skinuva] Channel filter (amazon.com only, row-level): sync ${beforeSync}→${_amzSyncRows.length}, hist ${beforeHist}→${_amzHistRows.length}`);
 
       try {
         const master = await getProductMaster();
         const isUsAmazonAsin = asin => {
           const entry = master.byAsin[(asin || '').trim().toUpperCase()];
           if (!entry) return true; // unknown ASIN — don't silently drop data we can't classify; only exclude confirmed non-US-Amazon channels
-          const tokens = (entry.channel || '').split('/').map(t => t.trim().toLowerCase());
-          return tokens.includes('amazon');
+          // FIXED 2026-08-14 -- checks allChannels (every channel this ASIN
+          // appears under, across every row in the sheet) rather than the
+          // single entry.channel field, which could be whichever row
+          // happened to win the blind overwrite in getProductMaster() —
+          // confirmed via diagnostic this was incorrectly excluding real
+          // Amazon ASINs whose Shopify-channel row came later in the sheet.
+          const allChannels = entry.allChannels || (entry.channel ? [entry.channel] : []);
+          return allChannels.some(ch => ch.split('/').map(t => t.trim().toLowerCase()).includes('amazon'));
         };
         const beforeReturns = _amzReturnRows.length, beforeAdOrders = _amzAdOrdersRowsAll.length;
         // Diagnostic added 2026-08-14 -- checking whether specific ASINs
@@ -6595,9 +6601,9 @@ async function initSns() {
         _amzReturnRows = _amzReturnRows.filter(r => isUsAmazonAsin(r.asin));
         _amzAdOrdersRowsAll = _amzAdOrdersRowsAll.filter(r => isUsAmazonAsin(r.asin || r.sku));
         console.log('[AmazonAdOrdersChannel][qa] test ASINs present in adOrdersRowsAll AFTER filter:', testAsins.map(a => ({ asin: a, rowCount: _amzAdOrdersRowsAll.filter(r => (r.asin||r.sku||'').trim().toUpperCase() === a).length })));
-        console.log(`[Evolis] Channel filter (amazon.com only, ASIN-based fallback): returns ${beforeReturns}→${_amzReturnRows.length}, adOrders ${beforeAdOrders}→${_amzAdOrdersRowsAll.length}`);
+        console.log(`[Skinuva] Channel filter (amazon.com only, ASIN-based fallback): returns ${beforeReturns}→${_amzReturnRows.length}, adOrders ${beforeAdOrders}→${_amzAdOrdersRowsAll.length}`);
       } catch (e) {
-        console.warn('[Evolis] Channel filter (returns/adOrders) failed, showing unfiltered data:', e.message);
+        console.warn('[Skinuva] Channel filter (returns/adOrders) failed, showing unfiltered data:', e.message);
       }
 
       renderAmazonPeriodPills('lastFull');
@@ -8053,7 +8059,7 @@ async function initSns() {
   window.initStewardshipLive = function () {
     if (window._stewardshipLivePromise) return window._stewardshipLivePromise;
     window._stewardshipLivePromise = (async function () {
-    console.log('[Evolis] initStewardshipLive() called');
+    console.log('[Skinuva] initStewardshipLive() called');
 
     const monthAbbr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const { year, month } = getLastFullMonth();
@@ -8073,7 +8079,7 @@ async function initSns() {
       const summaryRows = isCsv(summaryCsv) ? parseCsv(summaryCsv) : [];
 
       if (summaryRows.length === 0) {
-        console.warn('[Evolis] stewardship summary sheet returned no rows — check sync-stewardship-summary cron has run');
+        console.warn('[Skinuva] stewardship summary sheet returned no rows — check sync-stewardship-summary cron has run');
         return;
       }
 
@@ -8186,13 +8192,13 @@ async function initSns() {
         ]);
         const webRevRows = parseRevenueHistoryLocal(webRevCsv);
         const wmtRevRows = parseRevenueHistoryLocal(wmtRevCsv);
-        console.log('[Evolis][qa] % Revenue Invested — target year/month:', year, '/', month, '— webRevRows count:', webRevRows.length, '— last 4:', JSON.stringify(webRevRows.slice(-4)), '— first 4:', JSON.stringify(webRevRows.slice(0, 4)));
+        console.log('[Skinuva][qa] % Revenue Invested — target year/month:', year, '/', month, '— webRevRows count:', webRevRows.length, '— last 4:', JSON.stringify(webRevRows.slice(-4)), '— first 4:', JSON.stringify(webRevRows.slice(0, 4)));
         const webRevThisMonth = (webRevRows.find(r => r.year === year && r.month === month) || {}).revenue || 0;
         const wmtRevThisMonth = (wmtRevRows.find(r => r.year === year && r.month === month) || {}).revenue || 0;
         allChannelRevenue = amzRevenueThisMonth + webRevThisMonth + wmtRevThisMonth;
-        console.log('[Evolis] % Revenue Invested — revenue by channel:', 'amazon=', amzRevenueThisMonth, 'website=', webRevThisMonth, 'walmart=', wmtRevThisMonth, 'total=', allChannelRevenue);
+        console.log('[Skinuva] % Revenue Invested — revenue by channel:', 'amazon=', amzRevenueThisMonth, 'website=', webRevThisMonth, 'walmart=', wmtRevThisMonth, 'total=', allChannelRevenue);
       } catch (e) {
-        console.warn('[Evolis] could not fetch Website/Walmart revenue for % Revenue Invested — falling back to Amazon-only revenue:', e.message);
+        console.warn('[Skinuva] could not fetch Website/Walmart revenue for % Revenue Invested — falling back to Amazon-only revenue:', e.message);
       }
 
       if (allChannelRevenue) {
@@ -8207,7 +8213,7 @@ async function initSns() {
       const ltdVine   = summaryRows.reduce((s, r) => s + parseAmt(r.vine_total), 0);
       const ltdPromos = summaryRows.reduce((s, r) => s + parseAmt(r.promos_total), 0);
       const ltdTotal  = ltdAds + ltdVine + ltdPromos;
-      console.log('[Evolis] LTD: ads=', ltdAds, 'vine=', ltdVine, 'promos=', ltdPromos, 'total=', ltdTotal);
+      console.log('[Skinuva] LTD: ads=', ltdAds, 'vine=', ltdVine, 'promos=', ltdPromos, 'total=', ltdTotal);
       const ltdEl = document.getElementById('ltd-total-investments');
       if (ltdEl) {
         ltdEl.textContent = '$' + Math.round(ltdTotal).toLocaleString();
@@ -8218,7 +8224,7 @@ async function initSns() {
       // with a guess in the meantime.
 
     } catch (err) {
-      console.warn('[Evolis] initStewardshipLive failed, charts/KPIs remain at last rendered values:', err.message);
+      console.warn('[Skinuva] initStewardshipLive failed, charts/KPIs remain at last rendered values:', err.message);
     }
     })();
     return window._stewardshipLivePromise;
@@ -8382,10 +8388,10 @@ async function initSns() {
   window.initWalmartLive = function () {
     if (window._walmartLivePromise) return window._walmartLivePromise;
     window._walmartLivePromise = (async function () {
-    console.log('[Evolis] initWalmartLive() called');
+    console.log('[Skinuva] initWalmartLive() called');
 
     try {
-      const csv = await fetch(sheetCsvUrl(WALMART_SHEET_ID, WALMART_GID)).then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), ''));
+      const csv = await fetch(sheetCsvUrl(WALMART_SHEET_ID, WALMART_GID)).then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), ''));
       if (!isCsv(csv)) {
         document.getElementById('wtp-tbody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#c0392b;font-size:12px;">Could not load Walmart data. Check sheet permissions.</td></tr>';
         return;
@@ -9087,7 +9093,7 @@ async function initSns() {
   window.initAmazonExternal = function () {
     if (window._amazonExtPromise) return window._amazonExtPromise;
     window._amazonExtPromise = (async function () {
-    console.log('[Evolis] initAmazonExternal() called');
+    console.log('[Skinuva] initAmazonExternal() called');
 
     const { year, month } = getLastFullMonth();
     const monthNamesAmz = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -9110,12 +9116,12 @@ async function initSns() {
       const SYNC_GID = window.SHEET_CFG.SHEET_ORDERS.gid;
       const HIST_GID = window.SHEET_CFG.SHEET_ORDERS_HISTORICAL.gid;
 
-      console.log('[Evolis] Starting fetch...');
+      console.log('[Skinuva] Starting fetch...');
       const [syncCsv, histCsv, adSummaryCsv, adOrdersCsv, amzReturnsCsv] = await Promise.all([
-        fetch(sheetCsvUrl(SYNC_SHEET_ID, SYNC_GID)).then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), '')),
-        fetch(sheetCsvUrl(HISTORICAL_SHEET_ID, HIST_GID)).then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), '')),
-        fetch(sheetCsvUrl(AD_SUMMARY_SHEET_ID, AD_SUMMARY_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), '')),
-        fetch(sheetCsvUrl(AD_ORDERS_SHEET_ID,  AD_ORDERS_GID)  + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), '')),
+        fetch(sheetCsvUrl(SYNC_SHEET_ID, SYNC_GID)).then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
+        fetch(sheetCsvUrl(HISTORICAL_SHEET_ID, HIST_GID)).then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
+        fetch(sheetCsvUrl(AD_SUMMARY_SHEET_ID, AD_SUMMARY_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
+        fetch(sheetCsvUrl(AD_ORDERS_SHEET_ID,  AD_ORDERS_GID)  + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
         // Amazon Returns — added 2026-08-05 per Jaclyn, mirroring the same
         // fix already shipped on the internal Amazon Sales page: exclude
         // returned units from Total Units / Units (Organic) / Top Selling
@@ -9124,8 +9130,8 @@ async function initSns() {
         fetch(sheetCsvUrl(OV_RETURNS_SHEET_ID, OV_RETURNS_EVOLIS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
       ]);
 
-      console.log('[Evolis] syncCsv length:', syncCsv.length, 'isCsv:', isCsv(syncCsv));
-      console.log('[Evolis] histCsv length:', histCsv.length, 'isCsv:', isCsv(histCsv));
+      console.log('[Skinuva] syncCsv length:', syncCsv.length, 'isCsv:', isCsv(syncCsv));
+      console.log('[Skinuva] histCsv length:', histCsv.length, 'isCsv:', isCsv(histCsv));
       const syncRows = isCsv(syncCsv) ? filterRows(parseCsv(syncCsv)) : [];
       const histRows = isCsv(histCsv) ? filterRows(parseCsv(histCsv)) : [];
 
@@ -9636,7 +9642,7 @@ async function initSns() {
   window.initWebExternal = function () {
     if (window._webExtPromise) return window._webExtPromise;
     window._webExtPromise = (async function () {
-    console.log('[Evolis] initWebExternal() called');
+    console.log('[Skinuva] initWebExternal() called');
 
     const { year, month } = getLastFullMonth();
     let prevMonth = month - 1, prevYear = year;
@@ -9658,11 +9664,11 @@ async function initSns() {
       // quantity, refund_amount, note, brand, last_updated.
       const [csv, adsCsv, shoppingCsv, webReturnsCsv] = await Promise.all([
         fetch(sheetCsvUrl(SHOPIFY_SHEET_ID, SHOPIFY_SHEET_GID) + `&_cb=${Date.now()}`)
-          .then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), '')),
+          .then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
         fetch(sheetCsvUrl(SHOPIFY_SHEET_ID, SHOPIFY_ADS_GID) + `&_cb=${Date.now()}`)
-          .then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), '')),
+          .then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
         fetch(sheetCsvUrl(SHOPIFY_SHEET_ID, SHOPIFY_SHOPPING_GID) + `&_cb=${Date.now()}`)
-          .then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), '')),
+          .then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
         fetch(sheetCsvUrl(SHOPIFY_SHEET_ID, '1033366681') + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
       ]);
 
@@ -9943,7 +9949,7 @@ async function initSns() {
     const skuNameMap = {};
     try {
       const namesCsv = await fetch(sheetCsvUrl(PRODUCT_NAMES_SHEET_ID, PRODUCT_NAMES_GID) + `&_cb=${Date.now()}`)
-        .then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), ''));
+        .then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), ''));
       if (isCsv(namesCsv)) {
         const lines = namesCsv.trim().split('\n');
         for (let i = 1; i < lines.length; i++) {
@@ -10139,7 +10145,7 @@ async function initSns() {
   window.initWalmartExternal = function () {
     if (window._walmartExtPromise) return window._walmartExtPromise;
     window._walmartExtPromise = (async function () {
-    console.log('[Evolis] initWalmartExternal() called');
+    console.log('[Skinuva] initWalmartExternal() called');
 
     const { year, month } = getLastFullMonth();
     let prevMonth = month - 1, prevYear = year;
@@ -10158,7 +10164,7 @@ async function initSns() {
       // Overview page's returns netting — Jaclyn confirmed gid=344983459
       // is the évolis tab).
       const [csv, wmtReturnsCsv] = await Promise.all([
-        fetch(sheetCsvUrl(WALMART_SHEET_ID, WALMART_GID)).then(r => r.ok ? r.text() : (console.warn('[Evolis] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis] Sheet fetch error:', e.message), '')),
+        fetch(sheetCsvUrl(WALMART_SHEET_ID, WALMART_GID)).then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
         fetch(sheetCsvUrl(OV_WMT_RETURNS_SHEET_ID, OV_WMT_RETURNS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
       ]);
       if (!isCsv(csv)) {
@@ -11020,7 +11026,7 @@ async function initSns() {
   window.initStewardshipExternal = function () {
     if (window._stewardshipExtPromise) return window._stewardshipExtPromise;
     window._stewardshipExtPromise = (async function () {
-    console.log('[Evolis] initStewardshipExternal() called');
+    console.log('[Skinuva] initStewardshipExternal() called');
 
     const monthAbbr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const { year, month } = window.__approvedReportMonth || {};
@@ -11041,7 +11047,7 @@ async function initSns() {
       const summaryRows = isCsv(summaryCsv) ? parseCsv(summaryCsv) : [];
 
       if (summaryRows.length === 0) {
-        console.warn('[Evolis] stewardship summary sheet returned no rows — check sync-stewardship-summary cron has run');
+        console.warn('[Skinuva] stewardship summary sheet returned no rows — check sync-stewardship-summary cron has run');
         return;
       }
 
@@ -11203,7 +11209,7 @@ async function initSns() {
         ]);
         const webRevRows = parseRevenueHistoryLocal(webRevCsv);
         const wmtRevRows = parseRevenueHistoryLocal(wmtRevCsv);
-        console.log('[Evolis][qa] % Revenue Invested — target year/month:', year, '/', month, '— webRevRows count:', webRevRows.length, '— last 4:', JSON.stringify(webRevRows.slice(-4)), '— first 4:', JSON.stringify(webRevRows.slice(0, 4)));
+        console.log('[Skinuva][qa] % Revenue Invested — target year/month:', year, '/', month, '— webRevRows count:', webRevRows.length, '— last 4:', JSON.stringify(webRevRows.slice(-4)), '— first 4:', JSON.stringify(webRevRows.slice(0, 4)));
         const webRevThisMonth = (webRevRows.find(r => r.year === year && r.month === month) || {}).revenue || 0;
         const wmtRevThisMonth = (wmtRevRows.find(r => r.year === year && r.month === month) || {}).revenue || 0;
         allChannelRevenue = amzRevenueThisMonth + webRevThisMonth + wmtRevThisMonth;
@@ -11214,9 +11220,9 @@ async function initSns() {
           .filter(r => (r.date || '').substring(0, 7) === targetPrefix)
           .reduce((s, r) => s + parseAmt(r.spend), 0);
         currInvestTotal += webAdsSpendThisMonth;
-        console.log('[Evolis] % Revenue Invested — revenue by channel:', 'amazon=', amzRevenueThisMonth, 'website=', webRevThisMonth, 'walmart=', wmtRevThisMonth, 'total=', allChannelRevenue, '— website Google Ads spend added to numerator:', webAdsSpendThisMonth);
+        console.log('[Skinuva] % Revenue Invested — revenue by channel:', 'amazon=', amzRevenueThisMonth, 'website=', webRevThisMonth, 'walmart=', wmtRevThisMonth, 'total=', allChannelRevenue, '— website Google Ads spend added to numerator:', webAdsSpendThisMonth);
       } catch (e) {
-        console.warn('[Evolis] could not fetch Website/Walmart revenue or Website Google Ads spend for % Revenue Invested — falling back to Amazon-only numerator/revenue:', e.message);
+        console.warn('[Skinuva] could not fetch Website/Walmart revenue or Website Google Ads spend for % Revenue Invested — falling back to Amazon-only numerator/revenue:', e.message);
       }
 
       if (allChannelRevenue) {
@@ -11231,7 +11237,7 @@ async function initSns() {
       const ltdVine   = summaryRows.reduce((s, r) => s + parseAmt(r.vine_total), 0);
       const ltdPromos = summaryRows.reduce((s, r) => s + parseAmt(r.promos_total), 0);
       const ltdTotal  = ltdAds + ltdVine + ltdPromos;
-      console.log('[Evolis] LTD: ads=', ltdAds, 'vine=', ltdVine, 'promos=', ltdPromos, 'total=', ltdTotal);
+      console.log('[Skinuva] LTD: ads=', ltdAds, 'vine=', ltdVine, 'promos=', ltdPromos, 'total=', ltdTotal);
       const ltdEl = document.getElementById('mx-ltd-total-investments');
       if (ltdEl) {
         ltdEl.textContent = '$' + Math.round(ltdTotal).toLocaleString();
@@ -11242,7 +11248,7 @@ async function initSns() {
       // with a guess in the meantime.
 
     } catch (err) {
-      console.warn('[Evolis] initStewardshipExternal failed, charts/KPIs remain at last rendered values:', err.message);
+      console.warn('[Skinuva] initStewardshipExternal failed, charts/KPIs remain at last rendered values:', err.message);
     }
     })();
     return window._stewardshipExtPromise;
@@ -11471,25 +11477,25 @@ async function initSnsExternal() {
 
   try {
     const [totalsCsv, retentionCsv] = await Promise.all([
-      fetch(csvUrl(TOTALS_SHEET_ID, TOTALS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Evolis][subscriptions] totals sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis][subscriptions] totals sheet fetch error:', e.message), '')),
-      fetch(csvUrl(RETENTION_SHEET_ID, RETENTION_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Evolis][subscriptions] retention sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Evolis][subscriptions] retention sheet fetch error:', e.message), '')),
+      fetch(csvUrl(TOTALS_SHEET_ID, TOTALS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Skinuva][subscriptions] totals sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva][subscriptions] totals sheet fetch error:', e.message), '')),
+      fetch(csvUrl(RETENTION_SHEET_ID, RETENTION_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Skinuva][subscriptions] retention sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva][subscriptions] retention sheet fetch error:', e.message), '')),
     ]);
 
     // ── Active Subscriptions: bar chart + KPI ───────────────────────────
     if (looksLikeCsv(totalsCsv)) {
       const rows = csvToRows(totalsCsv);
-      console.log('[Evolis][subscriptions] totals sheet columns:', rows.length ? Object.keys(rows[0]) : '(no rows)');
-      console.log('[Evolis][subscriptions] totals sheet total row count (before any filtering):', rows.length);
+      console.log('[Skinuva][subscriptions] totals sheet columns:', rows.length ? Object.keys(rows[0]) : '(no rows)');
+      console.log('[Skinuva][subscriptions] totals sheet total row count (before any filtering):', rows.length);
 
       const brandRows = rows.filter(isEvolisRow);
       const useRows = brandRows.length ? brandRows : rows;
-      console.log('[Evolis][subscriptions] rows after brand filter:', useRows.length, '(', rows.length - useRows.length, 'dropped by brand filter )');
+      console.log('[Skinuva][subscriptions] rows after brand filter:', useRows.length, '(', rows.length - useRows.length, 'dropped by brand filter )');
 
       const withDate = useRows.map(r => ({ row: r, y: parseInt(r.year, 10), m: parseInt(r.month, 10) }));
       const sortable = withDate.length > 0 && withDate.every(x => !isNaN(x.y) && !isNaN(x.m));
       if (sortable) withDate.sort((a, b) => (a.y - b.y) || (a.m - b.m));
       if (withDate.length) {
-        console.log('[Evolis][subscriptions] full year/month range present in sheet (regardless of whether total_subscriptions is populated):',
+        console.log('[Skinuva][subscriptions] full year/month range present in sheet (regardless of whether total_subscriptions is populated):',
           withDate[0].y + '-' + withDate[0].m, 'to', withDate[withDate.length - 1].y + '-' + withDate[withDate.length - 1].m);
       }
 
@@ -11506,7 +11512,7 @@ async function initSnsExternal() {
         years.push(x.y);
       });
       if (skipped.length) {
-        console.warn('[Evolis][subscriptions] skipped', skipped.length, 'row(s) with no usable total_subscriptions value — these months are NOT in the chart:', skipped.join(', '));
+        console.warn('[Skinuva][subscriptions] skipped', skipped.length, 'row(s) with no usable total_subscriptions value — these months are NOT in the chart:', skipped.join(', '));
       }
 
       // Trailing 13 months only — chronologically sorted already, so this
@@ -11517,7 +11523,7 @@ async function initSnsExternal() {
       const trimmedValues = values.slice(-TRAILING_MONTHS);
       const trimmedYears  = years.slice(-TRAILING_MONTHS);
 
-      console.log('[Evolis][subscriptions] months actually plotted on the chart (trailing', TRAILING_MONTHS, 'of', labels.length, 'available):', trimmedLabels.join(', '));
+      console.log('[Skinuva][subscriptions] months actually plotted on the chart (trailing', TRAILING_MONTHS, 'of', labels.length, 'available):', trimmedLabels.join(', '));
 
       if (values.length) {
         // Color by calendar year: 2024 sand, 2025 slate, 2026 navy. Falls
@@ -11554,16 +11560,16 @@ async function initSnsExternal() {
           }
         }
       } else {
-        console.warn('[Evolis][subscriptions] no total_subscriptions values matched in totals sheet — check TOTALS_GID/column name. Available columns:', rows.length ? Object.keys(rows[0]) : '(none)');
+        console.warn('[Skinuva][subscriptions] no total_subscriptions values matched in totals sheet — check TOTALS_GID/column name. Available columns:', rows.length ? Object.keys(rows[0]) : '(none)');
       }
     } else {
-      console.warn('[Evolis][subscriptions] totals sheet did not return CSV (check it is published/shared, and TOTALS_GID is correct).');
+      console.warn('[Skinuva][subscriptions] totals sheet did not return CSV (check it is published/shared, and TOTALS_GID is correct).');
     }
 
     // ── Subscribe & Save Retention KPI ───────────────────────────────────
     if (looksLikeCsv(retentionCsv)) {
       const rows = csvToRows(retentionCsv);
-      console.log('[Evolis][subscriptions] retention sheet columns:', rows.length ? Object.keys(rows[0]) : '(no rows)');
+      console.log('[Skinuva][subscriptions] retention sheet columns:', rows.length ? Object.keys(rows[0]) : '(no rows)');
       // Strict, explicit brand match on this sheet's own 'brand' column —
       // NOT the shared isEvolisRow() helper, and deliberately NO fallback
       // to "use all rows" if zero match. Confirmed 2026-07-28: this sheet
@@ -11573,10 +11579,10 @@ async function initSnsExternal() {
       // showing nothing. Logging every row's actual brand value so a
       // future mismatch (e.g. a casing/accent variant) is visible
       // immediately instead of silently falling back to wrong data again.
-      console.log('[Evolis][subscriptions] retention sheet — raw brand value per row:', JSON.stringify(rows.map(r => ({ year: r.year, month: r.month, brand: r.brand }))));
+      console.log('[Skinuva][subscriptions] retention sheet — raw brand value per row:', JSON.stringify(rows.map(r => ({ year: r.year, month: r.month, brand: r.brand }))));
       const stripAccentsSns = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       const useRows = rows.filter(r => stripAccentsSns(r.brand).toLowerCase().trim() === (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase());
-      console.log('[Evolis][subscriptions] retention rows — total:', rows.length, '— after STRICT brand filter (no fallback):', useRows.length, '— raw year/month per row:', JSON.stringify(useRows.map(r => ({ year: r.year, month: r.month }))));
+      console.log('[Skinuva][subscriptions] retention rows — total:', rows.length, '— after STRICT brand filter (no fallback):', useRows.length, '— raw year/month per row:', JSON.stringify(useRows.map(r => ({ year: r.year, month: r.month }))));
 
       // MOM only works if this sheet actually has more than one dated row
       // per brand (i.e. it's historical, not a single current snapshot).
@@ -11585,7 +11591,7 @@ async function initSnsExternal() {
       const withDateR = useRows.map(r => ({ row: r, y: parseInt(r.year, 10), m: parseInt(r.month, 10) }));
       const hasHistory = withDateR.length > 1 && withDateR.every(x => !isNaN(x.y) && !isNaN(x.m));
       if (!hasHistory) {
-        console.warn('[Evolis][subscriptions] hasHistory=false — reason:', withDateR.length <= 1 ? ('only ' + withDateR.length + ' row(s) after brand filter, need 2+') : 'year/month not parsing as numbers on every row — check column names/values above');
+        console.warn('[Skinuva][subscriptions] hasHistory=false — reason:', withDateR.length <= 1 ? ('only ' + withDateR.length + ' row(s) after brand filter, need 2+') : 'year/month not parsing as numbers on every row — check column names/values above');
       }
       if (hasHistory) withDateR.sort((a, b) => (a.y - b.y) || (a.m - b.m));
 
@@ -11623,7 +11629,7 @@ async function initSnsExternal() {
       const retentionPrevVal = readRetention(prevBrandRow);
 
       if (retentionVal !== null) {
-        console.log('[Evolis][subscriptions] raw retention value:', retentionVal, '— history available for MOM:', hasHistory); console.log('[Evolis][subscriptions] DEBUG brandRow:', JSON.stringify(brandRow), '— prevBrandRow:', JSON.stringify(prevBrandRow), '— all rows w/ y/m/retention:', JSON.stringify(withDateR.map(x => ({y:x.y, m:x.m, retention_90_day: x.row.retention_90_day}))));
+        console.log('[Skinuva][subscriptions] raw retention value:', retentionVal, '— history available for MOM:', hasHistory); console.log('[Skinuva][subscriptions] DEBUG brandRow:', JSON.stringify(brandRow), '— prevBrandRow:', JSON.stringify(prevBrandRow), '— all rows w/ y/m/retention:', JSON.stringify(withDateR.map(x => ({y:x.y, m:x.m, retention_90_day: x.row.retention_90_day}))));
         if (retentionKpiEl) retentionKpiEl.textContent = Math.round(retentionVal) + '%';
         // 2026-07-16: was a fragile CSS positional selector
         // ('#m-opportunities .kpi-row .kpi-card:nth-child(2) .kpi-mom') that
@@ -11647,19 +11653,19 @@ async function initSnsExternal() {
           } else {
             retMomEl.className = 'kpi-mom flat';
             retMomEl.textContent = '—';
-            if (!hasHistory) console.warn('[Evolis][subscriptions] retention sheet appears to be a single current-value snapshot (no year/month history per brand) — MOM left blank rather than fabricated.');
+            if (!hasHistory) console.warn('[Skinuva][subscriptions] retention sheet appears to be a single current-value snapshot (no year/month history per brand) — MOM left blank rather than fabricated.');
           }
         } else {
-          console.warn('[Evolis][subscriptions] retMomEl not found — retentionKpiEl has no nextElementSibling, check #kpi-retention markup.');
+          console.warn('[Skinuva][subscriptions] retMomEl not found — retentionKpiEl has no nextElementSibling, check #kpi-retention markup.');
         }
       } else {
-        console.warn('[Evolis][subscriptions] no retention value matched in retention sheet — check RETENTION_GID/column name. Available columns:', rows.length ? Object.keys(rows[0]) : '(none)');
+        console.warn('[Skinuva][subscriptions] no retention value matched in retention sheet — check RETENTION_GID/column name. Available columns:', rows.length ? Object.keys(rows[0]) : '(none)');
       }
     } else {
-      console.warn('[Evolis][subscriptions] retention sheet did not return CSV (check it is published/shared, and RETENTION_GID is correct).');
+      console.warn('[Skinuva][subscriptions] retention sheet did not return CSV (check it is published/shared, and RETENTION_GID is correct).');
     }
   } catch (err) {
-    console.error('[Evolis][subscriptions] fetch/parse failed:', err);
+    console.error('[Skinuva][subscriptions] fetch/parse failed:', err);
   }
 }
 
@@ -13561,7 +13567,7 @@ async function initSnsExternal() {
   window.initPrimeDayReport = function () {
     if (window._primeDayReportPromise) return window._primeDayReportPromise;
     window._primeDayReportPromise = (async function () {
-      console.log('[Evolis] initPrimeDayReport() called');
+      console.log('[Skinuva] initPrimeDayReport() called');
       try {
         const [dates, ordersCsv, adOrdersCsv, nameMap] = await Promise.all([
           getEventDates(),
@@ -13971,7 +13977,7 @@ async function initSnsExternal() {
     return function () {
       if (window[promiseKey]) return window[promiseKey];
       window[promiseKey] = (async function () {
-        console.log(`[Evolis] init${cfg.prefix}Report() called`);
+        console.log(`[Skinuva] init${cfg.prefix}Report() called`);
         try {
           const [dates, ordersCsv, adOrdersCsv, nameMap] = await Promise.all([
             getEventDates(cfg.eventName),
@@ -14966,7 +14972,29 @@ function getProductMaster() {
           });
         }
       }
-      if (asin) byAsin[asin] = entry;
+      // FIXED 2026-08-14, Skinuva-specific: confirmed via diagnostic that
+      // byAsin[asin].channel alone isn't reliable for "is this ASIN sold
+      // on Amazon.com" checks — the same ASIN can appear on multiple rows
+      // (one per channel, same pattern documented in the bySku comment
+      // above), and the blind "byAsin[asin] = entry" overwrite below means
+      // whichever row is LAST in the sheet wins outright, discarding any
+      // other channel that ASIN is also listed under. Real example: an
+      // Amazon ASIN whose Shopify-channel row happened to come later in
+      // the sheet ended up showing channel:'Shopify' in byAsin, causing
+      // the Amazon Sales page's channel filter to incorrectly exclude a
+      // genuine Amazon ASIN with real ad-orders data. Fixed by
+      // accumulating EVERY channel value seen for a given ASIN into
+      // allChannels, so a consumer can check "does this ASIN appear under
+      // Amazon ANYWHERE" rather than only checking whichever single row
+      // happened to overwrite the others. Additive only — byAsin[asin]
+      // itself still gets the same blind-overwrite entry as before for
+      // every OTHER field, unchanged for any existing consumer.
+      if (asin) {
+        const existingAsinEntry = byAsin[asin];
+        const prevChannels = existingAsinEntry && existingAsinEntry.allChannels ? existingAsinEntry.allChannels : [];
+        byAsin[asin] = entry;
+        byAsin[asin].allChannels = entry.channel ? [...new Set([...prevChannels, entry.channel])] : prevChannels;
+      }
       // Root-SKU index — added 2026-08-11, Skinuva-specific: Amazon's own
       // SKU for a product is often suffixed (e.g. "SVA0001-stickerless",
       // "SVA0003.2pk"), not the bare "SVA0001" — but callers building a
@@ -16896,7 +16924,7 @@ async function loadInventoryPage() {
     // for the latest date, per Jaclyn. This log shows exactly what
     // survives each stage, so the next load pinpoints where they're
     // actually being lost rather than guessing further.
-    console.log('[Evolis][inventory] latestDate:', latestDate, '— rows at that date:', latestRows.length, '— all SKUs at that date:', latestRows.map(r => r.sku));
+    console.log('[Skinuva][inventory] latestDate:', latestDate, '— rows at that date:', latestRows.length, '— all SKUs at that date:', latestRows.map(r => r.sku));
 
     _invAllRows = latestRows.map(r => {
       // FBA now includes Inbound_receiving (col H on Products Cache) —
@@ -16953,11 +16981,11 @@ async function loadInventoryPage() {
     // each expected travel SKU specifically (onHand/discontinued/status),
     // so if one of those two things is unexpectedly true/zero for a
     // travel SKU, it'll be visible here directly instead of guessed at.
-    console.log('[Evolis][inventory] SKUs after discontinued+onHand filter:', _invAllRows.length, '—', _invAllRows.map(r => r.sku));
+    console.log('[Skinuva][inventory] SKUs after discontinued+onHand filter:', _invAllRows.length, '—', _invAllRows.map(r => r.sku));
     ['EVO0014','EVO0015','EVO0016','EVO0017','EVO0018','EVO0019'].forEach(sku => {
       const beforeFilter = latestRows.find(r => (r.sku || '').trim().toUpperCase() === sku);
       const afterFilter = _invAllRows.find(r => r.sku === sku);
-      console.log('[Evolis][inventory] travel SKU check —', sku, ': in latestRows?', !!beforeFilter, '· survived filter?', !!afterFilter, afterFilter ? { onHand: afterFilter.onHand, discontinued: afterFilter.discontinued, status: afterFilter.status } : '(dropped)');
+      console.log('[Skinuva][inventory] travel SKU check —', sku, ': in latestRows?', !!beforeFilter, '· survived filter?', !!afterFilter, afterFilter ? { onHand: afterFilter.onHand, discontinued: afterFilter.discontinued, status: afterFilter.status } : '(dropped)');
     });
 
     renderInventoryKpis(_invAllRows);
@@ -20916,7 +20944,7 @@ async function loadAuditResultsFromSheet() {
   window.initOverviewLive = async function () {
     if (window._overviewLiveInit) return;
     window._overviewLiveInit = true;
-    console.log('[Evolis] initOverviewLive() called');
+    console.log('[Skinuva] initOverviewLive() called');
 
     const AMAZON_SHEET_ID = window.SHEET_CFG.SHEET_ORDERS.fileId; const AMAZON_GID = window.SHEET_CFG.SHEET_ORDERS.gid;
     const WEB_SHEET_ID    = window.SHEET_CFG.SHOPIFY_ORDERS_SHEET.fileId; const WEB_GID    = window.SHEET_CFG.SHOPIFY_ORDERS_SHEET.gid;
@@ -20994,7 +21022,7 @@ async function loadAuditResultsFromSheet() {
       // Skinuva-specific — do not replicate to other brands by default.
       const webRows = isCsv(webCsv) ? parseCsv(webCsv).filter(r => (r.sku || '').trim().toUpperCase().startsWith('C-')) : [];
       const wmtRows = isCsv(wmtCsv) ? parseCsv(wmtCsv) : [];
-      console.log('[Evolis][overview] row counts \u2014 amazon:', amzRows.length, 'web:', webRows.length, 'walmart:', wmtRows.length, '\u2014 MTD range:', mtdStartStr, 'to', mtdEndStr);
+      console.log('[Skinuva][overview] row counts \u2014 amazon:', amzRows.length, 'web:', webRows.length, 'walmart:', wmtRows.length, '\u2014 MTD range:', mtdStartStr, 'to', mtdEndStr);
 
       // Product names + SKU→ASIN crosswalk (see fetch comment above).
       let asinNameMap = {};
@@ -21013,9 +21041,9 @@ async function loadAuditResultsFromSheet() {
             if (sku && asin) skuToAsinMap[sku] = asin;
             if (walmartItemId && asin) walmartItemIdToAsinMap[walmartItemId] = asin;
           }
-          console.log('[Evolis][overview] product name lookup: ', Object.keys(asinNameMap).length, 'ASINs,', Object.keys(skuToAsinMap).length, 'SKU→ASIN mappings,', Object.keys(walmartItemIdToAsinMap).length, 'Walmart Item ID→ASIN mappings');
+          console.log('[Skinuva][overview] product name lookup: ', Object.keys(asinNameMap).length, 'ASINs,', Object.keys(skuToAsinMap).length, 'SKU→ASIN mappings,', Object.keys(walmartItemIdToAsinMap).length, 'Walmart Item ID→ASIN mappings');
         }
-      } catch (e) { console.warn('[Evolis][overview] product name lookup failed:', e.message); }
+      } catch (e) { console.warn('[Skinuva][overview] product name lookup failed:', e.message); }
 
       // Average Amazon item_price per ASIN, built from the Amazon Orders sheet
       // rows already fetched above. Added 2026-08-05 per Jaclyn: Amazon's
@@ -21161,7 +21189,7 @@ async function loadAuditResultsFromSheet() {
       const wmtReturnsPrev = aggregateReturnsRange(wmtReturnsCsv, prevStartStr, prevEndStr, 'return_date');
       const webReturnsMtd  = aggregateReturnsRange(webReturnsCsv, mtdStartStr, mtdEndStr, 'refund_date', { skuPrefix: 'C-' });
       const webReturnsPrev = aggregateReturnsRange(webReturnsCsv, prevStartStr, prevEndStr, 'refund_date', { skuPrefix: 'C-' });
-      console.log('[Evolis][overview] returns this MTD \u2014 amazon:', amzReturnsMtd, 'walmart:', wmtReturnsMtd, 'website:', webReturnsMtd);
+      console.log('[Skinuva][overview] returns this MTD \u2014 amazon:', amzReturnsMtd, 'walmart:', wmtReturnsMtd, 'website:', webReturnsMtd);
 
       const amzMtd = aggregateRange(amzRows, mtdStartStr, mtdEndStr, isValidAmazonRow);
       const webMtd = aggregateRange(webRows, mtdStartStr, mtdEndStr, isValidWebRow);
@@ -21255,7 +21283,7 @@ async function loadAuditResultsFromSheet() {
             .filter(r => parseInt(r.year, 10) === now.getFullYear() && parseInt(r.month, 10) === now.getMonth() + 1)
             .reduce((s, r) => s + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0), 0);
         }
-      } catch (e) { console.warn('[Evolis][overview] Walmart ad units (for Ad-Driven Orders) lookup failed:', e.message); }
+      } catch (e) { console.warn('[Skinuva][overview] Walmart ad units (for Ad-Driven Orders) lookup failed:', e.message); }
 
       setKpiPlain('ov-kpi-ad-orders', (adDrivenOrders + Math.round(webAdsMtd.conversions) + walmartAdUnitsThisMonth).toLocaleString(), 'This month (Amazon orders + Google Ads + Walmart ad units)');
       // NOTE: this card's own MOM/"Organic Orders" companion logic moved
@@ -21353,7 +21381,7 @@ async function loadAuditResultsFromSheet() {
               adUnitsByAsinPrev[asin] = (adUnitsByAsinPrev[asin] || 0) + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0);
             });
         }
-      } catch (e) { console.warn('[Evolis][overview] ad units lookup failed:', e.message); }
+      } catch (e) { console.warn('[Skinuva][overview] ad units lookup failed:', e.message); }
 
       // Walmart per-ASIN ad units — added 2026-08-06 per Jaclyn. Joined
       // via item_id -> asin (walmartItemIdToAsinMap, built earlier from
@@ -21380,7 +21408,7 @@ async function loadAuditResultsFromSheet() {
               wmtAdUnitsByAsinPrev[asin] = (wmtAdUnitsByAsinPrev[asin] || 0) + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0);
             });
         }
-      } catch (e) { console.warn('[Evolis][overview] Walmart per-ASIN ad units lookup failed:', e.message); }
+      } catch (e) { console.warn('[Skinuva][overview] Walmart per-ASIN ad units lookup failed:', e.message); }
 
       // -- MTD Organic Units (net of returns, net of BOTH Amazon + Website ads) --
       // Changed 2026-08-05 per Jaclyn: this card used to be "MTD Organic
@@ -21508,7 +21536,7 @@ async function loadAuditResultsFromSheet() {
         proratedSpendPrev = twoMonthsAgoSpend * (daysElapsed / daysInTwoMonthsAgo);
         proratedSalesPrev = twoMonthsAgoSales * (daysElapsed / daysInTwoMonthsAgo);
       } else {
-        console.warn('[Evolis][overview] ad orders sheet did not return CSV — Ad Spend/ACOS will reflect Website only.');
+        console.warn('[Skinuva][overview] ad orders sheet did not return CSV — Ad Spend/ACOS will reflect Website only.');
       }
 
       // Walmart — added 2026-08-06 per Jaclyn. Reads SHEET_WALMART_ADVERTISING
@@ -21531,9 +21559,9 @@ async function loadAuditResultsFromSheet() {
           const wmtLastMonth = wmtAdvRows.find(r => parseInt(r.year, 10) === lastMonthYear && parseInt(r.month, 10) === lastMonthNum);
           if (wmtThisMonth) { walmartSpendThisMonth = parseAmt(wmtThisMonth.spend); walmartSalesThisMonth = parseAmt(wmtThisMonth.sales); }
           if (wmtLastMonth) { walmartSpendLastMonth = parseAmt(wmtLastMonth.spend); walmartSalesLastMonth = parseAmt(wmtLastMonth.sales); }
-          console.log('[Evolis][overview] Walmart ad spend added — this month:', walmartSpendThisMonth, 'last month:', walmartSpendLastMonth);
+          console.log('[Skinuva][overview] Walmart ad spend added — this month:', walmartSpendThisMonth, 'last month:', walmartSpendLastMonth);
         }
-      } catch (e) { console.warn('[Evolis][overview] Walmart Advertising Cache lookup failed:', e.message); }
+      } catch (e) { console.warn('[Skinuva][overview] Walmart Advertising Cache lookup failed:', e.message); }
 
       const blendedSpend = proratedSpend + webAdsMtd.spend + walmartSpendThisMonth;
       const blendedSpendPrev = proratedSpendPrev + webAdsPrevMtd.spend + walmartSpendLastMonth;
@@ -21564,7 +21592,7 @@ async function loadAuditResultsFromSheet() {
         const yearIdx = headers.indexOf('YEAR');
         const revenueIdx = headers.indexOf('REVENUE');
         if (monthIdx < 0 || yearIdx < 0 || revenueIdx < 0) {
-          console.warn('[Evolis][overview] revenue sheet missing MONTH/YEAR/REVENUE columns -- found:', headers);
+          console.warn('[Skinuva][overview] revenue sheet missing MONTH/YEAR/REVENUE columns -- found:', headers);
           return [];
         }
         const rows = [];
@@ -21592,7 +21620,7 @@ async function loadAuditResultsFromSheet() {
       const amzRevRows = parseRevenueHistory(amzRevCsv);
       const webRevRows = parseRevenueHistory(webRevCsv);
       const wmtRevRows = parseRevenueHistory(wmtRevCsv);
-      console.log('[Evolis][overview] revenue-history row counts -- amazon:', amzRevRows.length, 'web:', webRevRows.length, 'walmart:', wmtRevRows.length);
+      console.log('[Skinuva][overview] revenue-history row counts -- amazon:', amzRevRows.length, 'web:', webRevRows.length, 'walmart:', wmtRevRows.length);
 
       function monthlyRevenue(rows, y, m) {
         const row = rows.find(r => r.year === y && r.month === m);
@@ -21625,10 +21653,10 @@ async function loadAuditResultsFromSheet() {
           }
         });
       } else {
-        console.warn('[Evolis][overview] no non-zero months found for trend chart — check revenue-history sheet gids (expects UPPERCASE columns: MONTH, YEAR, REVENUE).');
+        console.warn('[Skinuva][overview] no non-zero months found for trend chart — check revenue-history sheet gids (expects UPPERCASE columns: MONTH, YEAR, REVENUE).');
       }
     } catch (err) {
-      console.error('[Evolis][overview] fetch/parse failed:', err);
+      console.error('[Skinuva][overview] fetch/parse failed:', err);
     }
   };
 
