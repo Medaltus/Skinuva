@@ -16868,20 +16868,45 @@ async function loadInventoryPage() {
   const tbody = document.getElementById('inv-table-body');
   if (!tbody) return;
   try {
-    const [csv, consignmentCsv, statusCsv] = await Promise.all([
+    const [csv, consignmentCsv, statusCsv, wfsCsv] = await Promise.all([
       fetch(ovCsvUrl(OV_PRODUCTS_CACHE_SHEET_ID, OV_PRODUCTS_CACHE_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
-      // 'evolis' tab doesn't exist in this sheet yet (Cin7 pipeline not
-      // built) — this will just fail quietly and consignmentMap stays
-      // empty, which is exactly the honest "no data yet" state.
-      fetch(ovCsvUrl(OV_CONSIGNMENT_SHEET_ID, '505131584')).then(r => r.ok ? r.text() : '').catch(() => ''),
+      // Skinuva's own tab on the shared, multi-brand consignment sheet —
+      // gid confirmed 2026-08-14 per Jaclyn.
+      fetch(ovCsvUrl(OV_CONSIGNMENT_SHEET_ID, '250172672')).then(r => r.ok ? r.text() : '').catch(() => ''),
       // Master Product Short Name sheet's own Status column (LIVE/DELETED)
       // — same sheet/gid as the name lookups used elsewhere, col B=SKU,
       // col H=Status. Used to grey out + sort discontinued SKUs to the
       // bottom, and drop them entirely once there's no stock left at all.
       fetch(ovCsvUrl('1NNRTRQxQl2r4XivAvH700CC39p49GD2xfZlyRNqahGA', '164358627')).then(r => r.ok ? r.text() : '').catch(() => ''),
+      // WFS (Walmart Fulfillment Services) — wired up 2026-08-14 per
+      // Jaclyn, via SHEET_WALMART_INVENTORY (Newderm - Walmart Products
+      // Sync). Columns: date, sku, product_name, wfs_on_hand,
+      // wfs_available, last_synced. Uses wfs_available, same convention
+      // as consignment's own "available" column above.
+      fetch(ovCsvUrl(window.SHEET_CFG.SHEET_WALMART_INVENTORY.fileId, window.SHEET_CFG.SHEET_WALMART_INVENTORY.gid)).then(r => r.ok ? r.text() : '').catch(() => ''),
     ]);
     const rows = parseCsvToRows(csv);
     if (!rows.length) { tbody.innerHTML = '<tr><td colspan="9" style="color:var(--muted);">No data</td></tr>'; return; }
+
+    // Moved up from further below (2026-08-14) so both the WFS map and
+    // the main product rows can share the same catalog-filter/root-SKU
+    // logic — same reasoning as the bare-SKU consolidation fix: bundle
+    // SKUs, VMP multi-packs, and .CA/.UK variants shouldn't be treated as
+    // separate catalog products, and multiple raw-SKU variants of the
+    // same product (FBA "-stickerless" vs Merchant "-SF") should
+    // consolidate into one root-SKU total rather than staying separate.
+    function isCatalogSku(rawSku) {
+      const upper = (rawSku || '').trim().toUpperCase();
+      if (!upper) return false;
+      if (upper.includes('+')) return false; // bundle, e.g. "SVA0001+03"
+      if (upper.startsWith('VMP_')) return false; // multi-pack
+      if (/-CA$/.test(upper) || /-UK$/.test(upper) || /\.1-CA$/.test(upper)) return false; // non-US marketplace variant
+      return true;
+    }
+    function inventoryRootSku(rawSku) {
+      const m = (rawSku || '').trim().toUpperCase().match(/^[A-Z]+\d+/);
+      return m ? m[0] : (rawSku || '').trim().toUpperCase();
+    }
 
     const consignmentMap = {};
     parseCsvToRows(consignmentCsv).forEach(r => {
@@ -16896,16 +16921,18 @@ async function loadInventoryPage() {
       if (sku) consignmentMap[sku] = parseFloat(r.available) || 0;
     });
 
-    // WFS (Walmart Fulfillment Services) — added 2026-08-04 per Jaclyn.
-    // Intentionally left EMPTY: no cron exists yet to pull Walmart
-    // inventory (this table has only ever pulled Amazon inventory via
-    // Products Cache). Structured as its own map, same shape as
-    // consignmentMap above, so wiring in a real sheet later is a one-line
-    // change: fetch the sheet alongside consignmentCsv above, then fill
-    // this map the same way (keyed by base SKU, value = on-hand/available
-    // quantity). Until then every row shows "—" for WFS, which is the
-    // honest "not tracked yet" state — not a fabricated zero.
+    // WFS (Walmart Fulfillment Services) — wired up 2026-08-14 per
+    // Jaclyn. Filters to catalog SKUs only and consolidates variants to
+    // their bare root SKU (same as the main table below), summing
+    // wfs_available across variants, and takes the latest date's rows
+    // only (same "most recent snapshot" convention as Products Cache).
     const wfsMap = {};
+    const wfsRowsAll = parseCsvToRows(wfsCsv);
+    const wfsLatestDate = wfsRowsAll.reduce((max, r) => ((r.date || '') > max ? r.date : max), '');
+    wfsRowsAll.filter(r => r.date === wfsLatestDate && isCatalogSku(r.sku)).forEach(r => {
+      const root = inventoryRootSku(r.sku);
+      wfsMap[root] = (wfsMap[root] || 0) + (parseFloat(r.wfs_available) || 0);
+    });
 
     const statusMap = {};
     parseCsvToRows(statusCsv).forEach(r => {
@@ -16913,6 +16940,7 @@ async function loadInventoryPage() {
       const status = (r.status || '').trim().toUpperCase();
       if (sku && status) statusMap[sku] = status;
     });
+
 
     // Daily snapshot cron — most recent date only
     const latestDate = rows.reduce((max, r) => ((r.date || '') > max ? r.date : max), '');
@@ -16926,7 +16954,12 @@ async function loadInventoryPage() {
     // actually being lost rather than guessing further.
     console.log('[Skinuva][inventory] latestDate:', latestDate, '— rows at that date:', latestRows.length, '— all SKUs at that date:', latestRows.map(r => r.sku));
 
-    _invAllRows = latestRows.map(r => {
+    // Catalog-only filtering + bare-root-SKU consolidation (excluding
+    // bundles, VMP multi-packs, and .CA/.UK variants; merging FBA
+    // "-stickerless" and Merchant-fulfilled "-SF" into one product row)
+    // uses isCatalogSku()/inventoryRootSku(), defined above alongside the
+    // WFS map so both share identical logic.
+    const perVariantRows = latestRows.filter(r => isCatalogSku(r.sku)).map(r => {
       // FBA now includes Inbound_receiving (col H on Products Cache) —
       // added 2026-08-06 per Jaclyn: units in transit to/being received at
       // an Amazon FC are real inbound FBA stock, not yet fulfillable but
@@ -16937,6 +16970,37 @@ async function loadInventoryPage() {
       const qtyAtAmazon    = (parseInt(r.fulfillable_quantity, 10) || 0) + inboundReceiving;
       const qtyAtMedaltus  = parseInt(r.seller_fulfilled_quantity, 10) || 0;
       const allocated       = parseInt(r.reserved_quantity, 10) || 0;
+      const onHand             = parseFloat(r.qty_on_hand) || 0; // kept only for the top KPI card sum — that definition is unchanged
+      const daysRaw             = r.days_of_inventory;
+      const days                 = (daysRaw === '' || daysRaw === null || daysRaw === undefined) ? '' : parseFloat(daysRaw);
+      const skuUpper              = (r.sku || '').trim().toUpperCase();
+      return {
+        rawSku: r.sku || '', root: inventoryRootSku(r.sku), name: r.name || r.sku || '',
+        qtyAtAmazon, qtyAtMedaltus, allocated, onHand, days,
+        discontinued: statusMap[skuUpper] === 'DELETED',
+      };
+    });
+
+    // Consolidate by root SKU — sum quantities across variants, take the
+    // most urgent (lowest) days-of-inventory, and treat the consolidated
+    // product as discontinued only if EVERY variant is discontinued (one
+    // live variant means the product itself is still active).
+    const byRoot = {};
+    perVariantRows.forEach(v => {
+      if (!byRoot[v.root]) {
+        byRoot[v.root] = { sku: v.root, name: v.name, qtyAtAmazon: 0, qtyAtMedaltus: 0, allocated: 0, onHand: 0, days: '', discontinued: true };
+      }
+      const acc = byRoot[v.root];
+      acc.qtyAtAmazon += v.qtyAtAmazon;
+      acc.qtyAtMedaltus += v.qtyAtMedaltus;
+      acc.allocated += v.allocated;
+      acc.onHand += v.onHand;
+      if (v.name && (!acc.name || acc.name === v.root)) acc.name = v.name;
+      if (v.days !== '') acc.days = (acc.days === '' ? v.days : Math.min(acc.days, v.days));
+      if (!v.discontinued) acc.discontinued = false;
+    });
+
+    _invAllRows = Object.values(byRoot).map(acc => {
       // REVISED 2026-08-04 per Jaclyn: Available now DOES subtract Allocated
       // (previous version, and the 2026-07-20 confirmation behind it,
       // treated Allocated as a separate bucket that shouldn't be removed
@@ -16945,11 +17009,10 @@ async function loadInventoryPage() {
       // principle exceed current fulfillable+seller-fulfilled stock
       // (e.g. reservations against incoming inventory) and a negative
       // "Available" would read as a bug rather than a real state.
-      const available        = Math.max(0, qtyAtAmazon + qtyAtMedaltus - allocated);
-      const onHand             = parseFloat(r.qty_on_hand) || 0; // kept only for the top KPI card sum — that definition is unchanged
-      const daysRaw             = r.days_of_inventory;
-      const days                 = (daysRaw === '' || daysRaw === null || daysRaw === undefined) ? '' : parseFloat(daysRaw);
-      const skuUpper              = (r.sku || '').trim().toUpperCase();
+      // Now computed from the CONSOLIDATED (summed-across-variants)
+      // quantities, not a single raw-SKU row's own numbers.
+      const available = Math.max(0, acc.qtyAtAmazon + acc.qtyAtMedaltus - acc.allocated);
+      const skuUpper = acc.sku;
       const consignment            = skuUpper in consignmentMap ? consignmentMap[skuUpper] : '';
       // WFS (Walmart Fulfillment Services) — added 2026-08-04 per Jaclyn.
       // Products Cache only ever pulled Amazon inventory (fulfillable/
@@ -16967,12 +17030,12 @@ async function loadInventoryPage() {
       // than a lagging days-of-inventory projection, and previously such
       // SKUs were getting buried under "Critical" or "Unscored" instead of
       // being called out on their own. Per Jaclyn, 2026-07-24.
-      const status = available === 0 ? 'oos' : invStatusFor(days);
+      const status = available === 0 ? 'oos' : invStatusFor(acc.days);
       return {
-        sku: r.sku || '', name: r.name || r.sku || '',
-        qtyAtAmazon, qtyAtMedaltus, available, allocated, wfs, onHand, consignment,
-        days, status,
-        discontinued: statusMap[skuUpper] === 'DELETED',
+        sku: acc.sku, name: acc.name,
+        qtyAtAmazon: acc.qtyAtAmazon, qtyAtMedaltus: acc.qtyAtMedaltus, available, allocated: acc.allocated, wfs, onHand: acc.onHand, consignment,
+        days: acc.days, status,
+        discontinued: acc.discontinued,
       };
     }).filter(r => !(r.discontinued && r.onHand === 0));
 
@@ -16982,11 +17045,6 @@ async function loadInventoryPage() {
     // so if one of those two things is unexpectedly true/zero for a
     // travel SKU, it'll be visible here directly instead of guessed at.
     console.log('[Skinuva][inventory] SKUs after discontinued+onHand filter:', _invAllRows.length, '—', _invAllRows.map(r => r.sku));
-    ['EVO0014','EVO0015','EVO0016','EVO0017','EVO0018','EVO0019'].forEach(sku => {
-      const beforeFilter = latestRows.find(r => (r.sku || '').trim().toUpperCase() === sku);
-      const afterFilter = _invAllRows.find(r => r.sku === sku);
-      console.log('[Skinuva][inventory] travel SKU check —', sku, ': in latestRows?', !!beforeFilter, '· survived filter?', !!afterFilter, afterFilter ? { onHand: afterFilter.onHand, discontinued: afterFilter.discontinued, status: afterFilter.status } : '(dropped)');
-    });
 
     renderInventoryKpis(_invAllRows);
     renderInventoryTable(_invAllRows);
@@ -21682,7 +21740,7 @@ document.addEventListener('DOMContentLoaded', setHomeDate);
 
 // Units On Hand KPI — sums the same consignment "available" column used
 // on the Inventory page's Consignment column (SHEET_CONSIGNMENT_INVENTORY,
-// evolis tab), and shows the most recent last_updated timestamp from that
+// skinuva tab), and shows the most recent last_updated timestamp from that
 // same data as the sub-label, so the number's own freshness is visible
 // rather than implied.
 async function loadHomeConsignmentKpi() {
@@ -21690,7 +21748,7 @@ async function loadHomeConsignmentKpi() {
   const subEl = document.getElementById('home-kpi-units-sub');
   if (!valEl) return;
   try {
-    const csv = await fetch(ovCsvUrl(OV_CONSIGNMENT_SHEET_ID, '505131584')).then(r => r.ok ? r.text() : '').catch(() => '');
+    const csv = await fetch(ovCsvUrl(OV_CONSIGNMENT_SHEET_ID, '250172672')).then(r => r.ok ? r.text() : '').catch(() => '');
     const rows = parseCsvToRows(csv);
     if (!rows.length) { valEl.textContent = '—'; if (subEl) subEl.textContent = 'No consignment data yet'; return; }
     const total = rows.reduce((sum, r) => sum + (parseFloat(r.available) || 0), 0);
