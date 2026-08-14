@@ -16883,7 +16883,17 @@ async function loadInventoryPage() {
       // Sync). Columns: date, sku, product_name, wfs_on_hand,
       // wfs_available, last_synced. Uses wfs_available, same convention
       // as consignment's own "available" column above.
-      fetch(ovCsvUrl(window.SHEET_CFG.SHEET_WALMART_INVENTORY.fileId, window.SHEET_CFG.SHEET_WALMART_INVENTORY.gid)).then(r => r.ok ? r.text() : '').catch(() => ''),
+      // FIXED 2026-08-14 — window.SHEET_CFG.SHEET_WALMART_INVENTORY may
+      // not exist yet if the env var hasn't been added on Vercel. The
+      // original version accessed .fileId directly, which threw
+      // synchronously and crashed the ENTIRE Promise.all — taking down
+      // the whole Inventory page (FBA, Medaltus, Consignment, everything)
+      // instead of just leaving WFS blank. Guarded so a missing/not-yet-
+      // configured sheet degrades gracefully to "—" for WFS only, same
+      // as the original pre-WFS behavior.
+      (window.SHEET_CFG && window.SHEET_CFG.SHEET_WALMART_INVENTORY
+        ? fetch(ovCsvUrl(window.SHEET_CFG.SHEET_WALMART_INVENTORY.fileId, window.SHEET_CFG.SHEET_WALMART_INVENTORY.gid)).then(r => r.ok ? r.text() : '').catch(() => '')
+        : Promise.resolve('')),
     ]);
     const rows = parseCsvToRows(csv);
     if (!rows.length) { tbody.innerHTML = '<tr><td colspan="9" style="color:var(--muted);">No data</td></tr>'; return; }
