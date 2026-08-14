@@ -8750,7 +8750,25 @@ async function initSns() {
     try {
       const wmtAdCsv = await fetch(sheetCsvUrl(WALMART_AD_ORDERS_SHEET_ID, WALMART_AD_ORDERS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => '');
       if (isCsv(wmtAdCsv)) {
-        const wmtAdRows = parseCsv(wmtAdCsv);
+        const wmtAdRowsRaw = parseCsv(wmtAdCsv);
+        // FIXED 2026-08-13 per Jaclyn -- confirmed via screenshot: every
+        // (item_id, year, month) combination in this sheet exists TWICE
+        // -- once with month/ad_units stored as text (left-aligned,
+        // Sheets shows a leading apostrophe), once as a real number
+        // (right-aligned) -- both with identical values. Fixing the
+        // apostrophe-parsing bug above correctly picks up BOTH rows now,
+        // which means it was also summing both together (2+2=4 instead
+        // of 2). Deduped here by keeping only the LAST row seen per
+        // (item_id, year, month) key, same "last write wins" convention
+        // used elsewhere in this codebase for this exact kind of
+        // duplicate-row problem.
+        const dedupMap = new Map();
+        wmtAdRowsRaw.forEach(r => {
+          const key = `${(r.item_id||'').trim()}|${parseInt(r.year,10)}|${parseInt(r.month,10)}`;
+          dedupMap.set(key, r); // last write wins
+        });
+        const wmtAdRows = Array.from(dedupMap.values());
+        console.log('[WalmartAdDedup][qa] raw rows:', wmtAdRowsRaw.length, '-- after dedup by (item_id,year,month):', wmtAdRows.length);
         // Diagnostic added 2026-08-13 -- crosswalk confirmed working
         // (all 6 known item_ids resolve correctly), so the remaining
         // suspect is this year/month filter. Logs the raw values so a
@@ -10465,7 +10483,25 @@ async function initSns() {
     try {
       const wmtAdCsv = await fetch(sheetCsvUrl(WALMART_AD_ORDERS_SHEET_ID, WALMART_AD_ORDERS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => '');
       if (isCsv(wmtAdCsv)) {
-        const wmtAdRows = parseCsv(wmtAdCsv);
+        const wmtAdRowsRaw = parseCsv(wmtAdCsv);
+        // FIXED 2026-08-13 per Jaclyn -- confirmed via screenshot: every
+        // (item_id, year, month) combination in this sheet exists TWICE
+        // -- once with month/ad_units stored as text (left-aligned,
+        // Sheets shows a leading apostrophe), once as a real number
+        // (right-aligned) -- both with identical values. Fixing the
+        // apostrophe-parsing bug above correctly picks up BOTH rows now,
+        // which means it was also summing both together (2+2=4 instead
+        // of 2). Deduped here by keeping only the LAST row seen per
+        // (item_id, year, month) key, same "last write wins" convention
+        // used elsewhere in this codebase for this exact kind of
+        // duplicate-row problem.
+        const dedupMap = new Map();
+        wmtAdRowsRaw.forEach(r => {
+          const key = `${(r.item_id||'').trim()}|${parseInt(r.year,10)}|${parseInt(r.month,10)}`;
+          dedupMap.set(key, r); // last write wins
+        });
+        const wmtAdRows = Array.from(dedupMap.values());
+        console.log('[WalmartAdDedup][qa] raw rows:', wmtAdRowsRaw.length, '-- after dedup by (item_id,year,month):', wmtAdRows.length);
         // Diagnostic added 2026-08-13 -- crosswalk confirmed working
         // (all 6 known item_ids resolve correctly), so the remaining
         // suspect is this year/month filter. Logs the raw values so a
