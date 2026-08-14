@@ -6582,8 +6582,19 @@ async function initSns() {
           return tokens.includes('amazon');
         };
         const beforeReturns = _amzReturnRows.length, beforeAdOrders = _amzAdOrdersRowsAll.length;
+        // Diagnostic added 2026-08-14 -- checking whether specific ASINs
+        // showing "Units (Ads): 0" on the dashboard despite real data in
+        // the Ad Orders Cache sheet are being incorrectly excluded by
+        // this channel filter.
+        const testAsins = ['B09FQJMLPZ','B07RCJDFN4','B0B23BB6CB','B07RCYZWNH'];
+        console.log('[AmazonAdOrdersChannel][qa] test ASIN channel classification:', testAsins.map(a => {
+          const entry = master.byAsin[a];
+          return { asin: a, foundInMaster: !!entry, channel: entry ? entry.channel : null, wouldInclude: isUsAmazonAsin(a) };
+        }));
+        console.log('[AmazonAdOrdersChannel][qa] test ASINs present in adOrdersRowsAll BEFORE filter:', testAsins.map(a => ({ asin: a, rowCount: _amzAdOrdersRowsAll.filter(r => (r.asin||r.sku||'').trim().toUpperCase() === a).length })));
         _amzReturnRows = _amzReturnRows.filter(r => isUsAmazonAsin(r.asin));
         _amzAdOrdersRowsAll = _amzAdOrdersRowsAll.filter(r => isUsAmazonAsin(r.asin || r.sku));
+        console.log('[AmazonAdOrdersChannel][qa] test ASINs present in adOrdersRowsAll AFTER filter:', testAsins.map(a => ({ asin: a, rowCount: _amzAdOrdersRowsAll.filter(r => (r.asin||r.sku||'').trim().toUpperCase() === a).length })));
         console.log(`[Evolis] Channel filter (amazon.com only, ASIN-based fallback): returns ${beforeReturns}→${_amzReturnRows.length}, adOrders ${beforeAdOrders}→${_amzAdOrdersRowsAll.length}`);
       } catch (e) {
         console.warn('[Evolis] Channel filter (returns/adOrders) failed, showing unfiltered data:', e.message);
@@ -6760,6 +6771,7 @@ async function initSns() {
     } else {
       const adOrderRows = _amzAdOrdersRowsAll.filter(r => parseInt(r.year, 10) === cfg.year && parseInt(r.month, 10) === cfg.month);
       const prevAdOrderRows = cfg.prevYear ? _amzAdOrdersRowsAll.filter(r => parseInt(r.year, 10) === cfg.prevYear && parseInt(r.month, 10) === cfg.prevMonth) : [];
+      console.log('[AmazonAdOrdersYearMonth][qa] cfg.year/cfg.month:', cfg.year, cfg.month, '-- adOrderRows after year/month filter:', adOrderRows.length, '-- sample:', adOrderRows.slice(0, 5).map(r => ({asin: r.asin, ad_units: r.ad_units, year: r.year, month: r.month})));
       buildTopProductsTable(orderRows, cfg.year, cfg.month, adOrderRows, cfg.prevYear, cfg.prevMonth, prevAdOrderRows, currReturns.byAsin, prevReturns.byAsin);
     }
   };
