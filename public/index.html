@@ -133,6 +133,16 @@ nav > .nav-btn:not(.active):hover{color:#fff;}
    second (YoY) badge line keeps the row visually even, rather than only
    the YoY cards growing taller than their siblings. */
 .kpi-card.kpi-card-tall{height:148px;}
+/* Territory breakdown mini-table — added 2026-08-19, Skinuva-specific
+   (Amazon Sales page only). Replaces the YoY badge slot with a compact
+   US/CA/UK breakdown, since Skinuva sells on all three Amazon
+   marketplaces and the combined KPI value alone doesn't show where
+   sales are actually coming from. */
+.kpi-territory{display:flex;gap:8px;margin-top:6px;padding-top:6px;border-top:1px solid var(--border2);}
+.kpi-territory-col{flex:1;text-align:center;}
+.kpi-territory-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:2px;}
+.kpi-territory-val{font-size:12px;font-weight:700;color:var(--navy);}
+.kpi-territory-na{font-size:10px;color:var(--muted);font-style:italic;margin-top:6px;padding-top:6px;border-top:1px solid var(--border2);}
 .period-pill{border:none;background:transparent;padding:7px 14px;border-radius:999px;font-size:12px;font-weight:600;color:var(--slate);cursor:pointer;transition:all .15s;white-space:nowrap;}
 .period-pill:hover{color:var(--navy);}
 .period-pill.active{background:var(--navy);color:#fff;}
@@ -1615,11 +1625,11 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <span id="amazon-hdr-date" style="font-size:11px;color:var(--muted);">📅 Loading…</span>
       </div>
       <div class="kpi-row">
-        <div class="kpi-card kpi-card-tall" id="kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-yoy flat"></div></div>
-        <div class="kpi-card kpi-card-tall" id="kpi-total-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-yoy flat"></div></div>
-        <div class="kpi-card kpi-card-tall" id="kpi-avg-order"><div class="kpi-label">Average Order</div><div class="kpi-value sm">—</div><div class="kpi-mom flat">Loading…</div></div>
-        <div class="kpi-card kpi-card-tall" id="kpi-units-ads"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-        <div class="kpi-card kpi-card-tall" id="kpi-units-organic"><div class="kpi-label">Units (Organic)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        <div class="kpi-card kpi-card-tall" id="kpi-total-units"><div class="kpi-label">Total Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-territory" id="kpi-total-units-territory"></div></div>
+        <div class="kpi-card kpi-card-tall" id="kpi-total-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-territory" id="kpi-total-orders-territory"></div></div>
+        <div class="kpi-card kpi-card-tall" id="kpi-avg-order"><div class="kpi-label">Average Order</div><div class="kpi-value sm">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-territory" id="kpi-avg-order-territory"></div></div>
+        <div class="kpi-card kpi-card-tall" id="kpi-units-ads"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-territory" id="kpi-units-ads-territory"></div></div>
+        <div class="kpi-card kpi-card-tall" id="kpi-units-organic"><div class="kpi-label">Units (Organic)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div><div class="kpi-territory" id="kpi-units-organic-territory"></div></div>
       </div>
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -4926,6 +4936,37 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     <!-- ── BLENDED PPC CONTEXT ── -->
     <div class="channel-page active" id="ppc-context">
 
+      <!-- Blended cross-channel KPIs — added 2026-08-19 per Jaclyn.
+           Ad Spend/Ad Sales/ACOS/Impressions/Clicks/CTR/CPC are summed
+           across all 3 channels' own ad platforms (Amazon Ads, Walmart
+           Ads via Helium 10, Website ads). Total Sales/Orders/AOV/TACOS
+           are all-channel totals (organic + ads combined), since those
+           are meant to represent whole-brand context, not just
+           ad-attributed performance. CVR intentionally omitted per
+           Jaclyn 2026-08-19 -- no orders/purchases column exists on any
+           of the 3 ad summary sheets to compute a real conversion rate
+           from, and ad_units/clicks would be a misleading proxy. -->
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+        <div class="ppc-card-title" style="margin:0;">Blended Performance — All Channels</div>
+        <div class="period-selector" id="ppc-blended-period-selector" style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);">Period</span>
+          <div class="period-pills" id="ppc-blended-period-pills" style="display:flex;background:var(--white);border:1px solid var(--border);border-radius:999px;padding:4px;gap:2px;"></div>
+        </div>
+      </div>
+      <div class="kpi-row" id="ppc-blended-kpi-row" style="margin-bottom:24px;">
+        <div class="kpi-card" id="ppc-kpi-adspend"><div class="kpi-label">Ad Spend</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        <div class="kpi-card" id="ppc-kpi-adsales"><div class="kpi-label">Ad Sales</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        <div class="kpi-card" id="ppc-kpi-acos"><div class="kpi-label">ACOS</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        <div class="kpi-card" id="ppc-kpi-totalsales"><div class="kpi-label">Total Sales</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        <div class="kpi-card" id="ppc-kpi-tacos"><div class="kpi-label">TACOS</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        <div class="kpi-card" id="ppc-kpi-impressions"><div class="kpi-label">Impressions</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        <div class="kpi-card" id="ppc-kpi-clicks"><div class="kpi-label">Clicks</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        <div class="kpi-card" id="ppc-kpi-ctr"><div class="kpi-label">CTR</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        <div class="kpi-card" id="ppc-kpi-cpc"><div class="kpi-label">CPC</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        <div class="kpi-card" id="ppc-kpi-orders"><div class="kpi-label">Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        <div class="kpi-card" id="ppc-kpi-aov"><div class="kpi-label">AOV</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+      </div>
+
       <div class="ppc-alert">
         <span class="ppc-alert-icon">📊</span>
         <div id="ppc-context-takeaway">Loading…</div>
@@ -6355,6 +6396,33 @@ async function initSns() {
     const prefix = `${year}-${String(month).padStart(2,'0')}`;
     return aggregateFilteredRows(rows.filter(r => normalizeDate(r.date).substring(0, 7) === prefix));
   }
+  // Territory breakdown — added 2026-08-19 per Jaclyn, Skinuva-specific.
+  // Wraps the existing aggregateFilteredRows (combined total, unchanged)
+  // and additionally computes the same {totalUnits, totalOrders, avgOrder}
+  // shape per territory, by filtering on the _territory tag set during
+  // fetch (see the territory-tagging block above, replacing what used to
+  // be a US-only exclusion filter).
+  function aggregateFilteredRowsWithTerritory(filtered) {
+    const combined = aggregateFilteredRows(filtered);
+    const byTerritory = {};
+    ['US', 'CA', 'UK'].forEach(t => {
+      byTerritory[t] = aggregateFilteredRows(filtered.filter(r => r._territory === t));
+    });
+    return { combined, byTerritory };
+  }
+  function aggregateMonthWithTerritory(rows, year, month) {
+    const prefix = `${year}-${String(month).padStart(2,'0')}`;
+    return aggregateFilteredRowsWithTerritory(rows.filter(r => normalizeDate(r.date).substring(0, 7) === prefix));
+  }
+  function aggregateMonthThroughDayWithTerritory(rows, year, month, throughDay) {
+    const prefix = `${year}-${String(month).padStart(2,'0')}`;
+    return aggregateFilteredRowsWithTerritory(rows.filter(r => {
+      const d = normalizeDate(r.date);
+      if (d.substring(0, 7) !== prefix) return false;
+      const day = parseInt(d.substring(8, 10), 10);
+      return day > 0 && day <= throughDay;
+    }));
+  }
   // MTD support -- filters to the same month AND caps at throughDay, so
   // "this month so far" can be aggregated with the exact same math as a
   // full month, just over a partial date range.
@@ -6394,33 +6462,65 @@ async function initSns() {
     badge.textContent = `${pctVal > 0 ? '+' : ''}${pctVal}% ${label}`;
   }
 
-  function renderKPIs(curr, prev, prevYear, adUnits = 0, prevAdUnits = 0) {
+  function renderKPIs(curr, prev, prevYear, adUnits = 0, prevAdUnits = 0, byTerritory = null, adUnitsByTerritory = null) {
     const fmt  = n => (n ?? 0).toLocaleString();
     const fmt2 = n => parseFloat(n ?? 0).toFixed(2);
+
+    // Territory breakdown — added 2026-08-19 per Jaclyn, Skinuva-specific
+    // (Amazon Sales page only, not applied to other brands). Replaces the
+    // YoY badge slot: instead of a single prior-year comparison, shows a
+    // compact US/CA/UK column for whichever KPI the value is territory-
+    // breakable for (Total Units, Total Orders, Average Order — Units
+    // (Ads)/(Organic) can't be, since the ad summary sheet has no
+    // per-territory granularity at all).
+    function renderTerritory(cardId, valueFn) {
+      const el = document.getElementById(`${cardId}-territory`);
+      if (!el || !byTerritory) return;
+      el.innerHTML = ['US', 'CA', 'UK'].map(t => {
+        const data = byTerritory[t];
+        const val = data ? valueFn(data) : '—';
+        return `<div class="kpi-territory-col"><div class="kpi-territory-lbl">${t}</div><div class="kpi-territory-val">${val}</div></div>`;
+      }).join('');
+    }
 
     // Total Units
     setKpiValue('kpi-total-units', fmt(curr.totalUnits));
     setBadge('kpi-total-units', '.kpi-mom', prev   ? pct(curr.totalUnits, prev.totalUnits)       : null, 'MOM');
-    setBadge('kpi-total-units', '.kpi-yoy', prevYear ? pct(curr.totalUnits, prevYear.totalUnits) : null, 'YOY');
+    renderTerritory('kpi-total-units', d => fmt(d.totalUnits));
 
     // Total Orders
     setKpiValue('kpi-total-orders', fmt(curr.totalOrders));
     setBadge('kpi-total-orders', '.kpi-mom', prev   ? pct(curr.totalOrders, prev.totalOrders)       : null, 'MOM');
-    setBadge('kpi-total-orders', '.kpi-yoy', prevYear ? pct(curr.totalOrders, prevYear.totalOrders) : null, 'YOY');
+    renderTerritory('kpi-total-orders', d => fmt(d.totalOrders));
 
     // Average Order
     setKpiValue('kpi-avg-order', '$' + fmt2(curr.avgOrder));
     setBadge('kpi-avg-order', '.kpi-mom', prev ? pct(Math.round(curr.avgOrder * 100), Math.round(prev.avgOrder * 100)) : null, 'MOM');
+    renderTerritory('kpi-avg-order', d => '$' + fmt2(d.avgOrder));
 
     // Units Ads — from advertising cache sheet
     setKpiValue('kpi-units-ads', fmt(adUnits));
     setBadge('kpi-units-ads', '.kpi-mom', (prevAdUnits != null && prev) ? pct(adUnits, prevAdUnits) : null, 'MOM');
+    if (adUnitsByTerritory) {
+      const el = document.getElementById('kpi-units-ads-territory');
+      if (el) el.innerHTML = ['US', 'CA', 'UK'].map(t =>
+        `<div class="kpi-territory-col"><div class="kpi-territory-lbl">${t}</div><div class="kpi-territory-val">${fmt(adUnitsByTerritory[t] || 0)}</div></div>`
+      ).join('');
+    }
 
     // Units Organic = Total Units - Units Ads
     const organicUnits = curr.totalUnits - adUnits;
     setKpiValue('kpi-units-organic', fmt(organicUnits));
     const prevOrganic = prev ? prev.totalUnits - (prevAdUnits || 0) : null;
     setBadge('kpi-units-organic', '.kpi-mom', prevOrganic != null ? pct(organicUnits, prevOrganic) : null, 'MOM');
+    if (byTerritory && adUnitsByTerritory) {
+      const el = document.getElementById('kpi-units-organic-territory');
+      if (el) el.innerHTML = ['US', 'CA', 'UK'].map(t => {
+        const territoryData = byTerritory[t];
+        const territoryOrganic = territoryData ? Math.max(0, territoryData.totalUnits - (adUnitsByTerritory[t] || 0)) : 0;
+        return `<div class="kpi-territory-col"><div class="kpi-territory-lbl">${t}</div><div class="kpi-territory-val">${fmt(territoryOrganic)}</div></div>`;
+      }).join('');
+    }
   }
 
   // ── Data source label ─────────────────────────────────────────────────────
@@ -6481,7 +6581,22 @@ async function initSns() {
       const HIST_GID = window.SHEET_CFG.SHEET_ORDERS_HISTORICAL.gid;
 
       console.log('[Skinuva] Starting fetch...');
-      const [syncCsv, histCsv, adSummaryCsv, adOrdersCsv, amzReturnsCsv] = await Promise.all([
+      // Skinuva-CA tabs — added 2026-08-19 per Jaclyn. Skinuva-CA orders
+      // used to get combined into the main skinuva tab (relying on the
+      // channel/marketplace column to tell them apart, per the
+      // territory-tagging block below) — a new dedicated brand/tab
+      // ("skinuva-ca") now exists instead, on the SAME 4 files, just
+      // different gids. SHEET_ORDERS_HISTORICAL has NOT been split
+      // (confirmed by Jaclyn) — Last Year/YoY still relies on the
+      // channel-column fallback for any historical CA rows. Every row
+      // fetched from these CA-specific tabs is unconditionally tagged CA
+      // below, regardless of its own channel/marketplace column value,
+      // since the whole tab is now CA-dedicated.
+      const CA_SYNC_GID       = '1347068338';
+      const CA_RETURNS_GID    = '2019659648';
+      const CA_AD_ORDERS_GID  = '1657515163';
+      const CA_AD_SUMMARY_GID = '193268511';
+      const [syncCsv, histCsv, adSummaryCsv, adOrdersCsv, amzReturnsCsv, caSyncCsv, caReturnsCsv, caAdOrdersCsv, caAdSummaryCsv] = await Promise.all([
         fetch(sheetCsvUrl(SYNC_SHEET_ID, SYNC_GID)).then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
         fetch(sheetCsvUrl(HISTORICAL_SHEET_ID, HIST_GID)).then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
         fetch(sheetCsvUrl(AD_SUMMARY_SHEET_ID, AD_SUMMARY_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Skinuva] Sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva] Sheet fetch error:', e.message), '')),
@@ -6493,6 +6608,10 @@ async function initSns() {
         // file (same sheet/tab already confirmed via the Overview page's
         // returns netting).
         fetch(sheetCsvUrl(OV_RETURNS_SHEET_ID, OV_RETURNS_EVOLIS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+        fetch(sheetCsvUrl(SYNC_SHEET_ID, CA_SYNC_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+        fetch(sheetCsvUrl(OV_RETURNS_SHEET_ID, CA_RETURNS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+        fetch(sheetCsvUrl(AD_ORDERS_SHEET_ID, CA_AD_ORDERS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+        fetch(sheetCsvUrl(AD_SUMMARY_SHEET_ID, CA_AD_SUMMARY_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
       ]);
 
       console.log('[Skinuva] syncCsv length:', syncCsv.length, 'isCsv:', isCsv(syncCsv));
@@ -6525,53 +6644,55 @@ async function initSns() {
       _amzAdSummaryRows = isCsv(adSummaryCsv) ? parseCsv(adSummaryCsv) : [];
       _amzAdOrdersRowsAll = isCsv(adOrdersCsv) ? parseCsv(adOrdersCsv) : [];
 
+      // Merge in the skinuva-ca tabs — every row unconditionally tagged
+      // CA (not run through amazonTerritoryFor below, since the whole tab
+      // is CA-dedicated now, regardless of what its own channel/
+      // marketplace column happens to say).
+      const caSyncRows = isCsv(caSyncCsv) ? filterRows(parseCsv(caSyncCsv)) : [];
+      caSyncRows.forEach(r => { r._territory = 'CA'; });
+      _amzSyncRows = _amzSyncRows.concat(caSyncRows);
+
+      const caReturnRows = isCsv(caReturnsCsv) ? parseCsv(caReturnsCsv) : [];
+      caReturnRows.forEach(r => { r._territory = 'CA'; });
+      _amzReturnRows = _amzReturnRows.concat(caReturnRows);
+
+      const caAdOrderRows = isCsv(caAdOrdersCsv) ? parseCsv(caAdOrdersCsv) : [];
+      caAdOrderRows.forEach(r => { r._territory = 'CA'; });
+      _amzAdOrdersRowsAll = _amzAdOrdersRowsAll.concat(caAdOrderRows);
+
+      const caAdSummaryRows = isCsv(caAdSummaryCsv) ? parseCsv(caAdSummaryCsv) : [];
+      caAdSummaryRows.forEach(r => { r._territory = 'CA'; });
+      _amzAdSummaryRows = _amzAdSummaryRows.concat(caAdSummaryRows);
+      _amzAdSummaryRows.forEach(r => { if (!r._territory) r._territory = 'US'; }); // pre-merge (skinuva tab) rows default to US
+
+      console.log('[Skinuva][CA-merge][qa] caSyncRows:', caSyncRows.length, 'caReturnRows:', caReturnRows.length, 'caAdOrderRows:', caAdOrderRows.length, 'caAdSummaryRows:', caAdSummaryRows.length);
+
       // FIXED 2026-08-12 per Jaclyn — Canadian orders were coming through
-      // the US Amazon Seller API sync, inflating every KPI on this page
-      // with orders that don't actually belong to the amazon.com
-      // marketplace.
-      //
-      // REVISED 2026-08-13, third pass — moved from an ASIN cross-
-      // reference against the Product Short Name sheet to checking each
-      // order row's OWN channel/marketplace column directly, confirmed by
-      // Jaclyn to now be populated on the Orders (rolling) sheet itself.
-      // This is more accurate than the ASIN-based version: it reflects
-      // the actual marketplace THAT SPECIFIC ORDER happened on, rather
-      // than inferring it from whichever channels the ASIN is generally
-      // listed under (an ASIN could in principle be legitimately ordered
-      // from more than one marketplace; per-row is ground truth, per-ASIN
-      // was only ever an approximation). Also simpler — no second fetch,
-      // no combined-value parsing.
-      //
-      // Per Jaclyn: a blank channel/marketplace means amazon.com (older
-      // rows predate this column being populated by the cron) — NOT
-      // unknown/exclude. Only rows explicitly tagged for another
-      // marketplace (contains ".ca", ".uk", etc.) get excluded.
-      //
-      // NOT changed: _amzReturnRows and _amzAdOrdersRowsAll still use the
-      // OLDER ASIN-based Product Short Name lookup below — those sheets
-      // aren't confirmed to have their own channel/marketplace column the
-      // way the Orders sheet now does. If they turn out to have one too,
-      // switching them to the same row-level check this block uses would
-      // be more accurate, same as the change made here.
-      //
-      // NOT applied to _amzAdSummaryRows (feeds the page-level "Units
-      // (Ads)" KPI specifically) — that sheet is a pre-aggregated
-      // brand-and-month rollup with NO per-ASIN/per-marketplace column at
-      // all, so there's nothing to filter client-side. If Canadian ad
-      // spend/units are ALSO leaking into that sheet, this fix does not
-      // catch it — that would need a fix at the sync-advertising cron
-      // itself, not here.
-      const isUsAmazonOrderRow = row => {
+      // REVISED 2026-08-19 per Jaclyn — Skinuva-specific change, NOT
+      // applied to other brands. Skinuva is now live on Amazon.ca and
+      // launching soon on Amazon.uk, so orders from those territories are
+      // real, wanted data — not contamination to exclude. Previously this
+      // block filtered non-US rows OUT entirely (see the surrounding
+      // comments above, dated 2026-08-12/13, for that history). Now it
+      // TAGS every row with its territory instead, so nothing gets
+      // dropped — every KPI shows a combined US+CA+UK total, with a
+      // per-territory breakdown alongside it (see renderKPIs below).
+      const amazonTerritoryFor = row => {
         const channel = (row.channel || '').trim().toLowerCase();
         const marketplace = (row.marketplace || '').trim().toLowerCase();
-        if (!channel && !marketplace) return true; // blank = amazon.com, per Jaclyn
-        if (channel.includes('.ca') || channel.includes('.uk') || marketplace.includes('.ca') || marketplace.includes('.uk')) return false;
-        return true;
+        if (channel.includes('.ca') || marketplace.includes('.ca')) return 'CA';
+        if (channel.includes('.uk') || marketplace.includes('.uk')) return 'UK';
+        return 'US'; // blank = amazon.com, per Jaclyn (older rows predate this column being populated)
       };
-      const beforeSync = _amzSyncRows.length, beforeHist = _amzHistRows.length;
-      _amzSyncRows = _amzSyncRows.filter(isUsAmazonOrderRow);
-      _amzHistRows = _amzHistRows.filter(isUsAmazonOrderRow);
-      console.log(`[Skinuva] Channel filter (amazon.com only, row-level): sync ${beforeSync}→${_amzSyncRows.length}, hist ${beforeHist}→${_amzHistRows.length}`);
+      // Skips rows that already have _territory set — the skinuva-ca
+      // tab's rows were tagged CA unconditionally when merged in above;
+      // running them through amazonTerritoryFor here would incorrectly
+      // recompute them as US, since their own channel/marketplace column
+      // may well be blank (they're not relying on that column anymore,
+      // the whole tab IS the CA designation now).
+      _amzSyncRows.forEach(r => { if (!r._territory) r._territory = amazonTerritoryFor(r); });
+      _amzHistRows.forEach(r => { if (!r._territory) r._territory = amazonTerritoryFor(r); });
+      console.log(`[Skinuva] Territory tagging (US/CA/UK, all retained): sync ${_amzSyncRows.length} rows, hist ${_amzHistRows.length} rows`);
 
       try {
         const master = await getProductMaster();
@@ -6598,8 +6719,14 @@ async function initSns() {
           return { asin: a, foundInMaster: !!entry, channel: entry ? entry.channel : null, wouldInclude: isUsAmazonAsin(a) };
         }));
         console.log('[AmazonAdOrdersChannel][qa] test ASINs present in adOrdersRowsAll BEFORE filter:', testAsins.map(a => ({ asin: a, rowCount: _amzAdOrdersRowsAll.filter(r => (r.asin||r.sku||'').trim().toUpperCase() === a).length })));
-        _amzReturnRows = _amzReturnRows.filter(r => isUsAmazonAsin(r.asin));
-        _amzAdOrdersRowsAll = _amzAdOrdersRowsAll.filter(r => isUsAmazonAsin(r.asin || r.sku));
+        // Skips rows already tagged CA (merged in from the dedicated
+        // skinuva-ca tab above) — they're already correctly classified by
+        // living in that tab, and some CA-specific ASINs may not
+        // classify as containing the exact token "amazon" on the Product
+        // Short Name sheet, which would otherwise risk silently dropping
+        // valid CA data here.
+        _amzReturnRows = _amzReturnRows.filter(r => r._territory === 'CA' || isUsAmazonAsin(r.asin));
+        _amzAdOrdersRowsAll = _amzAdOrdersRowsAll.filter(r => r._territory === 'CA' || isUsAmazonAsin(r.asin || r.sku));
         console.log('[AmazonAdOrdersChannel][qa] test ASINs present in adOrdersRowsAll AFTER filter:', testAsins.map(a => ({ asin: a, rowCount: _amzAdOrdersRowsAll.filter(r => (r.asin||r.sku||'').trim().toUpperCase() === a).length })));
         console.log(`[Skinuva] Channel filter (amazon.com only, ASIN-based fallback): returns ${beforeReturns}→${_amzReturnRows.length}, adOrders ${beforeAdOrders}→${_amzAdOrdersRowsAll.length}`);
       } catch (e) {
@@ -6728,9 +6855,10 @@ async function initSns() {
       ? aggregateAmzReturnsMonth(_amzReturnRows, cfg.prevYear, cfg.prevMonth)
       : { totalQty: 0, byAsin: {} };
 
-    const curr = cfg.isPartial
-      ? aggregateMonthThroughDay(orderRows, cfg.year, cfg.month, cfg.throughDay)
-      : aggregateMonth(orderRows, cfg.year, cfg.month);
+    const currWithTerritory = cfg.isPartial
+      ? aggregateMonthThroughDayWithTerritory(orderRows, cfg.year, cfg.month, cfg.throughDay)
+      : aggregateMonthWithTerritory(orderRows, cfg.year, cfg.month);
+    const curr = currWithTerritory ? currWithTerritory.combined : null;
     // Prior-period comparison always reads the sync sheet — even for MTD's
     // "same number of days into last month" comparison — since prevMonth
     // for every non-lastYear period is always within the sync sheet's
@@ -6755,15 +6883,29 @@ async function initSns() {
     }
 
     // ── Ad units KPI ──
+    // FIXED 2026-08-19 — now that SHEET_ADVERTISING has a separate
+    // skinuva-ca tab merged into _amzAdSummaryRows, more than one row can
+    // match the same year/month (one per territory). .find() only ever
+    // returned the first match, silently showing US-only ad_units as if
+    // it were the combined total. Now sums across every matching row,
+    // and builds a real US/CA/UK breakdown for Units (Ads) — upgrading
+    // it from "not tracked by territory", which was accurate before this
+    // sheet was split but isn't anymore.
     let adUnitsKpi = 0, prevAdUnitsKpi = 0;
-    const adRow = _amzAdSummaryRows.find(r => parseInt(r.year, 10) === cfg.year && parseInt(r.month, 10) === cfg.month);
-    if (adRow) adUnitsKpi = parseInt(adRow.ad_units, 10) || 0;
+    const adUnitsByTerritory = { US: 0, CA: 0, UK: 0 };
+    _amzAdSummaryRows.filter(r => parseInt(r.year, 10) === cfg.year && parseInt(r.month, 10) === cfg.month).forEach(r => {
+      const units = parseInt(r.ad_units, 10) || 0;
+      adUnitsKpi += units;
+      const t = r._territory || 'US';
+      if (adUnitsByTerritory[t] != null) adUnitsByTerritory[t] += units;
+    });
     if (cfg.prevYear) {
-      const prevAdRow = _amzAdSummaryRows.find(r => parseInt(r.year, 10) === cfg.prevYear && parseInt(r.month, 10) === cfg.prevMonth);
-      if (prevAdRow) prevAdUnitsKpi = parseInt(prevAdRow.ad_units, 10) || 0;
+      _amzAdSummaryRows.filter(r => parseInt(r.year, 10) === cfg.prevYear && parseInt(r.month, 10) === cfg.prevMonth).forEach(r => {
+        prevAdUnitsKpi += parseInt(r.ad_units, 10) || 0;
+      });
     }
 
-    renderKPIs(curr, prev, prevYoy, adUnitsKpi, cfg.prevYear ? prevAdUnitsKpi : null);
+    renderKPIs(curr, prev, prevYoy, adUnitsKpi, cfg.prevYear ? prevAdUnitsKpi : null, currWithTerritory.byTerritory, adUnitsByTerritory);
     setSourceLabel(cfg.year, cfg.month);
 
     // ── Top Selling Products ──
@@ -16822,7 +16964,189 @@ async function ppcLoadStrategyByProduct() {
 }
 window.ppcLoadStrategyByProduct = ppcLoadStrategyByProduct;
 
+// ═══════════════════════════════════════════════════════════════════
+// PPC BLENDED KPIs — added 2026-08-19 per Jaclyn. Cross-channel Ad
+// Spend/Sales/ACOS/Impressions/Clicks/CTR/CPC (summed across Amazon,
+// Walmart, and Website's own ad platforms) plus all-channel Total
+// Sales/Orders/AOV/TACOS (organic + ads combined, all 3 channels).
+//
+// Order-validity rules below are copied from each channel's own Sales
+// page rather than re-invented, so these totals match what each
+// channel's own page would show for the same period:
+//   - Amazon: excludes cancelled/pending status and Vine-promo rows
+//     (matches isValidOrder() on the Amazon Sales page). Does NOT
+//     re-apply the amazon.com-only channel filter built earlier in this
+//     project -- that fix lives in the Amazon Sales page's own fetch
+//     path, not on the raw sheet, so a small amount of Canada/UK revenue
+//     may still be included here until that filter is generalized.
+//   - Walmart: excludes cancelled/canceled status only (matches
+//     isValidWalmartRow() on the Walmart Sales page).
+//   - Website: excludes refunded/cancelled/canceled/voided financial
+//     status AND unfulfilled fulfillment status (matches isValidRow() on
+//     the Website Sales page, including the voided/unfulfilled fix from
+//     earlier in this project).
+// ═══════════════════════════════════════════════════════════════════
+
+function ppcBlendedNormalizeDate(val) {
+  if (!val) return '';
+  if (/^\d{4}-\d{2}/.test(val)) return val.substring(0, 10);
+  const parts = val.split('/');
+  if (parts.length === 3) {
+    const m = parts[0].padStart(2, '0');
+    const d = parts[1].padStart(2, '0');
+    const y = parts[2].length === 2 ? '20' + parts[2] : parts[2];
+    return `${y}-${m}-${d}`;
+  }
+  return val;
+}
+
+window._ppcBlendedPeriod = 'lastFull'; // 'mtd' | 'lastFull'
+window._ppcBlendedData = null; // cached after first fetch, re-rendered on toggle without refetching
+
+function ppcBlendedIsValidAmazonRow(r) {
+  const status = (r.status || '').toLowerCase().trim();
+  if (status === 'cancelled' || status === 'pending') return false;
+  if ((r.promotion_ids || '').toLowerCase().includes('vine')) return false;
+  return true;
+}
+function ppcBlendedIsValidWalmartRow(r) {
+  const status = (r.status || '').toLowerCase().trim();
+  return status !== 'cancelled' && status !== 'canceled';
+}
+function ppcBlendedIsValidWebRow(r) {
+  const status = (r.financial_status || r.status || '').toLowerCase();
+  if (status === 'refunded' || status === 'cancelled' || status === 'canceled' || status === 'voided') return false;
+  if ((r.fulfillment_status || '').toLowerCase() === 'unfulfilled') return false;
+  return true;
+}
+function ppcBlendedIsSkinuvaRow(r) {
+  const brand = (r.brand || '').toLowerCase().trim();
+  if (brand === 'skinuva') return true;
+  return (r.sku || '').trim().toUpperCase().startsWith('SVA');
+}
+
+// Sums order_total-equivalent revenue (via item_price per order_id, same
+// method as every channel's own aggregateFilteredRows) and unique order
+// count for a set of already-filtered rows.
+function ppcBlendedAggregateOrders(rows) {
+  const orderIds = new Set();
+  const orderTotals = {};
+  let totalUnits = 0;
+  rows.forEach(r => {
+    totalUnits += parseInt(r.unit_count, 10) || 0;
+    if (!r.order_id) return;
+    orderIds.add(r.order_id);
+    orderTotals[r.order_id] = (orderTotals[r.order_id] || 0) + (parseFloat(String(r.item_price || '').replace(/[$,]/g, '')) || 0);
+  });
+  const totalRevenue = Object.values(orderTotals).reduce((s, v) => s + v, 0);
+  return { totalOrders: orderIds.size, totalUnits, totalRevenue };
+}
+
+async function ppcLoadBlendedKpis() {
+  renderPpcBlendedPeriodPills();
+  try {
+    const now = new Date();
+    const mtdYear = now.getFullYear(), mtdMonth = now.getMonth() + 1;
+    let lastFullYear = mtdYear, lastFullMonth = mtdMonth - 1;
+    if (lastFullMonth < 1) { lastFullMonth = 12; lastFullYear -= 1; }
+
+    const [
+      amzOrdersCsv, wmtOrdersCsv, webOrdersCsv,
+      amzAdCsv, wmtAdCsv, webAdCsv,
+    ] = await Promise.all([
+      fetch(ovCsvUrl(window.SHEET_CFG.SHEET_ORDERS.fileId, window.SHEET_CFG.SHEET_ORDERS.gid) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+      fetch(ovCsvUrl(window.SHEET_CFG.SHEET_WALMART_ORDERS.fileId, window.SHEET_CFG.SHEET_WALMART_ORDERS.gid) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+      fetch(ovCsvUrl(window.SHEET_CFG.SHOPIFY_ORDERS_SHEET.fileId, window.SHEET_CFG.SHOPIFY_ORDERS_SHEET.gid) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+      fetch(ovCsvUrl(window.SHEET_CFG.SHEET_ADVERTISING.fileId, window.SHEET_CFG.SHEET_ADVERTISING.gid) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+      fetch(ovCsvUrl(window.SHEET_CFG.SHEET_WALMART_ADVERTISING.fileId, window.SHEET_CFG.SHEET_WALMART_ADVERTISING.gid) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+      fetch(ovCsvUrl(window.SHEET_CFG.SHEET_SHOPIFY_ADS.fileId, window.SHEET_CFG.SHEET_SHOPIFY_ADS.gid) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+    ]);
+
+    const amzOrders = parseCsvToRows(amzOrdersCsv).filter(ppcBlendedIsSkinuvaRow).filter(ppcBlendedIsValidAmazonRow);
+    const wmtOrders = parseCsvToRows(wmtOrdersCsv).filter(ppcBlendedIsSkinuvaRow).filter(ppcBlendedIsValidWalmartRow);
+    const webOrders = parseCsvToRows(webOrdersCsv).filter(ppcBlendedIsSkinuvaRow).filter(ppcBlendedIsValidWebRow);
+    const amzAdRows = parseCsvToRows(amzAdCsv);
+    const wmtAdRows = parseCsvToRows(wmtAdCsv);
+    const webAdRows = parseCsvToRows(webAdCsv);
+
+    console.log('[PPCBlended][qa] raw row counts -- amzOrders:', amzOrders.length, 'wmtOrders:', wmtOrders.length, 'webOrders:', webOrders.length, 'amzAd:', amzAdRows.length, 'wmtAd:', wmtAdRows.length, 'webAd:', webAdRows.length);
+    console.log('[PPCBlended][qa] amzAd header sample:', amzAdRows[0] || null);
+    console.log('[PPCBlended][qa] wmtAd header sample:', wmtAdRows[0] || null);
+    console.log('[PPCBlended][qa] webAd header sample:', webAdRows[0] || null);
+
+    function computeForPeriod(year, month) {
+      const prefix = `${year}-${String(month).padStart(2, '0')}`;
+      const amzO = ppcBlendedAggregateOrders(amzOrders.filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix));
+      const wmtO = ppcBlendedAggregateOrders(wmtOrders.filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix));
+      const webO = ppcBlendedAggregateOrders(webOrders.filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix));
+      const totalOrders = amzO.totalOrders + wmtO.totalOrders + webO.totalOrders;
+      const totalSales = amzO.totalRevenue + wmtO.totalRevenue + webO.totalRevenue;
+
+      const amzAdRow = amzAdRows.find(r => parseInt(r.year, 10) === year && parseInt(r.month, 10) === month) || {};
+      const wmtAdRow = wmtAdRows.find(r => parseInt(r.year, 10) === year && parseInt(r.month, 10) === month) || {};
+      const webAdRow = webAdRows.find(r => parseInt(r.year, 10) === year && parseInt(r.month, 10) === month) || {};
+      const num = v => parseFloat(String(v || '').replace(/[$,%]/g, '')) || 0;
+      const adSpend = num(amzAdRow.spend) + num(wmtAdRow.spend) + num(webAdRow.spend);
+      const adSales = num(amzAdRow.sales) + num(wmtAdRow.sales) + num(webAdRow.sales);
+      const impressions = num(amzAdRow.impressions) + num(wmtAdRow.impressions) + num(webAdRow.impressions);
+      const clicks = num(amzAdRow.clicks) + num(wmtAdRow.clicks) + num(webAdRow.clicks);
+
+      const acos = adSales > 0 ? (adSpend / adSales) * 100 : 0;
+      const tacos = totalSales > 0 ? (adSpend / totalSales) * 100 : 0;
+      const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+      const cpc = clicks > 0 ? adSpend / clicks : 0;
+      const aov = totalOrders > 0 ? totalSales / totalOrders : 0;
+
+      return { adSpend, adSales, acos, totalSales, tacos, impressions, clicks, ctr, cpc, totalOrders, aov };
+    }
+
+    window._ppcBlendedData = {
+      mtd: computeForPeriod(mtdYear, mtdMonth),
+      lastFull: computeForPeriod(lastFullYear, lastFullMonth),
+    };
+    console.log('[PPCBlended][qa] computed:', window._ppcBlendedData);
+
+    renderPpcBlendedKpis();
+  } catch (e) {
+    console.warn('[PPCBlended] load failed:', e.message);
+  }
+}
+
+function renderPpcBlendedPeriodPills() {
+  const el = document.getElementById('ppc-blended-period-pills');
+  if (!el) return;
+  const labels = { mtd: 'Month to Date', lastFull: 'Last Full Month' };
+  el.innerHTML = Object.entries(labels).map(([key, label]) =>
+    `<button class="period-pill${key === window._ppcBlendedPeriod ? ' active' : ''}" onclick="window.__ppcBlendedSelectPeriod('${key}')">${label}</button>`
+  ).join('');
+}
+window.__ppcBlendedSelectPeriod = function(key) {
+  window._ppcBlendedPeriod = key;
+  renderPpcBlendedPeriodPills();
+  renderPpcBlendedKpis();
+};
+
+function renderPpcBlendedKpis() {
+  if (!window._ppcBlendedData) return;
+  const d = window._ppcBlendedData[window._ppcBlendedPeriod];
+  const setVal = (id, text) => { const el = document.querySelector(`#${id} .kpi-value`); if (el) el.textContent = text; const mom = document.querySelector(`#${id} .kpi-mom`); if (mom) mom.textContent = ''; };
+  const money = v => `$${v.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  const pct = v => `${v.toFixed(1)}%`;
+  setVal('ppc-kpi-adspend', money(d.adSpend));
+  setVal('ppc-kpi-adsales', money(d.adSales));
+  setVal('ppc-kpi-acos', pct(d.acos));
+  setVal('ppc-kpi-totalsales', money(d.totalSales));
+  setVal('ppc-kpi-tacos', pct(d.tacos));
+  setVal('ppc-kpi-impressions', d.impressions.toLocaleString());
+  setVal('ppc-kpi-clicks', d.clicks.toLocaleString());
+  setVal('ppc-kpi-ctr', pct(d.ctr));
+  setVal('ppc-kpi-cpc', `$${d.cpc.toFixed(2)}`);
+  setVal('ppc-kpi-orders', d.totalOrders.toLocaleString());
+  setVal('ppc-kpi-aov', `$${d.aov.toFixed(2)}`);
+}
+
 window.initPpcPage = async function() {
+  await ppcLoadBlendedKpis();
   await ppcLoadSearchTermPanels();
   await ppcLoadProductPerformance();
   await ppcLoadKeywordCoverage();
@@ -17217,9 +17541,25 @@ async function loadOosLog() {
 
     const todayStr = rows.reduce((max, r) => ((r.date || '') > max ? r.date : max), '');
 
+    // FIXED 2026-08-14 per Jaclyn — bundle SKUs ("SVA0001+03") and VMP
+    // multi-packs ("VMP_SVA0001-STICKERLESS_2_PK") are virtual products
+    // with no inventory of their own — total_quantity is always 0/blank
+    // for these rows on Products Cache, since they're not real,
+    // separately-stocked items. Without this filter, every bundle shows
+    // up as a permanent, ongoing OOS incident from day one, which isn't
+    // a real stockout — it's just a SKU type that was never supposed to
+    // carry its own stock in the first place.
+    function isCatalogSkuForOos(rawSku) {
+      const upper = (rawSku || '').trim().toUpperCase();
+      if (!upper) return false;
+      if (upper.includes('+')) return false; // bundle, e.g. "SVA0001+03"
+      if (upper.startsWith('VMP_')) return false; // multi-pack
+      return true;
+    }
+
     // Group by SKU, sort each group's rows by date ascending
     const bySku = {};
-    rows.forEach(r => {
+    rows.filter(r => isCatalogSkuForOos(r.sku)).forEach(r => {
       const sku = (r.sku || '').trim();
       if (!sku) return;
       if (!bySku[sku]) bySku[sku] = { name: r.name || sku, rows: [] };
