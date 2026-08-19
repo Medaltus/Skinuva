@@ -115,6 +115,11 @@ nav > .nav-btn:not(.active):hover{color:#fff;}
 
 /* ── KPI row ── */
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px;margin-bottom:22px;}
+/* Capped at 6 columns per row, PPC Blended Context only — added
+   2026-08-19 per Jaclyn. #ppc-blended-kpi-row has 11 cards, and the
+   shared .kpi-row's auto-fit would otherwise pack as many as fit per
+   row (8+3 on a normal desktop width) rather than a clean 6+5 split. */
+#ppc-blended-kpi-row{grid-template-columns:repeat(6,1fr);}
 .kpi-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px 20px;height:116px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:flex-start;}
 .kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:11px;}
 .kpi-value{font-size:30px;font-weight:600;letter-spacing:-1px;line-height:1;color:var(--navy);font-family:var(--font-subheader);}
@@ -132,7 +137,7 @@ nav > .nav-btn:not(.active):hover{color:#fff;}
    applying this to every card in a KPI row once ANY of them gains a
    second (YoY) badge line keeps the row visually even, rather than only
    the YoY cards growing taller than their siblings. */
-.kpi-card.kpi-card-tall{height:148px;}
+.kpi-card.kpi-card-tall{min-height:180px;height:auto;}
 /* Territory breakdown mini-table — added 2026-08-19, Skinuva-specific
    (Amazon Sales page only). Replaces the YoY badge slot with a compact
    US/CA/UK breakdown, since Skinuva sells on all three Amazon
@@ -1644,8 +1649,8 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
           <span id="amazon-products-source" style="font-size:10px;color:var(--muted);"></span>
         </div>
         <table class="data-table" id="amazon-top-sellers">
-          <thead><tr><th style="width:32px;">#</th><th>Product</th><th>Units</th><th>Units (Ads)</th><th>Units (Organic)</th></tr></thead>
-          <tbody id="tp-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Loading…</td></tr></tbody>
+          <thead><tr><th style="width:32px;">#</th><th>Product</th><th>US</th><th>CA</th><th>UK</th><th>Ads</th><th>Organic</th></tr></thead>
+          <tbody id="tp-tbody"><tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Loading…</td></tr></tbody>
         </table>
       </div>
       <div class="insight-bar">
@@ -6753,14 +6758,27 @@ async function initSns() {
     const prefix = `${y}-${String(m).padStart(2, '0')}`;
     let totalQty = 0;
     const byAsin = {};
+    // Added 2026-08-19 per Jaclyn — Returns IS territory-tagged (the
+    // skinuva-ca tab was merged into _amzReturnRows during fetch, same
+    // as Orders/Ad Orders/Advertising), so per-territory netting is
+    // possible after all — corrects an earlier assumption of mine that
+    // returns weren't territory-aware.
+    const byTerritory = { US: 0, CA: 0, UK: 0 };
+    const byAsinByTerritory = {};
     rows.forEach(r => {
       if (normalizeDate(r.return_date).substring(0, 7) !== prefix) return;
       const qty = parseInt(r.quantity, 10) || 0;
       totalQty += qty;
       const asin = (r.asin || '').trim().toUpperCase();
       if (asin) byAsin[asin] = (byAsin[asin] || 0) + qty;
+      const t = r._territory || 'US';
+      if (byTerritory[t] != null) byTerritory[t] += qty;
+      if (asin) {
+        if (!byAsinByTerritory[asin]) byAsinByTerritory[asin] = { US: 0, CA: 0, UK: 0 };
+        if (byAsinByTerritory[asin][t] != null) byAsinByTerritory[asin][t] += qty;
+      }
     });
-    return { totalQty, byAsin };
+    return { totalQty, byAsin, byTerritory, byAsinByTerritory };
   }
 
   // Same idea, capped at throughDay — needed so MTD's returns-netting is
@@ -6769,6 +6787,8 @@ async function initSns() {
     const prefix = `${y}-${String(m).padStart(2, '0')}`;
     let totalQty = 0;
     const byAsin = {};
+    const byTerritory = { US: 0, CA: 0, UK: 0 };
+    const byAsinByTerritory = {};
     rows.forEach(r => {
       const d = normalizeDate(r.return_date);
       if (d.substring(0, 7) !== prefix) return;
@@ -6778,8 +6798,14 @@ async function initSns() {
       totalQty += qty;
       const asin = (r.asin || '').trim().toUpperCase();
       if (asin) byAsin[asin] = (byAsin[asin] || 0) + qty;
+      const t = r._territory || 'US';
+      if (byTerritory[t] != null) byTerritory[t] += qty;
+      if (asin) {
+        if (!byAsinByTerritory[asin]) byAsinByTerritory[asin] = { US: 0, CA: 0, UK: 0 };
+        if (byAsinByTerritory[asin][t] != null) byAsinByTerritory[asin][t] += qty;
+      }
     });
-    return { totalQty, byAsin };
+    return { totalQty, byAsin, byTerritory, byAsinByTerritory };
   }
 
   // ── Period selector — config, render, pills ─────────────────────────────
@@ -6876,6 +6902,16 @@ async function initSns() {
 
     if (curr) curr.totalUnits = Math.max(0, curr.totalUnits - currReturns.totalQty);
     if (prev) prev.totalUnits = Math.max(0, prev.totalUnits - prevReturns.totalQty);
+    // Added 2026-08-19 per Jaclyn -- Returns IS territory-tagged after
+    // all (corrects my earlier assumption otherwise), so the per-
+    // territory KPI breakdown gets the same returns netting the combined
+    // total already had, instead of staying gross-only.
+    if (currWithTerritory && currWithTerritory.byTerritory) {
+      ['US', 'CA', 'UK'].forEach(t => {
+        const territoryData = currWithTerritory.byTerritory[t];
+        if (territoryData) territoryData.totalUnits = Math.max(0, territoryData.totalUnits - (currReturns.byTerritory[t] || 0));
+      });
+    }
 
     if (!curr) {
       showError(`No Évolis data found for ${cfg.year}-${String(cfg.month).padStart(2,'0')}.`);
@@ -6915,12 +6951,12 @@ async function initSns() {
     // a plain note instead of a table that might silently be incomplete.
     if (cfg.isHistorical) {
       const tbody = document.getElementById('tp-tbody');
-      if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Per-product breakdown not available for Last Year — ad-orders history is not confirmed to reach back this far. Showing headline KPIs only for this period.</td></tr>';
+      if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Per-product breakdown not available for Last Year — ad-orders history is not confirmed to reach back this far. Showing headline KPIs only for this period.</td></tr>';
     } else {
       const adOrderRows = _amzAdOrdersRowsAll.filter(r => parseInt(r.year, 10) === cfg.year && parseInt(r.month, 10) === cfg.month);
       const prevAdOrderRows = cfg.prevYear ? _amzAdOrdersRowsAll.filter(r => parseInt(r.year, 10) === cfg.prevYear && parseInt(r.month, 10) === cfg.prevMonth) : [];
       console.log('[AmazonAdOrdersYearMonth][qa] cfg.year/cfg.month:', cfg.year, cfg.month, '-- adOrderRows after year/month filter:', adOrderRows.length, '-- sample:', adOrderRows.slice(0, 5).map(r => ({asin: r.asin, ad_units: r.ad_units, year: r.year, month: r.month})));
-      buildTopProductsTable(orderRows, cfg.year, cfg.month, adOrderRows, cfg.prevYear, cfg.prevMonth, prevAdOrderRows, currReturns.byAsin, prevReturns.byAsin);
+      buildTopProductsTable(orderRows, cfg.year, cfg.month, adOrderRows, cfg.prevYear, cfg.prevMonth, prevAdOrderRows, currReturns.byAsin, prevReturns.byAsin, currReturns.byAsinByTerritory);
     }
   };
 
@@ -7045,7 +7081,7 @@ async function initSns() {
   const PRODUCT_NAMES_SHEET_ID = '1NNRTRQxQl2r4XivAvH700CC39p49GD2xfZlyRNqahGA';
   const PRODUCT_NAMES_GID      = '164358627';
 
-  async function buildTopProductsTable(allRows, targetYear, targetMonth, adOrderRows = [], prevYear = null, prevMonth = null, prevAdOrderRows = [], returnsByAsin = {}, returnsByAsinPrev = {}) {
+  async function buildTopProductsTable(allRows, targetYear, targetMonth, adOrderRows = [], prevYear = null, prevMonth = null, prevAdOrderRows = [], returnsByAsin = {}, returnsByAsinPrev = {}, returnsByAsinByTerritory = {}) {
     const prefix = `${targetYear}-${String(targetMonth).padStart(2,'0')}`;
 
     // Filter to last full month (same rules as KPIs)
@@ -7061,7 +7097,7 @@ async function initSns() {
 
     const tbody = document.getElementById('tp-tbody');
     if (!monthRows.length) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--slate);font-style:italic;font-size:12px;">No data for this period.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--slate);font-style:italic;font-size:12px;">No data for this period.</td></tr>';
       return;
     }
 
@@ -7070,13 +7106,28 @@ async function initSns() {
     // so keying on ASIN works for all historical data. This fixes the table being empty
     // for rows written before the SKU column was added to the sheet.
     const asinUnits = {};
+    // Added 2026-08-19 per Jaclyn — per-territory breakdown (US/CA/UK)
+    // for the Top Selling Products table, netted against returns per
+    // territory using returnsByAsinByTerritory (built from the merged
+    // skinuva-ca Returns tab — corrects an earlier assumption of mine
+    // that returns weren't territory-tagged; they are).
+    const asinUnitsByTerritory = {};
     for (const row of monthRows) {
       const asin = (row.asin || '').trim().toUpperCase();
       if (!asin) continue;
       const qty = parseInt(row.unit_count, 10) || 0;
       if (!qty) continue;
       asinUnits[asin] = (asinUnits[asin] || 0) + qty;
+      const t = row._territory || 'US';
+      if (!asinUnitsByTerritory[asin]) asinUnitsByTerritory[asin] = { US: 0, CA: 0, UK: 0 };
+      if (asinUnitsByTerritory[asin][t] != null) asinUnitsByTerritory[asin][t] += qty;
     }
+    Object.keys(asinUnitsByTerritory).forEach(asin => {
+      const territoryReturns = returnsByAsinByTerritory[asin] || {};
+      ['US', 'CA', 'UK'].forEach(t => {
+        asinUnitsByTerritory[asin][t] = Math.max(0, asinUnitsByTerritory[asin][t] - (territoryReturns[t] || 0));
+      });
+    });
     // Net Amazon returns against gross per-ASIN units — added 2026-08-05
     // per Jaclyn. Returns rows carry their own `asin` column directly (no
     // SKU crosswalk needed). Floored at 0 per ASIN so a heavily-returned
@@ -7179,17 +7230,16 @@ async function initSns() {
       const name         = asinNameMap[asin] || asin;
       const adUnits      = asinAdUnitsMap[asin] || 0;
       const orgUnits     = Math.max(0, units - adUnits);
-      const prevUnits    = asinUnitsPrev[asin] || 0;
-      const prevAdUnits  = prevAsinAdUnitsMap[asin] || 0;
-      const prevOrgUnits = Math.max(0, prevUnits - prevAdUnits);
+      const territory    = asinUnitsByTerritory[asin] || { US: 0, CA: 0, UK: 0 };
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${idx + 1}.</td>
         <td>${name}<div style="font-size:10px;color:var(--muted);font-family:monospace;margin-top:2px;">${asin}</div></td>
-        <td><div class="tp-cell"><span class="tp-units">${units.toLocaleString()}</span>${momSpan(units, prevUnits)}</div></td>
-        <td><div class="tp-cell"><span class="tp-units">${adUnits.toLocaleString()}</span>${momSpan(adUnits, prevAdUnits)}</div></td>
-        <td><div class="tp-cell"><span class="tp-units">${orgUnits.toLocaleString()}</span>${momSpan(orgUnits, prevOrgUnits)}</div></td>`;
-      tbody.appendChild(tr);
+        <td><div class="tp-cell"><span class="tp-units">${territory.US.toLocaleString()}</span></div></td>
+        <td><div class="tp-cell"><span class="tp-units">${territory.CA.toLocaleString()}</span></div></td>
+        <td><div class="tp-cell"><span class="tp-units">${territory.UK.toLocaleString()}</span></div></td>
+        <td><div class="tp-cell"><span class="tp-units">${adUnits.toLocaleString()}</span></div></td>
+        <td><div class="tp-cell"><span class="tp-units">${orgUnits.toLocaleString()}</span></div></td>`;
     });
 
     // Update source label
