@@ -7220,25 +7220,42 @@ async function initSns() {
       console.warn('[TopProducts] Name lookup failed:', e.message);
     }
 
+    // Consolidate by resolved product name — added 2026-08-19 per Jaclyn.
+    // US and CA are genuinely different ASINs for the same product (e.g.
+    // Scar 30ml: B07RCJDFN4 on .com vs its own distinct ASIN on .ca), so
+    // grouping by ASIN split them into separate rows with only one
+    // territory column ever populated per row. Groups by name here
+    // (falling back to the ASIN itself if no name was resolved, so two
+    // genuinely different unnamed products never get merged together by
+    // accident) and sums units/territory/ad/organic across every ASIN
+    // sharing that name.
+    const productRows = {};
+    Object.keys(asinUnits).forEach(asin => {
+      const key = asinNameMap[asin] || asin;
+      if (!productRows[key]) productRows[key] = { units: 0, territory: { US: 0, CA: 0, UK: 0 }, adUnits: 0 };
+      const p = productRows[key];
+      p.units += asinUnits[asin] || 0;
+      const t = asinUnitsByTerritory[asin] || { US: 0, CA: 0, UK: 0 };
+      p.territory.US += t.US; p.territory.CA += t.CA; p.territory.UK += t.UK;
+      p.adUnits += asinAdUnitsMap[asin] || 0;
+    });
+
     // Sort by units desc, remove zeros
-    const sorted = Object.entries(asinUnits)
-      .filter(([, u]) => u > 0)
-      .sort((a, b) => b[1] - a[1]);
+    const sorted = Object.entries(productRows)
+      .filter(([, p]) => p.units > 0)
+      .sort((a, b) => b[1].units - a[1].units);
 
     tbody.innerHTML = '';
-    sorted.forEach(([asin, units], idx) => {
-      const name         = asinNameMap[asin] || asin;
-      const adUnits      = asinAdUnitsMap[asin] || 0;
-      const orgUnits     = Math.max(0, units - adUnits);
-      const territory    = asinUnitsByTerritory[asin] || { US: 0, CA: 0, UK: 0 };
+    sorted.forEach(([name, p], idx) => {
+      const orgUnits = Math.max(0, p.units - p.adUnits);
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${idx + 1}.</td>
-        <td>${name}<div style="font-size:10px;color:var(--muted);font-family:monospace;margin-top:2px;">${asin}</div></td>
-        <td><div class="tp-cell"><span class="tp-units">${territory.US.toLocaleString()}</span></div></td>
-        <td><div class="tp-cell"><span class="tp-units">${territory.CA.toLocaleString()}</span></div></td>
-        <td><div class="tp-cell"><span class="tp-units">${territory.UK.toLocaleString()}</span></div></td>
-        <td><div class="tp-cell"><span class="tp-units">${adUnits.toLocaleString()}</span></div></td>
+        <td>${name}</td>
+        <td><div class="tp-cell"><span class="tp-units">${p.territory.US.toLocaleString()}</span></div></td>
+        <td><div class="tp-cell"><span class="tp-units">${p.territory.CA.toLocaleString()}</span></div></td>
+        <td><div class="tp-cell"><span class="tp-units">${p.territory.UK.toLocaleString()}</span></div></td>
+        <td><div class="tp-cell"><span class="tp-units">${p.adUnits.toLocaleString()}</span></div></td>
         <td><div class="tp-cell"><span class="tp-units">${orgUnits.toLocaleString()}</span></div></td>`;
       tbody.appendChild(tr);
     });
