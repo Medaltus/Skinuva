@@ -17110,6 +17110,33 @@ function ppcBlendedAggregateOrders(rows) {
   return { totalOrders: orderIds.size, totalUnits, totalRevenue };
 }
 
+// Added 2026-08-19 per Jaclyn -- confirmed via console log that the
+// Walmart Advertising fetch was intermittently failing with a CORS error
+// (Google Sheets' CSV export occasionally redirects to a CDN-style
+// googleusercontent.com domain that doesn't have CORS headers set,
+// rather than serving directly). The existing .catch(() => '') silently
+// swallowed this, showing as a correctly-zeroed sheet rather than a
+// visible failure. Retries once after a short delay -- a fresh request a
+// moment later is unlikely to hit the same bad redirect twice in a row.
+async function fetchCsvWithRetry(url, retries = 1) {
+  try {
+    const r = await fetch(url);
+    if (r.ok) return await r.text();
+    if (retries > 0) {
+      await new Promise(res => setTimeout(res, 500));
+      return fetchCsvWithRetry(url, retries - 1);
+    }
+    return '';
+  } catch (e) {
+    if (retries > 0) {
+      await new Promise(res => setTimeout(res, 500));
+      return fetchCsvWithRetry(url, retries - 1);
+    }
+    console.warn('[PPCBlended] fetch failed after retry:', url, e.message);
+    return '';
+  }
+}
+
 async function ppcLoadBlendedKpis() {
   renderPpcBlendedPeriodPills();
   try {
@@ -17122,13 +17149,14 @@ async function ppcLoadBlendedKpis() {
       amzOrdersCsv, wmtOrdersCsv, webOrdersCsv,
       amzAdCsv, wmtAdCsv, webAdCsv,
     ] = await Promise.all([
-      fetch(ovCsvUrl(window.SHEET_CFG.SHEET_ORDERS.fileId, window.SHEET_CFG.SHEET_ORDERS.gid) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
-      fetch(ovCsvUrl(window.SHEET_CFG.SHEET_WALMART_ORDERS.fileId, window.SHEET_CFG.SHEET_WALMART_ORDERS.gid) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
-      fetch(ovCsvUrl(window.SHEET_CFG.SHOPIFY_ORDERS_SHEET.fileId, window.SHEET_CFG.SHOPIFY_ORDERS_SHEET.gid) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
-      fetch(ovCsvUrl(window.SHEET_CFG.SHEET_ADVERTISING.fileId, window.SHEET_CFG.SHEET_ADVERTISING.gid) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
-      fetch(ovCsvUrl(window.SHEET_CFG.SHEET_WALMART_ADVERTISING.fileId, window.SHEET_CFG.SHEET_WALMART_ADVERTISING.gid) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
-      fetch(ovCsvUrl(window.SHEET_CFG.SHEET_SHOPIFY_ADS.fileId, window.SHEET_CFG.SHEET_SHOPIFY_ADS.gid) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+      fetchCsvWithRetry(ovCsvUrl(window.SHEET_CFG.SHEET_ORDERS.fileId, window.SHEET_CFG.SHEET_ORDERS.gid) + `&_cb=${Date.now()}`),
+      fetchCsvWithRetry(ovCsvUrl(window.SHEET_CFG.SHEET_WALMART_ORDERS.fileId, window.SHEET_CFG.SHEET_WALMART_ORDERS.gid) + `&_cb=${Date.now()}`),
+      fetchCsvWithRetry(ovCsvUrl(window.SHEET_CFG.SHOPIFY_ORDERS_SHEET.fileId, window.SHEET_CFG.SHOPIFY_ORDERS_SHEET.gid) + `&_cb=${Date.now()}`),
+      fetchCsvWithRetry(ovCsvUrl(window.SHEET_CFG.SHEET_ADVERTISING.fileId, window.SHEET_CFG.SHEET_ADVERTISING.gid) + `&_cb=${Date.now()}`),
+      fetchCsvWithRetry(ovCsvUrl(window.SHEET_CFG.SHEET_WALMART_ADVERTISING.fileId, window.SHEET_CFG.SHEET_WALMART_ADVERTISING.gid) + `&_cb=${Date.now()}`),
+      fetchCsvWithRetry(ovCsvUrl(window.SHEET_CFG.SHEET_SHOPIFY_ADS.fileId, window.SHEET_CFG.SHEET_SHOPIFY_ADS.gid) + `&_cb=${Date.now()}`),
     ]);
+
 
     const amzOrders = parseCsvToRows(amzOrdersCsv).filter(ppcBlendedIsSkinuvaRow).filter(ppcBlendedIsValidAmazonRow);
     const wmtOrders = parseCsvToRows(wmtOrdersCsv).filter(ppcBlendedIsSkinuvaRow).filter(ppcBlendedIsValidWalmartRow);
