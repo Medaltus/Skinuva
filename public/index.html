@@ -12622,7 +12622,22 @@ async function initSnsExternal() {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
       window.closeAsnUploadModal();
-      await window.loadInboundShipmentsExternal();
+
+      // FIXED 2026-08-19 -- the write itself succeeds immediately, but this
+      // reads back through the gviz endpoint (gvizCsvUrl), which has its own
+      // server-side caching on Google's end separate from the browser --
+      // a cache-busting query param doesn't help there, only time does. A
+      // single fetch immediately after the write can genuinely come back
+      // without the new row even though it's already in the sheet. Retry a
+      // few times with increasing delay before giving up; each call is a
+      // full idempotent re-render, so repeating it is harmless.
+      const priorCount = _trackerRows.length;
+      const delays = [1500, 3000, 5000];
+      for (const ms of delays) {
+        await new Promise(r => setTimeout(r, ms));
+        await window.loadInboundShipmentsExternal();
+        if (_trackerRows.length > priorCount) break;
+      }
     } catch (err) {
       document.getElementById('asn-step-submitting').style.display = 'none';
       document.getElementById('asn-step-review').style.display = 'block';
@@ -16883,9 +16898,9 @@ async function ppcLoadKeywordCoverage() {
       </tr>`;
     }).join('');
 
-    container.innerHTML = `<div style="overflow-x:auto;">
-      <table class="data-table">
-        <thead><tr><th>Keyword</th><th>Sales (60d)</th><th>ASIN</th><th>Where in Listing</th></tr></thead>
+    container.innerHTML = `<div style="max-height:760px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);">
+      <table class="data-table" style="margin:0;">
+        <thead><tr style="position:sticky;top:0;z-index:1;"><th>Keyword</th><th>Sales (60d)</th><th>ASIN</th><th>Where in Listing</th></tr></thead>
         <tbody>${rowsHtml}</tbody>
       </table>
     </div>`;
