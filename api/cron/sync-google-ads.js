@@ -3,7 +3,10 @@
  * Runs daily — pulls yesterday's Google Ads campaign performance and
  * writes one row per campaign per day to the ads tab on the Shopify sheet.
  * Computes ACOS using Shopify revenue from the orders tab for that date.
- * Deduplicates on date + campaign_name — safe to re-run.
+ * Upserts on date + campaign_name — safe to re-run for any date, including
+ * past ones already in the sheet; re-running a date replaces its rows with
+ * a fresh API pull rather than skipping them (fixed 2026-08-19 — see the
+ * comment at the write step below for why this matters).
  *
  * ADAPTED FOR SKINUVA (2026-08-10) from évolis's identical file. No code
  * changes were needed — this cron has zero hardcoded brand strings
@@ -29,7 +32,7 @@
  * Schedule: daily at 15 7 * * * (after orders + revenue sync)
  */
 
-const { ensureTab, appendRows, replaceRows, readRows } = require('../config/_sheets_client');
+const { ensureTab, replaceRows, readRows } = require('../config/_sheets_client');
 const { sendCronFailureAlert }            = require('../_alerts');
 
 const CUSTOMER_ID   = process.env.GOOGLE_ADS_CUSTOMER_ID;
@@ -177,30 +180,36 @@ module.exports = async (req, res) => {
     };
   }).filter(r => r.date && r.campaign_name);
 
-  // ── 5. Dedup and write ────────────────────────────────────────────────────
-  const token        = await ensureTab(SHEET_ID, ADS_TAB, ADS_HEADERS);
-  const existingRows = await readRows(SHEET_ID, ADS_TAB);
-  const existingKeys = new Set(
-    existingRows
-      .map(r => `${r.date}||${r.campaign_name}`)
-      .filter(k => k !== '||')
-  );
+  // ── 5. Upsert on date + campaign_name ─────────────────────────────────────
+  // FIXED 2026-08-19 — this used to be skip-if-exists (append only new
+  // date+campaign keys, silently drop anything already in the sheet). That
+  // meant "just re-run the cron for a bad day" did nothing: a corrupted
+  // 2026-07-21 row (revenue read as $119,423.44 against $324.07 of actual
+  // spend that day — see the shopping-tab upsert comment below, this is the
+  // same class of problem) would be re-fetched correctly from the API, then
+  // thrown away at this step because the date+campaign key already existed.
+  // Now matches the shopping tab's existing upsert pattern: overwrite on
+  // every run, so re-running a date always reflects the latest API read —
+  // including Google Ads' own after-the-fact metric corrections, not just
+  // one-off bad-data fixes.
+  const token         = await ensureTab(SHEET_ID, ADS_TAB, ADS_HEADERS);
+  const existingRows  = await readRows(SHEET_ID, ADS_TAB);
+  const existingByKey = new Map();
+  existingRows.forEach(r => {
+    const key = `${r.date}||${r.campaign_name}`;
+    if (key !== '||') existingByKey.set(key, r);
+  });
 
-  const rowsToWrite = newLineItems
-    .filter(r => !existingKeys.has(`${r.date}||${r.campaign_name}`))
-    .map(r => ADS_HEADERS.map(h => r[h] ?? ''));
+  let updatedCount = 0, newCount = 0;
+  newLineItems.forEach(item => {
+    const key = `${item.date}||${item.campaign_name}`;
+    if (existingByKey.has(key)) updatedCount++; else newCount++;
+    existingByKey.set(key, item);
+  });
 
-  const dupCount = newLineItems.length - rowsToWrite.length;
-  if (dupCount > 0) {
-    console.log(`[sync-google-ads] skipped ${dupCount} duplicate date+campaign rows`);
-  }
-
-  if (rowsToWrite.length > 0) {
-    await appendRows(SHEET_ID, ADS_TAB, rowsToWrite, token);
-    console.log(`[sync-google-ads] wrote ${rowsToWrite.length} rows`);
-  } else {
-    console.log('[sync-google-ads] 0 new rows (all duplicates)');
-  }
+  const rowsToWrite = Array.from(existingByKey.values()).map(r => ADS_HEADERS.map(h => r[h] ?? ''));
+  await replaceRows(SHEET_ID, ADS_TAB, ADS_HEADERS, rowsToWrite, token);
+  console.log(`[sync-google-ads] ads: ${newCount} new, ${updatedCount} refreshed, ${rowsToWrite.length} total`);
 
   // ── 6. Shopping performance (per-product) — new, best-effort ─────────────
   // Deliberately isolated in its own try/catch: campaign-level ads sync above
@@ -216,8 +225,9 @@ module.exports = async (req, res) => {
   }
 
   return res.status(200).json({
-    rows:      rowsToWrite.length,
-    skipped:   dupCount,
+    new:       newCount,
+    updated:   updatedCount,
+    totalRows: rowsToWrite.length,
     shopping:  shoppingResult,
     mode,
     startDate,
