@@ -17263,12 +17263,10 @@ async function ppcLoadBlendedKpis() {
     // per Jaclyn, for QA comparison against a coworker's reference
     // report. Reuses the same raw rows computeForPeriod already has in
     // scope, but keeps each channel separate instead of summing them.
-    // Amazon/Walmart get full metrics since they have their own
-    // order-level sales data; Google (the "ads" tab) only gets ad
-    // metrics — it drives traffic to the Shopify store rather than
-    // having its own separate sales, matching the coworker's report's
-    // convention of showing "—" for Google's Total Sales/TACOS/Orders/
-    // AOV/CVR.
+    // Amazon/Walmart/Google all get full metrics now — Google's Total
+    // Sales/Orders/TACOS/AOV/CVR pull from the same combined Shopify
+    // orders total as the "Shopify — Store Sales" line (see comment on
+    // the google row below for why that's the same number on purpose).
     function computeChannelBreakdown(year, month) {
       const prefix = `${year}-${String(month).padStart(2, '0')}`;
       const num = v => parseFloat(String(v || '').replace(/[$,%]/g, '')) || 0;
@@ -17293,8 +17291,23 @@ async function ppcLoadBlendedKpis() {
 
       // Google — day-level rows, no year/month columns, "revenue" not
       // "sales" (see computeForPeriod above for the full explanation).
-      // No separate Total Sales/Orders for this row: Google Ads drives
-      // traffic to the Shopify store, tracked as its own line below.
+      // UPDATED 2026-08-19 per Jaclyn -- Total Sales/TACOS/Orders/AOV/CVR
+      // now pull from the Shopify orders sheet (webO below), same as
+      // Amazon/Walmart use their own order sheets. webOrders is already
+      // the combined Customer+Physician+International+Samples set --
+      // ppcBlendedIsValidWebRow/ppcBlendedIsSkinuvaRow don't filter by
+      // order type, they're all one sheet disambiguated by SKU prefix
+      // only on the Web Orders page itself -- so no extra fetch or filter
+      // needed here to get "all" of them.
+      // Heads up: this is organic + every paid channel's traffic blended
+      // together, not Google-attributed sales specifically (same number
+      // as the "Shopify — Store Sales" line below, on purpose, per
+      // Jaclyn) -- so Google's TACOS/AOV/CVR here read low relative to
+      // Amazon/Walmart's, since the denominator includes sales Google
+      // didn't drive. Not a bug; don't "fix" this to look more like the
+      // other rows without checking with her first.
+      const webO = ppcBlendedAggregateOrders(webOrders.filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix));
+
       const webAdMonthRows = webAdRows.filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix);
       let gAdSpend = 0, gImpressions = 0, gClicks = 0;
       const gRevenueByDate = {};
@@ -17305,7 +17318,7 @@ async function ppcLoadBlendedKpis() {
         gRevenueByDate[ppcBlendedNormalizeDate(r.date)] = num(r.revenue);
       });
       const gAdSales = Object.values(gRevenueByDate).reduce((s, v) => s + v, 0);
-      const google = makeRow(gAdSpend, gAdSales, gImpressions, gClicks, null, null);
+      const google = makeRow(gAdSpend, gAdSales, gImpressions, gClicks, webO.totalRevenue, webO.totalOrders);
 
       const totalPaidMedia = makeRow(
         amazon.adSpend + walmart.adSpend + google.adSpend,
@@ -17317,8 +17330,9 @@ async function ppcLoadBlendedKpis() {
 
       // Shopify — Store Sales: website's own total revenue (organic +
       // ad combined), shown as a separate line, not blended into Total
-      // Paid Media — matching the coworker's report's structure.
-      const webO = ppcBlendedAggregateOrders(webOrders.filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix));
+      // Paid Media — matching the coworker's report's structure. Same
+      // webO/prefix as the Google row above (intentionally the same
+      // number, see comment there).
 
       return { amazon, google, walmart, totalPaidMedia, shopifyStoreSales: webO.totalRevenue };
     }
