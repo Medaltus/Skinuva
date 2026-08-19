@@ -2039,7 +2039,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <a href="https://docs.google.com/spreadsheets/d/17ZTBMaZrZ6avFoHte8M_Zi1a_xhE3nZUnbn21EtRRRY/edit?gid=106183169#gid=106183169" target="_blank" rel="noopener"><span class="sheet-link-icon">🚚</span>Fulfillment KPIs</a>
         <a href="https://docs.google.com/spreadsheets/d/14CETE7Qo5PpYrbDqF9TQFoz4b1Uzw3hECIztWmy_VYA/edit?gid=1776812216#gid=1776812216" target="_blank" rel="noopener"><span class="sheet-link-icon">🎧</span>Customer Service (Compliance + Reviews)</a>
         <a href="https://docs.google.com/spreadsheets/d/1YYhGDwFqHb0wo0D_YzpsPemh5qX-lfv1aQYxTK9bgug/edit?gid=402779529#gid=402779529" target="_blank" rel="noopener"><span class="sheet-link-icon">🗺️</span>Fulfillment States (US Map)</a>
-        <a href="https://docs.google.com/spreadsheets/d/1Pb50CzCb0fouNsaewQATEY_c3IpgRVPu5FoppNg19_A/edit" target="_blank" rel="noopener"><span class="sheet-link-icon">📥</span>ASN Master Tracker (Inbound_Shipments tab)</a>
+        <a href="https://docs.google.com/spreadsheets/d/1gb5uf0MQ5qGp1DSdiD4oZO84t4a28n_aRm0-qZag1l4/edit?gid=1803244874#gid=1803244874" target="_blank" rel="noopener"><span class="sheet-link-icon">📥</span>ASN Master Tracker (Inbound_Shipments tab)</a>
         <a href="https://docs.google.com/spreadsheets/d/16mnFaFkTfXS4FzZ2mI5aoDKNrw8FWe8R8IUDnv3FHVs/edit?gid=267551179#gid=267551179" target="_blank" rel="noopener"><span class="sheet-link-icon">↩️</span>Amazon Returns</a>
         <a href="https://docs.google.com/spreadsheets/d/1XxYmX0NT-4bqKh4N96zNAPIAzctXDQaK6Yzp6hVWjJc/edit?gid=344983459#gid=344983459" target="_blank" rel="noopener"><span class="sheet-link-icon">↩️</span>Walmart Returns</a>
         <a href="https://docs.google.com/spreadsheets/d/1Wyc43am0EIk2OArL2EU8fP-EyHkhz-9-S5tcY3E60zw/edit?gid=1033366681#gid=1033366681" target="_blank" rel="noopener"><span class="sheet-link-icon">↩️</span>Website Returns</a>
@@ -12007,7 +12007,14 @@ async function initSnsExternal() {
 
   const CONSIGNMENT_SHEET_ID = window.SHEET_CFG.SHEET_CONSIGNMENT_INVENTORY.fileId;
   const CONSIGNMENT_GID      = window.SHEET_CFG.SHEET_CONSIGNMENT_INVENTORY.gid;
-  const TRACKER_SHEET_ID     = '1Pb50CzCb0fouNsaewQATEY_c3IpgRVPu5FoppNg19_A';
+  // FIXED 2026-08-19 — this was hardcoded to évolis's own ASN tracker
+  // sheet, meaning every skinuva ASN created or edited through this page
+  // was actually being written into évolis's spreadsheet by mistake.
+  // Now points at skinuva's own ASN sheet, and is passed through
+  // explicitly to /api/create-asn and /api/update-asn-shipping below
+  // (both now accept a trackerSheetId parameter for exactly this reason
+  // — see those files' own headers).
+  const TRACKER_SHEET_ID     = '1gb5uf0MQ5qGp1DSdiD4oZO84t4a28n_aRm0-qZag1l4';
   const TRACKER_TAB          = 'Inbound_Shipments';
   const ASN_TEMPLATE_ID      = '12wOeZryBrUKsWFrPr6SzHadwEti1SI1hEEv1X2vjHkk';
   // Same master Product Short Name sheet used elsewhere on this dashboard
@@ -12462,7 +12469,7 @@ async function initSnsExternal() {
       const res = await fetch('/api/update-asn-shipping', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ shipmentId, carrier, trackingNo, boxCount }),
+        body: JSON.stringify({ shipmentId, carrier, trackingNo, boxCount, trackerSheetId: TRACKER_SHEET_ID }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
@@ -12613,7 +12620,7 @@ async function initSnsExternal() {
       const res = await fetch('/api/create-asn', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rows: _asnParsedRows }),
+        body: JSON.stringify({ rows: _asnParsedRows, trackerSheetId: TRACKER_SHEET_ID }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
@@ -18613,7 +18620,12 @@ async function mfcLoadReturns() {
 // Per Jaclyn, 2026-07-27: "current month so far" is the assumed window,
 // since this KPI has no explicit date range shown next to it the way the
 // 7d/30d cards do — flag if a different window is wanted.
-const MFC_ASN_TRACKER_SHEET_ID = '1Pb50CzCb0fouNsaewQATEY_c3IpgRVPu5FoppNg19_A';
+// FIXED 2026-08-19 — same évolis-hardcoded bug as the Inbound Shipments
+// (ASN) page's TRACKER_SHEET_ID above (a separate, independent
+// occurrence of the same mistake, not a duplicate reference to the same
+// constant). Read-only here (this only computes a KPI, no create/update
+// calls), so fixing the constant alone is sufficient.
+const MFC_ASN_TRACKER_SHEET_ID = '1gb5uf0MQ5qGp1DSdiD4oZO84t4a28n_aRm0-qZag1l4';
 const MFC_ASN_TRACKER_TAB = 'Inbound_Shipments';
 
 function mfcGvizCsvUrl(sheetId, tabName) {
