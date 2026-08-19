@@ -17229,21 +17229,18 @@ async function ppcLoadBlendedKpis() {
       // missing from a screenshot total that otherwise matched Amazon +
       // Walmart almost exactly.
       //
-      // revenue repeats identically across every campaign row for the
-      // same date (it's a daily site-wide figure, not per-campaign) --
-      // summing it per row would multiply it by however many campaigns
-      // ran that day. De-duped by date here instead.
+      // revenue is real per-campaign Google Ads-attributed value as of the
+      // 2026-08-19 sync-google-ads.js fix -- sum directly, no dedupe needed
+      // (the old dedupe-by-date logic assumed one shared value repeated
+      // per day, which stopped being true once that fix shipped).
       const webAdMonthRows = webAdRows.filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix);
-      let webAdSpend = 0, webImpressions = 0, webClicks = 0;
-      const webRevenueByDate = {};
+      let webAdSpend = 0, webImpressions = 0, webClicks = 0, webAdSales = 0;
       webAdMonthRows.forEach(r => {
         webAdSpend += num(r.spend);
         webImpressions += num(r.impressions);
         webClicks += num(r.clicks);
-        const d = ppcBlendedNormalizeDate(r.date);
-        webRevenueByDate[d] = num(r.revenue); // same value repeats per campaign row on this date -- last write is fine, they're identical
+        webAdSales += num(r.revenue);
       });
-      const webAdSales = Object.values(webRevenueByDate).reduce((s, v) => s + v, 0);
 
       const adSpend = num(amzAdRow.spend) + num(wmtAdRow.spend) + webAdSpend;
       const adSales = num(amzAdRow.sales) + num(wmtAdRow.sales) + webAdSales;
@@ -17263,10 +17260,9 @@ async function ppcLoadBlendedKpis() {
     // per Jaclyn, for QA comparison against a coworker's reference
     // report. Reuses the same raw rows computeForPeriod already has in
     // scope, but keeps each channel separate instead of summing them.
-    // Amazon/Walmart/Google all get full metrics now — Google's Total
-    // Sales/Orders/TACOS/AOV/CVR pull from the same combined Shopify
-    // orders total as the "Shopify — Store Sales" line (see comment on
-    // the google row below for why that's the same number on purpose).
+    // Amazon/Walmart/Google all get full metrics — Google's Total
+    // Sales/Orders/TACOS/AOV/CVR pull from the combined Shopify orders
+    // total (see comment on the google row below).
     function computeChannelBreakdown(year, month) {
       const prefix = `${year}-${String(month).padStart(2, '0')}`;
       const num = v => parseFloat(String(v || '').replace(/[$,%]/g, '')) || 0;
@@ -17300,24 +17296,21 @@ async function ppcLoadBlendedKpis() {
       // only on the Web Orders page itself -- so no extra fetch or filter
       // needed here to get "all" of them.
       // Heads up: this is organic + every paid channel's traffic blended
-      // together, not Google-attributed sales specifically (same number
-      // as the "Shopify — Store Sales" line below, on purpose, per
-      // Jaclyn) -- so Google's TACOS/AOV/CVR here read low relative to
-      // Amazon/Walmart's, since the denominator includes sales Google
-      // didn't drive. Not a bug; don't "fix" this to look more like the
-      // other rows without checking with her first.
+      // together, not Google-attributed sales specifically -- so Google's
+      // TACOS/AOV/CVR here read low relative to Amazon/Walmart's, since the
+      // denominator includes sales Google didn't drive. Not a bug; don't
+      // "fix" this to look more like the other rows without checking with
+      // her first.
       const webO = ppcBlendedAggregateOrders(webOrders.filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix));
 
       const webAdMonthRows = webAdRows.filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix);
-      let gAdSpend = 0, gImpressions = 0, gClicks = 0;
-      const gRevenueByDate = {};
+      let gAdSpend = 0, gImpressions = 0, gClicks = 0, gAdSales = 0;
       webAdMonthRows.forEach(r => {
         gAdSpend += num(r.spend);
         gImpressions += num(r.impressions);
         gClicks += num(r.clicks);
-        gRevenueByDate[ppcBlendedNormalizeDate(r.date)] = num(r.revenue);
+        gAdSales += num(r.revenue);
       });
-      const gAdSales = Object.values(gRevenueByDate).reduce((s, v) => s + v, 0);
       const google = makeRow(gAdSpend, gAdSales, gImpressions, gClicks, webO.totalRevenue, webO.totalOrders);
 
       const totalPaidMedia = makeRow(
@@ -17328,14 +17321,11 @@ async function ppcLoadBlendedKpis() {
         null, null
       );
 
-      // Shopify — Store Sales: website's own total revenue (organic +
-      // ad combined), shown as a separate line, not blended into Total
-      // Paid Media — matching the coworker's report's structure. Same
-      // webO/prefix as the Google row above (intentionally the same
-      // number, see comment there).
-
-      return { amazon, google, walmart, totalPaidMedia, shopifyStoreSales: webO.totalRevenue };
+      return { amazon, google, walmart, totalPaidMedia };
     }
+
+    let lastFullPrevYear = lastFullYear, lastFullPrevMonth = lastFullMonth - 1;
+    if (lastFullPrevMonth < 1) { lastFullPrevMonth = 12; lastFullPrevYear -= 1; }
 
     window._ppcChannelBreakdown = {
       mtd: computeChannelBreakdown(mtdYear, mtdMonth),
@@ -17345,6 +17335,7 @@ async function ppcLoadBlendedKpis() {
     window._ppcBlendedData = {
       mtd: computeForPeriod(mtdYear, mtdMonth),
       lastFull: computeForPeriod(lastFullYear, lastFullMonth),
+      lastFullPrev: computeForPeriod(lastFullPrevYear, lastFullPrevMonth),
     };
     console.log('[PPCBlended][qa] computed:', window._ppcBlendedData);
 
@@ -17370,10 +17361,31 @@ window.__ppcBlendedSelectPeriod = function(key) {
   renderPpcChannelBreakdown();
 };
 
+// Same convention as setKpiMom()/pct() used elsewhere in this file --
+// duplicated locally rather than sharing scope, matching how every other
+// page here already does it.
+function ppcBlendedPct(current, previous) {
+  if (!previous) return null;
+  return Math.round(((current - previous) / previous) * 100);
+}
+function ppcBlendedSetMom(id, pctVal) {
+  const mom = document.querySelector(`#${id} .kpi-mom`);
+  if (!mom) return;
+  if (pctVal == null) { mom.className = 'kpi-mom flat'; mom.textContent = ''; return; }
+  const cls = pctVal === 0 ? 'flat' : pctVal > 0 ? 'up' : 'dn';
+  const arrow = pctVal > 0 ? '▲ ' : pctVal < 0 ? '▼ ' : '';
+  mom.className = 'kpi-mom ' + cls;
+  mom.textContent = `${arrow}${Math.abs(pctVal)}% MOM`;
+}
+
 function renderPpcBlendedKpis() {
   if (!window._ppcBlendedData) return;
   const d = window._ppcBlendedData[window._ppcBlendedPeriod];
-  const setVal = (id, text) => { const el = document.querySelector(`#${id} .kpi-value`); if (el) el.textContent = text; const mom = document.querySelector(`#${id} .kpi-mom`); if (mom) mom.textContent = ''; };
+  // Fair like-for-like comparison only exists for Last Full Month (full
+  // month vs. full prior month). MTD has no prior-month comparison here --
+  // see the comment where lastFullPrev is computed above.
+  const prev = window._ppcBlendedPeriod === 'lastFull' ? window._ppcBlendedData.lastFullPrev : null;
+  const setVal = (id, text) => { const el = document.querySelector(`#${id} .kpi-value`); if (el) el.textContent = text; };
   const money = v => `$${v.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
   const pct = v => `${v.toFixed(1)}%`;
   setVal('ppc-kpi-adspend', money(d.adSpend));
@@ -17387,6 +17399,18 @@ function renderPpcBlendedKpis() {
   setVal('ppc-kpi-cpc', `$${d.cpc.toFixed(2)}`);
   setVal('ppc-kpi-orders', d.totalOrders.toLocaleString());
   setVal('ppc-kpi-aov', `$${d.aov.toFixed(2)}`);
+
+  ppcBlendedSetMom('ppc-kpi-adspend', prev ? ppcBlendedPct(d.adSpend, prev.adSpend) : null);
+  ppcBlendedSetMom('ppc-kpi-adsales', prev ? ppcBlendedPct(d.adSales, prev.adSales) : null);
+  ppcBlendedSetMom('ppc-kpi-acos', prev ? ppcBlendedPct(d.acos, prev.acos) : null);
+  ppcBlendedSetMom('ppc-kpi-totalsales', prev ? ppcBlendedPct(d.totalSales, prev.totalSales) : null);
+  ppcBlendedSetMom('ppc-kpi-tacos', prev ? ppcBlendedPct(d.tacos, prev.tacos) : null);
+  ppcBlendedSetMom('ppc-kpi-impressions', prev ? ppcBlendedPct(d.impressions, prev.impressions) : null);
+  ppcBlendedSetMom('ppc-kpi-clicks', prev ? ppcBlendedPct(d.clicks, prev.clicks) : null);
+  ppcBlendedSetMom('ppc-kpi-ctr', prev ? ppcBlendedPct(d.ctr, prev.ctr) : null);
+  ppcBlendedSetMom('ppc-kpi-cpc', prev ? ppcBlendedPct(d.cpc, prev.cpc) : null);
+  ppcBlendedSetMom('ppc-kpi-orders', prev ? ppcBlendedPct(d.totalOrders, prev.totalOrders) : null);
+  ppcBlendedSetMom('ppc-kpi-aov', prev ? ppcBlendedPct(d.aov, prev.aov) : null);
 }
 
 function renderPpcChannelBreakdown() {
@@ -17417,8 +17441,7 @@ function renderPpcChannelBreakdown() {
     rowHtml('Amazon', d.amazon, false) +
     rowHtml('Google', d.google, false) +
     rowHtml('Walmart', d.walmart, false) +
-    rowHtml('Total Paid Media', d.totalPaidMedia, true) +
-    `<tr><td colspan="4" style="color:var(--muted);font-style:italic;">Shopify — Store Sales (DTC revenue, organic + ad combined)</td><td>${money(d.shopifyStoreSales)}</td><td colspan="7"></td></tr>`;
+    rowHtml('Total Paid Media', d.totalPaidMedia, true);
 }
 
 window.initPpcPage = async function() {
