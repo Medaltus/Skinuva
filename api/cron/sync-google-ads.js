@@ -2,7 +2,10 @@
  * api/cron/sync-google-ads.js
  * Runs daily — pulls yesterday's Google Ads campaign performance and
  * writes one row per campaign per day to the ads tab on the Shopify sheet.
- * Computes ACOS using Shopify revenue from the orders tab for that date.
+ * revenue/acos come directly from Google Ads' own metrics.conversions_value
+ * per campaign (fixed 2026-08-19 — see the comment at row-build below; this
+ * used to be a Shopify-wide daily total copy-pasted onto every campaign row,
+ * not real per-campaign attribution).
  * Upserts on date + campaign_name — safe to re-run for any date, including
  * past ones already in the sheet; re-running a date replaces its rows with
  * a fresh API pull rather than skipping them (fixed 2026-08-19 — see the
@@ -114,7 +117,8 @@ module.exports = async (req, res) => {
       metrics.impressions,
       metrics.clicks,
       metrics.cost_micros,
-      metrics.conversions
+      metrics.conversions,
+      metrics.conversions_value
     FROM campaign
     WHERE ${gaqlDate}
       AND metrics.impressions > 0
@@ -136,27 +140,18 @@ module.exports = async (req, res) => {
     return res.status(200).json({ message: 'No ad data in range', mode, startDate, endDate });
   }
 
-  // ── 3. Read Shopify orders for revenue lookup ─────────────────────────────
-  let orderRows = [];
-  try {
-    orderRows = await readRows(SHEET_ID, ORDERS_TAB);
-    console.log(`[sync-google-ads] loaded ${orderRows.length} order rows for revenue lookup`);
-  } catch (e) {
-    console.warn('[sync-google-ads] could not read orders tab — ACOS will be blank');
-  }
-
-  // Build revenue map: date → total revenue (sum item_price, exclude refunded/cancelled)
-  const revenueByDate = {};
-  for (const row of orderRows) {
-    const finStatus = (row.financial_status || row.status || '').toLowerCase();
-    if (finStatus === 'refunded' || finStatus === 'cancelled' || finStatus === 'canceled') continue;
-    const date  = normalizeDate(row.date);
-    if (!date) continue;
-    const price = parseFloat((row.item_price || '0').replace(/[$,]/g, '')) || 0;
-    revenueByDate[date] = (revenueByDate[date] || 0) + price;
-  }
-
-  // ── 4. Build sheet rows ───────────────────────────────────────────────────
+  // ── 3. Build sheet rows ────────────────────────────────────────────────────
+  // FIXED 2026-08-19 — this used to read the Shopify orders tab and sum
+  // item_price by calendar date, then stamp that ONE site-wide daily total
+  // onto every campaign row for that date. That's not per-campaign
+  // attribution: every campaign running on a given day showed the identical
+  // revenue figure, because it was never computed per-campaign at all (a
+  // Skinuva screenshot from 2026-08-19 caught this directly — 13 different
+  // campaigns on 2026-07-21, all reading revenue=$119,423.44). Google Ads
+  // already reports true per-campaign attributed value via
+  // metrics.conversions_value (the same field the shopping/per-product
+  // section below already uses correctly) — using that instead means each
+  // row gets its own real number, no Shopify join needed for this at all.
   const newLineItems = adsRows.map(r => {
     const date         = r.segments?.date || '';
     const campaignName = r.campaign?.name || '';
@@ -164,7 +159,7 @@ module.exports = async (req, res) => {
     const clicks       = parseInt(r.metrics?.clicks || '0', 10);
     const spend        = round2(parseInt(r.metrics?.costMicros || '0', 10) / 1_000_000);
     const conversions  = round2(r.metrics?.conversions || 0);
-    const revenue      = round2(revenueByDate[date] || 0);
+    const revenue      = round2(r.metrics?.conversionsValue || 0);
     const acos         = revenue > 0 ? round2(spend / revenue) : '';
 
     return {
@@ -400,12 +395,6 @@ function getDateRange(mode, req) {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function normalizeDate(val) {
-  if (!val) return '';
-  if (/^\d{4}-\d{2}/.test(val)) return val.substring(0, 10);
-  return val;
-}
 
 function toEstIso(date) {
   const parts = new Intl.DateTimeFormat('en-US', {
