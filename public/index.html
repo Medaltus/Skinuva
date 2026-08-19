@@ -17028,6 +17028,7 @@ async function ppcLoadStrategyByProduct() {
     console.log('[PPC][Strategy][qa] rows for brand', INSIGHTS_BRAND_TAB, ':', brandRows.length);
 
     const bySku = {};
+    const byRootSku = {};
     brandRows.forEach(r => {
       const sku = (r.sku || '').trim().toUpperCase();
       if (!sku) return;
@@ -17036,6 +17037,8 @@ async function ppcLoadStrategyByProduct() {
       // a documented history of stray values landing in the wrong
       // column) from ever beating a real one for "latest."
       if (!bySku[sku] || (isValidDateStr(r.date) && (!isValidDateStr(bySku[sku].date) || r.date > bySku[sku].date))) bySku[sku] = r;
+      const root = sku.match(/^[A-Z]+\d+/)?.[0];
+      if (root && root !== sku && (!byRootSku[root] || (isValidDateStr(r.date) && (!isValidDateStr(byRootSku[root].date) || r.date > byRootSku[root].date)))) byRootSku[root] = r;
     });
 
     // Extracted so the same rendering logic can drive both the 7
@@ -17044,7 +17047,8 @@ async function ppcLoadStrategyByProduct() {
       const container = document.getElementById(`${containerId}-container`);
       if (!container) return;
       const cardsHtml = products.map(p => {
-        const row = bySku[p.sku];
+        const sku = (p.sku || '').toUpperCase();
+        const row = bySku[sku] || byRootSku[sku];
         if (!row) return `<div class="ppc-strategy-card"><div class="ppc-strategy-hd"><div><div class="ppc-strategy-sku">${escapeHtmlOrg(p.sku)} · ${escapeHtmlOrg(p.asin)}</div><div class="ppc-strategy-name">${escapeHtmlOrg(p.label)}</div></div></div><div class="ppc-strategy-body"><div style="color:var(--muted);font-size:12px;">No PPC analysis run yet for this SKU — click "Run PPC Analysis" on the Insights Log page.</div></div></div>`;
         return ppcRenderStrategyCard(row, p.label);
       }).join('');
