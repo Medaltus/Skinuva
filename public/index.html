@@ -4997,9 +4997,6 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
             </tbody>
           </table>
         </div>
-        <div class="ppc-note">
-          ℹ Built for QA comparison against other reporting tools. Meta/Reddit/TikTok ad spend is not yet included — no data source identified for these channels on this dashboard.
-        </div>
       </div>
         <span class="ppc-alert-icon">📊</span>
         <div id="ppc-context-takeaway">Loading…</div>
@@ -17313,15 +17310,7 @@ async function ppcLoadBlendedKpis() {
       });
       const google = makeRow(gAdSpend, gAdSales, gImpressions, gClicks, webO.totalRevenue, webO.totalOrders);
 
-      const totalPaidMedia = makeRow(
-        amazon.adSpend + walmart.adSpend + google.adSpend,
-        amazon.adSales + walmart.adSales + google.adSales,
-        amazon.impressions + walmart.impressions + google.impressions,
-        amazon.clicks + walmart.clicks + google.clicks,
-        null, null
-      );
-
-      return { amazon, google, walmart, totalPaidMedia };
+      return { amazon, google, walmart };
     }
 
     let lastFullPrevYear = lastFullYear, lastFullPrevMonth = lastFullMonth - 1;
@@ -17440,8 +17429,7 @@ function renderPpcChannelBreakdown() {
   tbody.innerHTML =
     rowHtml('Amazon', d.amazon, false) +
     rowHtml('Google', d.google, false) +
-    rowHtml('Walmart', d.walmart, false) +
-    rowHtml('Total Paid Media', d.totalPaidMedia, true);
+    rowHtml('Walmart', d.walmart, false);
 }
 
 window.initPpcPage = async function() {
