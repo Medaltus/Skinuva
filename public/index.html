@@ -120,7 +120,7 @@ nav > .nav-btn:not(.active):hover{color:#fff;}
    shared .kpi-row's auto-fit would otherwise pack as many as fit per
    row (8+3 on a normal desktop width) rather than a clean 6+5 split. */
 #ppc-blended-kpi-row{grid-template-columns:repeat(6,1fr);}
-.kpi-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px 20px;height:116px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:flex-start;}
+.kpi-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px 20px;min-height:116px;height:auto;box-sizing:border-box;display:flex;flex-direction:column;justify-content:flex-start;}
 .kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:11px;}
 .kpi-value{font-size:30px;font-weight:600;letter-spacing:-1px;line-height:1;color:var(--navy);font-family:var(--font-subheader);}
 .kpi-value.sm{font-size:30px;}
