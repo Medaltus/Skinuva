@@ -38,6 +38,7 @@ const HEADERS = [
   'promotion_discount', 'item_price', 'quantity_ordered',
   'quantity_shipped', 'unit_count', 'sku', 'brand', 'last_updated',
   'shopify_variant_id', 'shopify_product_id', 'shopify_item_id',
+  'customer_name',
 ];
 
 module.exports = async (req, res) => {
@@ -90,6 +91,11 @@ module.exports = async (req, res) => {
             displayFinancialStatus
             tags
             discountCodes
+            customer {
+              firstName
+              lastName
+              displayName
+            }
             totalPriceSet      { shopMoney { amount } }
             totalDiscountsSet  { shopMoney { amount } }
             lineItems(first: 20) {
@@ -159,6 +165,16 @@ module.exports = async (req, res) => {
     const isSub       = tags.some(t => t.toLowerCase() === 'subscription') ? 'TRUE' : 'FALSE';
     const isB2B       = tags.some(t => t.toLowerCase() === 'b2b') ? 'TRUE' : 'FALSE';
     const isFulfilled = status === 'FULFILLED';
+    // ADDED 2026-08-25 per Jaclyn — needed to filter out internal/PO orders
+    // (e.g. Ashley Wilcox's Medaltus purchase orders) that aren't real
+    // end-customer sales and were skewing AOV. displayName is Shopify's
+    // own formatted "First Last" — falls back to manually joining
+    // first/last if displayName is ever blank, and to '' if the order has
+    // no linked customer at all (draft/manually-created orders, or a
+    // genuine guest checkout with no customer record).
+    const customerName = order.customer
+      ? (order.customer.displayName || `${order.customer.firstName || ''} ${order.customer.lastName || ''}`.trim())
+      : '';
 
     for (const edge of order.lineItems?.edges || []) {
       const li       = edge.node;
@@ -200,6 +216,7 @@ module.exports = async (req, res) => {
         shopify_variant_id: shopifyVariantId,
         shopify_product_id: shopifyProductId,
         shopify_item_id:    shopifyItemId,
+        customer_name:      customerName,
       });
     }
   }
