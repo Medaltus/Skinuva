@@ -1353,21 +1353,20 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     </div>
 
     <div class="card" style="margin-bottom:20px;">
-      <div class="card-title">Top Selling Products <span style="font-weight:400;color:var(--muted);">(by Units, all channels, Month to Date)</span></div>
+      <div class="card-title">Top Selling Products <span style="font-weight:400;color:var(--muted);">(by Units, Amazon + Walmart, Month to Date)</span></div>
       <table class="tp-table" style="width:100%;border-collapse:collapse;font-size:12px;">
         <thead>
           <tr style="background:var(--navy);color:#fff;">
             <th style="text-align:left;padding:8px 10px;">#</th>
             <th style="text-align:left;padding:8px 10px;">Product</th>
             <th style="text-align:left;padding:8px 10px;">Amazon</th>
-            <th style="text-align:left;padding:8px 10px;">Website</th>
             <th style="text-align:left;padding:8px 10px;">Walmart</th>
             <th style="text-align:left;padding:8px 10px;">Total Units</th>
             <th style="text-align:left;padding:8px 10px;">Ads (Amazon)</th>
             <th style="text-align:left;padding:8px 10px;">Organic</th>
           </tr>
         </thead>
-        <tbody id="ov-products-tbody"><tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted);">Loading…</td></tr></tbody>
+        <tbody id="ov-products-tbody"><tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);">Loading…</td></tr></tbody>
       </table>
     </div>
 
@@ -1649,7 +1648,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
           <span id="amazon-products-source" style="font-size:10px;color:var(--muted);"></span>
         </div>
         <table class="data-table" id="amazon-top-sellers">
-          <thead><tr><th style="width:32px;">#</th><th>Product</th><th>US</th><th>CA</th><th>UK</th><th style="border-left:1px dotted var(--border);">Ads</th><th>Organic</th></tr></thead>
+          <thead><tr><th style="width:32px;">#</th><th>Product</th><th>US</th><th>CA</th><th style="border-right:1px dotted var(--border);">UK</th><th style="border-left:1px dotted var(--border);">Ads</th><th>Organic</th></tr></thead>
           <tbody id="tp-tbody"><tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Loading…</td></tr></tbody>
         </table>
       </div>
@@ -7280,7 +7279,7 @@ async function initSns() {
         <td>${name}</td>
         <td><div class="tp-cell"><span class="tp-units">${p.territory.US.toLocaleString()}</span></div></td>
         <td><div class="tp-cell"><span class="tp-units">${p.territory.CA.toLocaleString()}</span></div></td>
-        <td><div class="tp-cell"><span class="tp-units">${p.territory.UK.toLocaleString()}</span></div></td>
+        <td style="border-right:1px dotted var(--border);"><div class="tp-cell"><span class="tp-units">${p.territory.UK.toLocaleString()}</span></div></td>
         <td style="border-left:1px dotted var(--border);"><div class="tp-cell"><span class="tp-units">${p.adUnits.toLocaleString()}</span></div></td>
         <td><div class="tp-cell"><span class="tp-units">${orgUnits.toLocaleString()}</span></div></td>`;
       tbody.appendChild(tr);
@@ -17257,43 +17256,29 @@ async function ppcLoadBlendedKpis() {
       const prefix = `${year}-${String(month).padStart(2, '0')}`;
       const amzO = ppcBlendedAggregateOrders(amzOrders.filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix));
       const wmtO = ppcBlendedAggregateOrders(wmtOrders.filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix));
-      const webO = ppcBlendedAggregateOrders(webOrders.filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix), true); // true = use order_total, not summed item_price -- Website-specific, see comment above ppcBlendedAggregateOrders
-      const totalOrders = amzO.totalOrders + wmtO.totalOrders + webO.totalOrders;
-      const totalSales = amzO.totalRevenue + wmtO.totalRevenue + webO.totalRevenue;
+      // FIXED 2026-08-25 per Jaclyn -- Website/Google intentionally
+      // excluded from these blended totals. This dashboard's PPC KPIs are
+      // meant to be Medaltus-owned metrics only: Shopify sells consignment
+      // inventory Medaltus doesn't own the revenue for, and its ad spend
+      // is paid from an entirely different budget than Amazon/Walmart's.
+      // A separate dashboard will account for that channel; this one
+      // shouldn't blend it in. Website data is still fetched/computed
+      // above and shown on its own row in the Channel Breakdown table
+      // below (reference info for Jaclyn's team to hand off, per her own
+      // note that Medaltus still owes Shopify that reporting) -- it's
+      // just not summed into Ad Spend/Sales/ACOS/Total Sales/TACOS/etc.
+      // here anymore.
+      const totalOrders = amzO.totalOrders + wmtO.totalOrders;
+      const totalSales = amzO.totalRevenue + wmtO.totalRevenue;
 
       const amzAdRow = amzAdRows.find(r => parseInt(r.year, 10) === year && parseInt(r.month, 10) === month) || {};
       const wmtAdRow = wmtAdRows.find(r => parseInt(r.year, 10) === year && parseInt(r.month, 10) === month) || {};
       const num = v => parseFloat(String(v || '').replace(/[$,%]/g, '')) || 0;
 
-      // FIXED 2026-08-19 -- Website's ad sheet ("ads" tab) has a
-      // completely different shape than Amazon's/Walmart's: day-level
-      // rows per campaign (date, campaign_name, spend, revenue...), no
-      // year/month columns at all, and no "sales" column (it's called
-      // "revenue"). The old .find(r => r.year === year...) always
-      // silently matched nothing on this sheet -- Website's entire ad
-      // contribution has been $0 in every blended total until now,
-      // regardless of whether the fetch itself succeeded. Confirmed via
-      // the actual file: real July spend was $9,988.04, completely
-      // missing from a screenshot total that otherwise matched Amazon +
-      // Walmart almost exactly.
-      //
-      // revenue is real per-campaign Google Ads-attributed value as of the
-      // 2026-08-19 sync-google-ads.js fix -- sum directly, no dedupe needed
-      // (the old dedupe-by-date logic assumed one shared value repeated
-      // per day, which stopped being true once that fix shipped).
-      const webAdMonthRows = webAdRows.filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix);
-      let webAdSpend = 0, webImpressions = 0, webClicks = 0, webAdSales = 0;
-      webAdMonthRows.forEach(r => {
-        webAdSpend += num(r.spend);
-        webImpressions += num(r.impressions);
-        webClicks += num(r.clicks);
-        webAdSales += num(r.revenue);
-      });
-
-      const adSpend = num(amzAdRow.spend) + num(wmtAdRow.spend) + webAdSpend;
-      const adSales = num(amzAdRow.sales) + num(wmtAdRow.sales) + webAdSales;
-      const impressions = num(amzAdRow.impressions) + num(wmtAdRow.impressions) + webImpressions;
-      const clicks = num(amzAdRow.clicks) + num(wmtAdRow.clicks) + webClicks;
+      const adSpend = num(amzAdRow.spend) + num(wmtAdRow.spend);
+      const adSales = num(amzAdRow.sales) + num(wmtAdRow.sales);
+      const impressions = num(amzAdRow.impressions) + num(wmtAdRow.impressions);
+      const clicks = num(amzAdRow.clicks) + num(wmtAdRow.clicks);
 
       const acos = adSales > 0 ? (adSpend / adSales) * 100 : 0;
       const tacos = totalSales > 0 ? (adSpend / totalSales) * 100 : 0;
@@ -21972,8 +21957,8 @@ async function loadAuditResultsFromSheet() {
       const webPrevNetUnits = Math.max(0, webPrev.totalUnits - webReturnsPrev.totalQty);
       const wmtPrevNetUnits = Math.max(0, wmtPrev.totalUnits - wmtReturnsPrev.totalQty);
 
-      const mtd  = { units: amzMtdNetUnits + webMtdNetUnits + wmtMtdNetUnits, orders: amzMtd.totalOrders + webMtd.totalOrders + wmtMtd.totalOrders, revenue: amzMtdNetRevenue + webMtdNetRevenue + wmtMtdNetRevenue };
-      const prev = { units: amzPrevNetUnits + webPrevNetUnits + wmtPrevNetUnits, orders: amzPrev.totalOrders + webPrev.totalOrders + wmtPrev.totalOrders, revenue: amzPrevNetRevenue + webPrevNetRevenue + wmtPrevNetRevenue };
+      const mtd  = { units: amzMtdNetUnits + wmtMtdNetUnits, orders: amzMtd.totalOrders + wmtMtd.totalOrders, revenue: amzMtdNetRevenue + wmtMtdNetRevenue };
+      const prev = { units: amzPrevNetUnits + wmtPrevNetUnits, orders: amzPrev.totalOrders + wmtPrev.totalOrders, revenue: amzPrevNetRevenue + wmtPrevNetRevenue };
       const aov = mtd.orders ? mtd.revenue / mtd.orders : 0;
       const aovPrev = prev.orders ? prev.revenue / prev.orders : 0;
 
@@ -22036,7 +22021,7 @@ async function loadAuditResultsFromSheet() {
         }
       } catch (e) { console.warn('[Skinuva][overview] Walmart ad units (for Ad-Driven Orders) lookup failed:', e.message); }
 
-      setKpiPlain('ov-kpi-ad-orders', (adDrivenOrders + Math.round(webAdsMtd.conversions) + walmartAdUnitsThisMonth).toLocaleString(), 'This month (Amazon orders + Google Ads + Walmart ad units)');
+      setKpiPlain('ov-kpi-ad-orders', (adDrivenOrders + walmartAdUnitsThisMonth).toLocaleString(), 'This month (Amazon orders + Walmart ad units)');
       // NOTE: this card's own MOM/"Organic Orders" companion logic moved
       // further down — see "MTD Organic Units" below, after per-ASIN net
       // units and ad-attributed units are available. Per Jaclyn
@@ -22083,14 +22068,14 @@ async function loadAuditResultsFromSheet() {
       const amzPrevUnitsByAsin = netByAsin(unitsByAsin(amzPrev.filteredRows, skuToAsinMap), amzReturnsPrev.byAsin);
       const webPrevUnitsByAsin = netByAsin(unitsByAsin(webPrev.filteredRows, skuToAsinMap), webReturnsPrev.byAsin);
       const wmtPrevUnitsByAsin = netByAsin(unitsByAsin(wmtPrev.filteredRows, skuToAsinMap), wmtReturnsPrev.byAsin);
-      const allAsins = new Set([...Object.keys(amzUnitsByAsin), ...Object.keys(webUnitsByAsin), ...Object.keys(wmtUnitsByAsin)]);
+      const allAsins = new Set([...Object.keys(amzUnitsByAsin), ...Object.keys(wmtUnitsByAsin)]);
 
       // Active SKUs (hero stat) — count of ASINs with net units > 0 across
-      // all three channels combined, MTD. Replaces the old gross-SKU-set
-      // count (which counted any ASIN with an order line at all, even if
-      // every unit sold was later returned).
+      // Amazon + Walmart, MTD. Replaces the old gross-SKU-set count (which
+      // counted any ASIN with an order line at all, even if every unit
+      // sold was later returned).
       const activeSkuCount = Array.from(allAsins).filter(asin =>
-        (amzUnitsByAsin[asin] || 0) + (webUnitsByAsin[asin] || 0) + (wmtUnitsByAsin[asin] || 0) > 0
+        (amzUnitsByAsin[asin] || 0) + (wmtUnitsByAsin[asin] || 0) > 0
       ).length;
       const heroSkuEl = document.getElementById('ov-hero-skus');
       if (heroSkuEl && activeSkuCount > 0) heroSkuEl.textContent = String(activeSkuCount);
@@ -22100,7 +22085,7 @@ async function loadAuditResultsFromSheet() {
       // 0, same "netted against returns" basis as Active SKUs above,
       // rather than assuming a fixed channel count regardless of whether
       // each channel has any real sales data flowing yet.
-      const channelTotals = [amzUnitsByAsin, webUnitsByAsin, wmtUnitsByAsin].map(
+      const channelTotals = [amzUnitsByAsin, wmtUnitsByAsin].map(
         m => Object.values(m).reduce((s, v) => s + v, 0)
       );
       const activeChannelCount = channelTotals.filter(t => t > 0).length;
@@ -22179,12 +22164,10 @@ async function loadAuditResultsFromSheet() {
       const webShopUnitsByAsinPrev = webShoppingUnitsByAsin(webShoppingRows, prevStartStr, prevEndStr, skuToAsinMap);
       const totalAdUnitsCurr = Array.from(allAsins).reduce((s, asin) =>
         s + Math.min(adUnitsByAsin[asin] || 0, amzUnitsByAsin[asin] || 0)
-          + Math.min(webShopUnitsByAsin[asin] || 0, webUnitsByAsin[asin] || 0)
           + Math.min(wmtAdUnitsByAsin[asin] || 0, wmtUnitsByAsin[asin] || 0), 0);
-      const allAsinsPrev = new Set([...Object.keys(amzPrevUnitsByAsin), ...Object.keys(webPrevUnitsByAsin), ...Object.keys(wmtPrevUnitsByAsin)]);
+      const allAsinsPrev = new Set([...Object.keys(amzPrevUnitsByAsin), ...Object.keys(wmtPrevUnitsByAsin)]);
       const totalAdUnitsPrev = Array.from(allAsinsPrev).reduce((s, asin) =>
         s + Math.min(adUnitsByAsinPrev[asin] || 0, amzPrevUnitsByAsin[asin] || 0)
-          + Math.min(webShopUnitsByAsinPrev[asin] || 0, webPrevUnitsByAsin[asin] || 0)
           + Math.min(wmtAdUnitsByAsinPrev[asin] || 0, wmtPrevUnitsByAsin[asin] || 0), 0);
       const organicUnits = Math.max(0, mtd.units - totalAdUnitsCurr);
       const organicUnitsPrev = Math.max(0, prev.units - totalAdUnitsPrev);
@@ -22203,29 +22186,27 @@ async function loadAuditResultsFromSheet() {
       }
 
       const productRows = Array.from(allAsins).map(asin => {
-        const a = amzUnitsByAsin[asin] || 0, w = webUnitsByAsin[asin] || 0, m = wmtUnitsByAsin[asin] || 0;
-        const aPrev = amzPrevUnitsByAsin[asin] || 0, wPrev = webPrevUnitsByAsin[asin] || 0, mPrev = wmtPrevUnitsByAsin[asin] || 0;
-        const total = a + w + m, totalPrev = aPrev + wPrev + mPrev;
-        // Ad units = Amazon Ads (capped at Amazon's own net units) + Google
-        // Ads via the "shopping" tab (capped at Website's own net units)
-        // + Walmart Ads (capped at Walmart's own net units, added
+        const a = amzUnitsByAsin[asin] || 0, m = wmtUnitsByAsin[asin] || 0;
+        const aPrev = amzPrevUnitsByAsin[asin] || 0, mPrev = wmtPrevUnitsByAsin[asin] || 0;
+        const total = a + m, totalPrev = aPrev + mPrev;
+        // Ad units = Amazon Ads (capped at Amazon's own net units) +
+        // Walmart Ads (capped at Walmart's own net units, added
         // 2026-08-06 per Jaclyn).
-        const adUnits = Math.min(adUnitsByAsin[asin] || 0, a) + Math.min(webShopUnitsByAsin[asin] || 0, w) + Math.min(wmtAdUnitsByAsin[asin] || 0, m);
+        const adUnits = Math.min(adUnitsByAsin[asin] || 0, a) + Math.min(wmtAdUnitsByAsin[asin] || 0, m);
         const orgUnits = total - adUnits;
-        return { asin, name: asinNameMap[asin] || asin, amazon: a, amazonPrev: aPrev, website: w, websitePrev: wPrev, walmart: m, walmartPrev: mPrev, total, totalPrev, adUnits, orgUnits };
+        return { asin, name: asinNameMap[asin] || asin, amazon: a, amazonPrev: aPrev, walmart: m, walmartPrev: mPrev, total, totalPrev, adUnits, orgUnits };
       }).sort((x, y) => y.total - x.total).slice(0, 15);
 
       const tbody = document.getElementById('ov-products-tbody');
       if (tbody) {
         if (!productRows.length) {
-          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted);">No sales yet this month.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);">No sales yet this month.</td></tr>';
         } else {
           tbody.innerHTML = productRows.map((r, i) => `
             <tr>
               <td style="padding:7px 10px;">${i + 1}.</td>
               <td style="padding:7px 10px;">${r.name}</td>
               <td style="padding:7px 10px;"><div class="tp-cell">${unitCell(r.amazon, r.amazonPrev)}</div></td>
-              <td style="padding:7px 10px;"><div class="tp-cell">${unitCell(r.website, r.websitePrev)}</div></td>
               <td style="padding:7px 10px;"><div class="tp-cell">${unitCell(r.walmart, r.walmartPrev)}</div></td>
               <td style="padding:7px 10px;"><div class="tp-cell">${unitCell(r.total, r.totalPrev)}</div></td>
               <td style="padding:7px 10px;">${r.adUnits > 0 ? `<span class="tp-units">${r.adUnits.toLocaleString()}</span>` : '<span class="tp-dash">—</span>'}</td>
@@ -22238,13 +22219,13 @@ async function loadAuditResultsFromSheet() {
       // Switched to the net figures 2026-08-03 — using gross here while the
       // hero KPI above uses net would make the donut's total silently not
       // match the hero number, which is worse than either being wrong alone.
-      const donutTotal = amzMtdNetRevenue + webMtdNetRevenue + wmtMtdNetRevenue;
+      const donutTotal = amzMtdNetRevenue + wmtMtdNetRevenue;
       if (donutTotal > 0) {
         window._ovDonutChart = new Chart(document.getElementById('chart-ov-donut'), {
           type: 'doughnut',
           data: {
-            labels: ['Amazon', 'Website', 'Walmart'],
-            datasets: [{ data: [amzMtdNetRevenue, webMtdNetRevenue, wmtMtdNetRevenue], backgroundColor: ['#001f60', '#24e9a3', '#6b7ba2'], borderWidth: 0 }]
+            labels: ['Amazon', 'Walmart'],
+            datasets: [{ data: [amzMtdNetRevenue, wmtMtdNetRevenue], backgroundColor: ['#001f60', '#6b7ba2'], borderWidth: 0 }]
           },
           options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 10, font: { size: 12 } } } } }
         });
@@ -22314,10 +22295,10 @@ async function loadAuditResultsFromSheet() {
         }
       } catch (e) { console.warn('[Skinuva][overview] Walmart Advertising Cache lookup failed:', e.message); }
 
-      const blendedSpend = proratedSpend + webAdsMtd.spend + walmartSpendThisMonth;
-      const blendedSpendPrev = proratedSpendPrev + webAdsPrevMtd.spend + walmartSpendLastMonth;
-      const blendedSales = proratedSales + webAdsMtd.revenue + walmartSalesThisMonth;
-      const blendedSalesPrev = proratedSalesPrev + webAdsPrevMtd.revenue + walmartSalesLastMonth;
+      const blendedSpend = proratedSpend + walmartSpendThisMonth;
+      const blendedSpendPrev = proratedSpendPrev + walmartSpendLastMonth;
+      const blendedSales = proratedSales + walmartSalesThisMonth;
+      const blendedSalesPrev = proratedSalesPrev + walmartSalesLastMonth;
       const acos = blendedSales > 0 ? (blendedSpend / blendedSales) * 100 : 0;
       const acosPrev = blendedSalesPrev > 0 ? (blendedSpendPrev / blendedSalesPrev) * 100 : 0;
 
@@ -22363,37 +22344,33 @@ async function loadAuditResultsFromSheet() {
         return rows;
       }
 
-      const [amzRevCsv, webRevCsv, wmtRevCsv] = await Promise.all([
+      const [amzRevCsv, wmtRevCsv] = await Promise.all([
         fetch(sheetCsvUrl(AMZ_REVENUE_SHEET_ID, AMZ_REVENUE_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
-        fetch(sheetCsvUrl(WEB_SHEET_ID, WEB_REVENUE_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
         fetch(sheetCsvUrl(WMT_REVENUE_SHEET_ID, WMT_REVENUE_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
       ]);
       const amzRevRows = parseRevenueHistory(amzRevCsv);
-      const webRevRows = parseRevenueHistory(webRevCsv);
       const wmtRevRows = parseRevenueHistory(wmtRevCsv);
-      console.log('[Skinuva][overview] revenue-history row counts -- amazon:', amzRevRows.length, 'web:', webRevRows.length, 'walmart:', wmtRevRows.length);
+      console.log('[Skinuva][overview] revenue-history row counts -- amazon:', amzRevRows.length, 'walmart:', wmtRevRows.length);
 
       function monthlyRevenue(rows, y, m) {
         const row = rows.find(r => r.year === y && r.month === m);
         return row ? row.revenue : 0;
       }
-      const trendLabels = [], amzTrend = [], webTrend = [], wmtTrend = [];
+      const trendLabels = [], amzTrend = [], wmtTrend = [];
       let ty = now.getFullYear(), tm = now.getMonth();
       for (let i = 0; i < 6; i++) {
         tm -= 1; if (tm === 0) { tm = 12; ty--; }
         trendLabels.unshift(`${monthNames[tm - 1]} '${String(ty).slice(2)}`);
         amzTrend.unshift(monthlyRevenue(amzRevRows, ty, tm));
-        webTrend.unshift(monthlyRevenue(webRevRows, ty, tm));
         wmtTrend.unshift(monthlyRevenue(wmtRevRows, ty, tm));
       }
-      if ([...amzTrend, ...webTrend, ...wmtTrend].some(v => v > 0)) {
+      if ([...amzTrend, ...wmtTrend].some(v => v > 0)) {
         window._ovTrendChart = new Chart(document.getElementById('chart-ov-trend'), {
           type: 'line',
           data: {
             labels: trendLabels,
             datasets: [
               { label: 'Amazon', data: amzTrend, borderColor: '#001f60', backgroundColor: 'transparent', borderWidth: 2.5, pointRadius: 3, tension: 0.3 },
-              { label: 'Website', data: webTrend, borderColor: '#24e9a3', backgroundColor: 'transparent', borderWidth: 2.5, pointRadius: 3, tension: 0.3 },
               { label: 'Walmart', data: wmtTrend, borderColor: '#6b7ba2', backgroundColor: 'transparent', borderWidth: 2.5, pointRadius: 3, tension: 0.3 },
             ]
           },
