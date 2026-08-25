@@ -7380,25 +7380,21 @@ async function initSns() {
     // customer was never actually charged). Added alongside the existing
     // financial_status checks.
     //
-    // Also added a SEPARATE check on fulfillment status (a different
-    // Shopify concept entirely -- financial_status is about whether
-    // money moved, fulfillment is about whether it's shipped) to exclude
+    // Also added a SEPARATE check on fulfillment_status (a different
+    // Shopify field entirely -- financial_status is about whether money
+    // moved, fulfillment_status is about whether it's shipped) to exclude
     // unfulfilled orders per Jaclyn's explicit choice to only count sales
     // once shipped, not merely once paid.
     //
-    // FIXED 2026-08-25, REVERTED same day -- attempted to fix this to
-    // read the real fulfillment column ('status', confirmed via a real
-    // July export: this sheet has no 'fulfillment_status' column at all,
-    // so the check below was always a no-op). That change broke Consumer
-    // data live (0 units / no data) for a reason not yet root-caused --
-    // possibly 'status' behaving differently outside the one month
-    // sampled, or a broader data-quality issue with that column. Reverted
-    // to the original no-op check until this can be verified against a
-    // fuller export without breaking production again. Do not re-attempt
-    // this fix without first confirming 'status' values across multiple
-    // months/periods, not just one.
-    const financialStatus = (r.financial_status || '').toLowerCase();
-    if (financialStatus === 'refunded' || financialStatus === 'partially_refunded' || financialStatus === 'cancelled' || financialStatus === 'canceled' || financialStatus === 'voided') return false;
+    // NOTE: 'fulfillment_status' as the column name is inferred from
+    // Shopify's own REST API field naming, which financial_status already
+    // matches exactly -- strong but not 100% confirmed evidence the sync
+    // cron preserves Shopify's native field names for this one too. If
+    // this doesn't correctly filter unfulfilled rows after deploying,
+    // check the actual column header in the orders sheet against this
+    // exact name.
+    const status = (r.financial_status || r.status || '').toLowerCase();
+    if (status === 'refunded' || status === 'cancelled' || status === 'canceled' || status === 'voided') return false;
     const fulfillmentStatus = (r.fulfillment_status || '').toLowerCase();
     if (fulfillmentStatus === 'unfulfilled') return false;
     // ADDED 2026-08-25 per Jaclyn -- Ashley Wilcox's orders are internal
@@ -9836,18 +9832,21 @@ async function initSns() {
     // customer was never actually charged). Added alongside the existing
     // financial_status checks.
     //
-    // Also added a SEPARATE check on fulfillment status (a different
-    // Shopify concept entirely -- financial_status is about whether
-    // money moved, fulfillment is about whether it's shipped) to exclude
+    // Also added a SEPARATE check on fulfillment_status (a different
+    // Shopify field entirely -- financial_status is about whether money
+    // moved, fulfillment_status is about whether it's shipped) to exclude
     // unfulfilled orders per Jaclyn's explicit choice to only count sales
     // once shipped, not merely once paid.
     //
-    // FIXED 2026-08-25, REVERTED same day -- see the internal Website
-    // Sales page's isValidRow() for the full explanation: reading the
-    // real 'status' column here broke Consumer data live for a reason
-    // not yet root-caused. Reverted to the original no-op check.
-    const financialStatus = (r.financial_status || '').toLowerCase();
-    if (financialStatus === 'refunded' || financialStatus === 'partially_refunded' || financialStatus === 'cancelled' || financialStatus === 'canceled' || financialStatus === 'voided') return false;
+    // NOTE: 'fulfillment_status' as the column name is inferred from
+    // Shopify's own REST API field naming, which financial_status already
+    // matches exactly -- strong but not 100% confirmed evidence the sync
+    // cron preserves Shopify's native field names for this one too. If
+    // this doesn't correctly filter unfulfilled rows after deploying,
+    // check the actual column header in the orders sheet against this
+    // exact name.
+    const status = (r.financial_status || r.status || '').toLowerCase();
+    if (status === 'refunded' || status === 'cancelled' || status === 'canceled' || status === 'voided') return false;
     const fulfillmentStatus = (r.fulfillment_status || '').toLowerCase();
     if (fulfillmentStatus === 'unfulfilled') return false;
     // ADDED 2026-08-25 per Jaclyn -- Ashley Wilcox's orders are internal
@@ -17192,11 +17191,8 @@ function ppcBlendedIsValidWalmartRow(r) {
   return status !== 'cancelled' && status !== 'canceled';
 }
 function ppcBlendedIsValidWebRow(r) {
-  // FIXED 2026-08-25, REVERTED same day -- see the Website Sales page's
-  // isValidRow() for the full explanation. Reverted to the original
-  // no-op fulfillment check after it broke Consumer data live.
-  const financialStatus = (r.financial_status || '').toLowerCase();
-  if (financialStatus === 'refunded' || financialStatus === 'partially_refunded' || financialStatus === 'cancelled' || financialStatus === 'canceled' || financialStatus === 'voided') return false;
+  const status = (r.financial_status || r.status || '').toLowerCase();
+  if (status === 'refunded' || status === 'cancelled' || status === 'canceled' || status === 'voided') return false;
   if ((r.fulfillment_status || '').toLowerCase() === 'unfulfilled') return false;
   // ADDED 2026-08-25 per Jaclyn -- Ashley Wilcox's orders are internal
   // Medaltus purchase orders, not real end-customer sales. See the
@@ -21637,15 +21633,8 @@ async function loadAuditResultsFromSheet() {
     return true;
   }
   function isValidWebRow(row) {
-    // FIXED 2026-08-25, REVERTED same day -- see the Website Sales page's
-    // isValidRow() for the full explanation. Reverted to the original
-    // no-op fulfillment check after it broke Consumer data live
-    // elsewhere. This function is currently inert anyway (Website is
-    // excluded from every Overview KPI/chart), kept aligned for
-    // consistency.
-    const financialStatus = (row.financial_status || '').toLowerCase();
-    if (financialStatus === 'refunded' || financialStatus === 'partially_refunded' || financialStatus === 'cancelled' || financialStatus === 'canceled' || financialStatus === 'voided') return false;
-    if ((row.fulfillment_status || '').toLowerCase() === 'unfulfilled') return false;
+    const status = (row.financial_status || row.status || '').toLowerCase();
+    if (status === 'refunded' || status === 'cancelled' || status === 'canceled') return false;
     // ADDED 2026-08-25 per Jaclyn -- Ashley Wilcox's orders are internal
     // Medaltus purchase orders, not real end-customer sales. See the
     // Website Sales page's isValidRow() for the full comment. (Website is
