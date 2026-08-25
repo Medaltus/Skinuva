@@ -1328,6 +1328,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     </div>
 
     <div class="kpi-row">
+      <div class="kpi-card" id="ov-kpi-total-sales"><div class="kpi-label">Total Sales</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
       <div class="kpi-card" id="ov-kpi-units"><div class="kpi-label">Total Units Sold</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
       <div class="kpi-card" id="ov-kpi-orders"><div class="kpi-label">Total Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
       <div class="kpi-card" id="ov-kpi-aov"><div class="kpi-label">Blended AOV</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
@@ -1337,8 +1338,18 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 
     <div class="kpi-row">
       <div class="kpi-card" id="ov-kpi-organic-orders"><div class="kpi-label">MTD Organic Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-      <div class="kpi-card" id="ov-kpi-ad-orders"><div class="kpi-label">MTD Ad-Driven Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+      <div class="kpi-card" id="ov-kpi-organic-sales"><div class="kpi-label">MTD Organic Sales</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+      <div class="kpi-card" id="ov-kpi-ad-orders"><div class="kpi-label">MTD Ad-Driven Units</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+      <div class="kpi-card" id="ov-kpi-ad-sales"><div class="kpi-label">MTD Ad Sales</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
       <div class="kpi-card" id="ov-kpi-pending"><div class="kpi-label">Pending Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">Channel Breakdown <span style="font-weight:400;color:var(--muted);">(Amazon + Walmart, Month to Date)</span></div>
+      <table class="data-table" style="width:100%;">
+        <thead><tr><th>Channel</th><th>Units</th><th>Orders</th><th>Revenue</th><th>AOV</th></tr></thead>
+        <tbody id="ov-channel-breakdown-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);">Loading…</td></tr></tbody>
+      </table>
     </div>
 
     <div class="two-col" style="margin-bottom:22px;">
@@ -1553,7 +1564,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
       </div>
     </div>
     <div class="page-hd">
-      <div><div class="page-title">Sales</div><div class="page-sub" id="sales-page-sub">May 1 – May 31, 2026 · Last full month</div></div>
+      <div><div class="page-title">Sales</div><div class="page-sub" id="sales-page-sub">May 1 – May 31, 2026 · Last month</div></div>
       <div style="display:flex;align-items:center;gap:10px;">
         <span class="staging-note" id="sales-report-status">◎ Draft</span>
         <button class="btn-approve" id="sales-approve-btn" style="background:var(--green);border-color:var(--green);color:#fff;">✓ Approved &amp; Ready</button>
@@ -1648,7 +1659,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
           <span id="amazon-products-source" style="font-size:10px;color:var(--muted);"></span>
         </div>
         <table class="data-table" id="amazon-top-sellers">
-          <thead><tr><th style="width:32px;">#</th><th>Product</th><th>US</th><th>CA</th><th style="border-right:1px dotted var(--border);">UK</th><th style="border-left:1px dotted var(--border);">Ads</th><th>Organic</th></tr></thead>
+          <thead><tr><th style="width:32px;">#</th><th>Product</th><th>US</th><th>CA</th><th style="border-right:1px dotted var(--border);padding-right:22px;">UK</th><th style="border-left:1px dotted var(--border);padding-left:22px;">Ads</th><th>Organic</th></tr></thead>
           <tbody id="tp-tbody"><tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Loading…</td></tr></tbody>
         </table>
       </div>
@@ -5003,7 +5014,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         </div>
 
       <div class="ppc-card">
-        <div class="ppc-card-title">Product Performance — Last Full Month</div>
+        <div class="ppc-card-title">Product Performance — Last Month</div>
         <div style="overflow-x:auto;">
           <table class="data-table">
             <thead><tr><th>Product</th><th>Sessions</th><th>Units</th><th>Revenue</th><th>Conv%</th></tr></thead>
@@ -5083,7 +5094,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     <!-- ── DATA-INFORMED OPPORTUNITIES ── -->
     <div class="channel-page" id="ppc-opportunities">
 
-      <div class="ppc-card-title" style="margin-bottom:2px;">Search Terms — Last Full Month</div>
+      <div class="ppc-card-title" style="margin-bottom:2px;">Search Terms — Last Month</div>
       <div class="ppc-note" style="margin-bottom:14px;">Pulled live from the Ad Search Terms sheet · up to 25 terms per panel, or fewer if fewer qualify</div>
 
       <div id="ppc-search-terms-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;">
@@ -6494,7 +6505,7 @@ async function initSns() {
 
   function renderKPIs(curr, prev, prevYear, adUnits = 0, prevAdUnits = 0, byTerritory = null, adUnitsByTerritory = null) {
     const fmt  = n => (n ?? 0).toLocaleString();
-    const fmt2 = n => parseFloat(n ?? 0).toFixed(2);
+    const fmt2 = n => parseFloat(n ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     // Territory breakdown — added 2026-08-19 per Jaclyn, Skinuva-specific
     // (Amazon Sales page only, not applied to other brands). Replaces the
@@ -6835,7 +6846,7 @@ async function initSns() {
 
   // ── Period selector — config, render, pills ─────────────────────────────
   // See handoff doc (évolis, 2026-08-11) for the full pattern this follows.
-  const AMZ_PERIOD_LABELS = { mtd: 'Month to Date', lastFull: 'Last Full Month', prior: 'Prior Month', lastYear: 'Last Year' };
+  const AMZ_PERIOD_LABELS = { mtd: 'Month to Date', lastFull: 'Last Month', prior: 'Prior Month', lastYear: 'Last Year' };
 
   function buildAmazonPeriodConfig(key) {
     const { year, month } = getLastFullMonth();
@@ -7279,8 +7290,8 @@ async function initSns() {
         <td>${name}</td>
         <td><div class="tp-cell"><span class="tp-units">${p.territory.US.toLocaleString()}</span></div></td>
         <td><div class="tp-cell"><span class="tp-units">${p.territory.CA.toLocaleString()}</span></div></td>
-        <td style="border-right:1px dotted var(--border);"><div class="tp-cell"><span class="tp-units">${p.territory.UK.toLocaleString()}</span></div></td>
-        <td style="border-left:1px dotted var(--border);"><div class="tp-cell"><span class="tp-units">${p.adUnits.toLocaleString()}</span></div></td>
+        <td style="border-right:1px dotted var(--border);padding-right:22px;"><div class="tp-cell"><span class="tp-units">${p.territory.UK.toLocaleString()}</span></div></td>
+        <td style="border-left:1px dotted var(--border);padding-left:22px;"><div class="tp-cell"><span class="tp-units">${p.adUnits.toLocaleString()}</span></div></td>
         <td><div class="tp-cell"><span class="tp-units">${orgUnits.toLocaleString()}</span></div></td>`;
       tbody.appendChild(tr);
     });
@@ -7528,7 +7539,7 @@ async function initSns() {
     international: { skuPrefix: 'I-', idPrefix: 'webintl' },
     samples:       { skuPrefix: 'S-', idPrefix: 'websamp' },
   };
-  const WEB_PERIOD_LABELS = { mtd: 'Month to Date', lastFull: 'Last Full Month', prior: 'Prior Month', lastYear: 'Last Year' };
+  const WEB_PERIOD_LABELS = { mtd: 'Month to Date', lastFull: 'Last Month', prior: 'Prior Month', lastYear: 'Last Year' };
 
   function ensureWebDataFetched() {
     if (_webDataPromise) return _webDataPromise;
@@ -7643,14 +7654,26 @@ async function initSns() {
       : null;
     const prevYoy = cfg.showYoy ? aggregateMonth(_webAllRowsRaw, cfg.yoyYear, cfg.yoyMonth, skuPrefix) : null;
 
-    // Ad conversions -- campaign-level, not resolvable to a specific
-    // order-type SKU prefix, same figure regardless of which tab is active.
-    const ads = cfg.isPartial
-      ? aggregateAdMonthThroughDay(_webAdsRowsRaw, cfg.year, cfg.month, cfg.throughDay, cfg.prevYear, cfg.prevMonth)
-      : aggregateAdMonth(_webAdsRowsRaw, cfg.year, cfg.month);
+    // FIXED 2026-08-25 per Jaclyn -- Google Ads only ever drives the
+    // Consumer storefront; Physician/International/Samples orders don't
+    // come through these campaigns at all. This used to compute the same
+    // ad-conversion figure regardless of which tab was active (see the
+    // old comment this replaced: "not resolvable to a specific order-type
+    // SKU prefix, same figure regardless of which tab is active") and
+    // silently attribute it to all four tabs identically -- meaning
+    // Physician/International/Samples each showed Consumer's ad units as
+    // if they were their own, and each tab's "Organic" figure was
+    // correspondingly understated by that same amount. Only Consumer
+    // (idPrefix === 'web') computes a real value now; the other three
+    // always read zero ad units / all-organic.
+    const ads = idPrefix === 'web'
+      ? (cfg.isPartial
+          ? aggregateAdMonthThroughDay(_webAdsRowsRaw, cfg.year, cfg.month, cfg.throughDay, cfg.prevYear, cfg.prevMonth)
+          : aggregateAdMonth(_webAdsRowsRaw, cfg.year, cfg.month))
+      : { totalConversions: 0, prevConversions: 0 };
 
     const fmt  = n => (n ?? 0).toLocaleString();
-    const fmt2 = n => parseFloat(n ?? 0).toFixed(2);
+    const fmt2 = n => parseFloat(n ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     if (!curr) {
       // FIXED 2026-08-12 -- confirmed real bug: this branch cleared
@@ -7996,19 +8019,21 @@ async function initSns() {
       skuUnits[sku] = (skuUnits[sku] || 0) + qty;
     }
 
-    // Real per-SKU ad conversions from the shopping tab (Shopping/PMax
-    // campaigns only, sku resolved server-side by sync-google-ads.js).
-    // NOTE: the shopping tab has no order-type distinction of its own —
-    // ad conversions can't be split by Customer/Physician/International,
-    // so this stays the same across all three tabs' product tables.
+    // FIXED 2026-08-25 per Jaclyn -- ad conversions only ever apply to the
+    // Consumer tab. Previously computed identically across all four
+    // tabs' product tables (see the comment this replaced), meaning
+    // Physician/International/Samples each showed Consumer's per-product
+    // ad units as if they were their own.
     const skuAdConversions = {};
-    (shoppingRows || [])
-      .filter(r => (r.date || '').substring(0,7) === prefix)
-      .forEach(r => {
-        const sku = (findCI(r, 'sku') || '').trim().toUpperCase();
-        if (!sku) return; // not yet resolved to a real SKU
-        skuAdConversions[sku] = (skuAdConversions[sku] || 0) + (parseFloat(r.conversions) || 0);
-      });
+    if (idPrefix === 'web') {
+      (shoppingRows || [])
+        .filter(r => (r.date || '').substring(0,7) === prefix)
+        .forEach(r => {
+          const sku = (findCI(r, 'sku') || '').trim().toUpperCase();
+          if (!sku) return; // not yet resolved to a real SKU
+          skuAdConversions[sku] = (skuAdConversions[sku] || 0) + (parseFloat(r.conversions) || 0);
+        });
+    }
     const totalUnitsThisMonth = Object.values(skuUnits).reduce((s, v) => s + v, 0);
 
     // Prev month for MOM
@@ -8024,7 +8049,7 @@ async function initSns() {
              });
     }
     const skuAdConversionsPrev = {};
-    if (prevYear && prevMonth) {
+    if (idPrefix === 'web' && prevYear && prevMonth) {
       const prevPrefixForAds = `${prevYear}-${String(prevMonth).padStart(2,'0')}`;
       (shoppingRows || [])
         .filter(r => (r.date || '').substring(0,7) === prevPrefixForAds)
@@ -8672,7 +8697,7 @@ async function initSns() {
   // the SAME sheet as every other period, no separate historical sheet
   // needed. This also means genuine YoY support is new functionality for
   // Walmart (Amazon already had — broken — YoY code; Walmart never had any).
-  const WMT_PERIOD_LABELS = { mtd: 'Month to Date', lastFull: 'Last Full Month', prior: 'Prior Month', lastYear: 'Last Year' };
+  const WMT_PERIOD_LABELS = { mtd: 'Month to Date', lastFull: 'Last Month', prior: 'Prior Month', lastYear: 'Last Year' };
 
   function buildWalmartPeriodConfig(key) {
     const { year, month } = getLastFullMonth();
@@ -8747,7 +8772,7 @@ async function initSns() {
     }
 
     const fmt  = n => (n ?? 0).toLocaleString();
-    const fmt2 = n => parseFloat(n ?? 0).toFixed(2);
+    const fmt2 = n => parseFloat(n ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     // Total Units
     setKpiValue('wkpi-total-units', fmt(curr.totalUnits));
@@ -9281,7 +9306,7 @@ async function initSns() {
 
   function renderKPIs(curr, prev, prevYear, adUnits = 0, prevAdUnits = 0) {
     const fmt  = n => (n ?? 0).toLocaleString();
-    const fmt2 = n => parseFloat(n ?? 0).toFixed(2);
+    const fmt2 = n => parseFloat(n ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     // Total Units
     setKpiValue('x-kpi-total-units', fmt(curr.totalUnits));
@@ -9980,7 +10005,7 @@ async function initSns() {
       if (prev) prev.totalUnits = Math.max(0, prev.totalUnits - prevReturns.totalQty);
 
       const fmt  = n => (n ?? 0).toLocaleString();
-      const fmt2 = n => parseFloat(n ?? 0).toFixed(2);
+      const fmt2 = n => parseFloat(n ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
       if (!curr) {
         setKpiValue('x-web-kpi-total-units',   '0');
@@ -10489,7 +10514,7 @@ async function initSns() {
       }
 
       const fmt  = n => (n ?? 0).toLocaleString();
-      const fmt2 = n => parseFloat(n ?? 0).toFixed(2);
+      const fmt2 = n => parseFloat(n ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
       // Total Units
       setKpiValue('x-wkpi-total-units', fmt(curr.totalUnits));
@@ -13891,7 +13916,7 @@ async function initSnsExternal() {
         const prevAdUnits = prevYear ? sumAdUnits(allAdRows, prevYear) : 0;
 
         const fmt  = n => (n ?? 0).toLocaleString();
-        const fmt2 = n => parseFloat(n ?? 0).toFixed(2);
+        const fmt2 = n => parseFloat(n ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
         setKpiValue('pd-kpi-total-units', fmt(curr.totalUnits));
         setBadge('pd-kpi-total-units', prev ? pct(curr.totalUnits, prev.totalUnits) : null);
@@ -14300,7 +14325,7 @@ async function initSnsExternal() {
           const prevAdUnits = prevYear ? sumAdUnits(allAdRows, prevYear) : 0;
 
           const fmt  = n => (n ?? 0).toLocaleString();
-          const fmt2 = n => parseFloat(n ?? 0).toFixed(2);
+          const fmt2 = n => parseFloat(n ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
           setKpiValue(`${cfg.prefix}-kpi-total-units`, fmt(curr.totalUnits));
           setBadge(`${cfg.prefix}-kpi-total-units`, prev ? pct(curr.totalUnits, prev.totalUnits) : null);
@@ -17390,7 +17415,7 @@ async function ppcLoadBlendedKpis() {
 function renderPpcBlendedPeriodPills() {
   const el = document.getElementById('ppc-blended-period-pills');
   if (!el) return;
-  const labels = { mtd: 'Month to Date', lastFull: 'Last Full Month' };
+  const labels = { mtd: 'Month to Date', lastFull: 'Last Month' };
   el.innerHTML = Object.entries(labels).map(([key, label]) =>
     `<button class="period-pill${key === window._ppcBlendedPeriod ? ' active' : ''}" onclick="window.__ppcBlendedSelectPeriod('${key}')">${label}</button>`
   ).join('');
@@ -18408,7 +18433,7 @@ async function mfcLoadKpis() {
     if (subEl) {
       const monthNamesShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const lastDay = new Date(year, month, 0).getDate();
-      subEl.textContent = `${monthNamesShort[month-1]} 1 – ${monthNamesShort[month-1]} ${lastDay}, ${year} · Last full month`;
+      subEl.textContent = `${monthNamesShort[month-1]} 1 – ${monthNamesShort[month-1]} ${lastDay}, ${year} · Last month`;
     }
 
     // Shipped Website Orders is recomputed from the daily raw data (same
@@ -21986,9 +22011,38 @@ async function loadAuditResultsFromSheet() {
       const aov = mtd.orders ? mtd.revenue / mtd.orders : 0;
       const aovPrev = prev.orders ? prev.revenue / prev.orders : 0;
 
+      // ADDED 2026-08-25 per Jaclyn -- Total Sales KPI, Amazon + Walmart
+      // only (mtd.revenue/prev.revenue are already scoped that way, per
+      // her earlier request to exclude Website from every Overview
+      // metric).
+      setKpi('ov-kpi-total-sales', '$' + mtd.revenue.toLocaleString(undefined, { maximumFractionDigits: 0 }), pctChange(mtd.revenue, prev.revenue));
       setKpi('ov-kpi-units',  mtd.units.toLocaleString(),  pctChange(mtd.units, prev.units));
       setKpi('ov-kpi-orders', mtd.orders.toLocaleString(), pctChange(mtd.orders, prev.orders));
-      setKpi('ov-kpi-aov',    '$' + aov.toFixed(2),        pctChange(Math.round(aov * 100), Math.round(aovPrev * 100)));
+      setKpi('ov-kpi-aov',    '$' + aov.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), pctChange(Math.round(aov * 100), Math.round(aovPrev * 100)));
+
+      // ADDED 2026-08-25 per Jaclyn -- Channel Breakdown table, full width,
+      // placed above the Revenue by Channel donut / Monthly Revenue Trend
+      // cards. Amazon + Walmart only, reusing the same netted figures the
+      // KPI cards above and the donut chart below already compute --
+      // no new data fetch needed.
+      (function renderOvChannelBreakdown() {
+        const tbody = document.getElementById('ov-channel-breakdown-tbody');
+        if (!tbody) return;
+        const rows = [
+          { label: 'Amazon',  units: amzMtdNetUnits, orders: amzMtd.totalOrders, revenue: amzMtdNetRevenue },
+          { label: 'Walmart', units: wmtMtdNetUnits, orders: wmtMtd.totalOrders, revenue: wmtMtdNetRevenue },
+        ];
+        tbody.innerHTML = rows.map(r => {
+          const rowAov = r.orders > 0 ? r.revenue / r.orders : 0;
+          return `<tr>
+            <td>${r.label}</td>
+            <td>${r.units.toLocaleString()}</td>
+            <td>${r.orders.toLocaleString()}</td>
+            <td>$${r.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+            <td>$${rowAov.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          </tr>`;
+        }).join('');
+      })();
 
       // -- MTD Ad-Driven Orders / Pending Orders --
       // Amazon: per Jaclyn (2026-07-24), the ad orders cron runs daily and
@@ -22328,6 +22382,16 @@ async function loadAuditResultsFromSheet() {
 
       setKpi('ov-kpi-adspend', '$' + blendedSpend.toLocaleString(undefined, { maximumFractionDigits: 0 }), pctChange(blendedSpend, blendedSpendPrev), ' vs MTD last month (Est.)');
       setKpi('ov-kpi-acos', acos.toFixed(1) + '%', pctChange(Math.round(acos * 10), Math.round(acosPrev * 10)), ' vs MTD last month (Est.)');
+
+      // ADDED 2026-08-25 per Jaclyn -- MTD Ad Sales (the same blended
+      // ad-attributed sales figure ACOS above is already built from) and
+      // MTD Organic Sales (Total Sales -- mtd.revenue, computed near the
+      // top of this function -- minus Ad Sales, floored at 0, same
+      // pattern as the existing Organic Units card).
+      const organicSales = Math.max(0, mtd.revenue - blendedSales);
+      const organicSalesPrev = Math.max(0, prev.revenue - blendedSalesPrev);
+      setKpi('ov-kpi-ad-sales', '$' + blendedSales.toLocaleString(undefined, { maximumFractionDigits: 0 }), pctChange(blendedSales, blendedSalesPrev), ' vs MTD last month (Est.)');
+      setKpi('ov-kpi-organic-sales', '$' + organicSales.toLocaleString(undefined, { maximumFractionDigits: 0 }), pctChange(organicSales, organicSalesPrev), ' vs MTD last month (Est.)');
 
       // -- Trend: trailing 6 COMPLETED months, blended revenue across channels --
       // ROOT CAUSE of the blank chart: these revenue-history sheets use
