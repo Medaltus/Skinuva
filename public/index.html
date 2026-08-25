@@ -1347,8 +1347,8 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     <div class="card" style="margin-bottom:20px;">
       <div class="card-title">Channel Breakdown <span style="font-weight:400;color:var(--muted);">(Amazon + Walmart, Month to Date)</span></div>
       <table class="data-table" style="width:100%;">
-        <thead><tr><th>Channel</th><th>Units</th><th>Orders</th><th>Revenue</th><th>AOV</th></tr></thead>
-        <tbody id="ov-channel-breakdown-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);">Loading…</td></tr></tbody>
+        <thead><tr><th>Channel</th><th>Ad Spend</th><th>Ad Sales</th><th>Units</th><th>Orders</th><th>Revenue</th><th>AOV</th></tr></thead>
+        <tbody id="ov-channel-breakdown-tbody"><tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">Loading…</td></tr></tbody>
       </table>
     </div>
 
@@ -7380,22 +7380,26 @@ async function initSns() {
     // customer was never actually charged). Added alongside the existing
     // financial_status checks.
     //
-    // Also added a SEPARATE check on fulfillment_status (a different
-    // Shopify field entirely -- financial_status is about whether money
-    // moved, fulfillment_status is about whether it's shipped) to exclude
+    // Also added a SEPARATE check on fulfillment status (a different
+    // Shopify concept entirely -- financial_status is about whether
+    // money moved, fulfillment is about whether it's shipped) to exclude
     // unfulfilled orders per Jaclyn's explicit choice to only count sales
     // once shipped, not merely once paid.
     //
-    // NOTE: 'fulfillment_status' as the column name is inferred from
-    // Shopify's own REST API field naming, which financial_status already
-    // matches exactly -- strong but not 100% confirmed evidence the sync
-    // cron preserves Shopify's native field names for this one too. If
-    // this doesn't correctly filter unfulfilled rows after deploying,
-    // check the actual column header in the orders sheet against this
-    // exact name.
-    const status = (r.financial_status || r.status || '').toLowerCase();
-    if (status === 'refunded' || status === 'cancelled' || status === 'canceled' || status === 'voided') return false;
-    const fulfillmentStatus = (r.fulfillment_status || '').toLowerCase();
+    // FIXED 2026-08-25 -- confirmed against a real export: this sheet has
+    // NO 'fulfillment_status' column at all. The real fulfillment info
+    // lives in the 'status' column itself (values: FULFILLED/
+    // UNFULFILLED) -- the same column the line below was already
+    // reading as a *fallback* for financial_status, which is why this
+    // never actually excluded anything: financial_status is always
+    // present on a real row, so that fallback never triggered, and
+    // r.fulfillment_status was always undefined. Split into two
+    // genuinely separate checks now. Also added partially_refunded
+    // alongside the existing refunded/cancelled/voided exclusions --
+    // found in a real row while fixing this, wasn't excluded before.
+    const financialStatus = (r.financial_status || '').toLowerCase();
+    if (financialStatus === 'refunded' || financialStatus === 'partially_refunded' || financialStatus === 'cancelled' || financialStatus === 'canceled' || financialStatus === 'voided') return false;
+    const fulfillmentStatus = (r.status || '').toLowerCase();
     if (fulfillmentStatus === 'unfulfilled') return false;
     // ADDED 2026-08-25 per Jaclyn -- Ashley Wilcox's orders are internal
     // Medaltus purchase orders (confirmed: the outlier order that was
@@ -9832,22 +9836,22 @@ async function initSns() {
     // customer was never actually charged). Added alongside the existing
     // financial_status checks.
     //
-    // Also added a SEPARATE check on fulfillment_status (a different
-    // Shopify field entirely -- financial_status is about whether money
-    // moved, fulfillment_status is about whether it's shipped) to exclude
+    // Also added a SEPARATE check on fulfillment status (a different
+    // Shopify concept entirely -- financial_status is about whether
+    // money moved, fulfillment is about whether it's shipped) to exclude
     // unfulfilled orders per Jaclyn's explicit choice to only count sales
     // once shipped, not merely once paid.
     //
-    // NOTE: 'fulfillment_status' as the column name is inferred from
-    // Shopify's own REST API field naming, which financial_status already
-    // matches exactly -- strong but not 100% confirmed evidence the sync
-    // cron preserves Shopify's native field names for this one too. If
-    // this doesn't correctly filter unfulfilled rows after deploying,
-    // check the actual column header in the orders sheet against this
-    // exact name.
-    const status = (r.financial_status || r.status || '').toLowerCase();
-    if (status === 'refunded' || status === 'cancelled' || status === 'canceled' || status === 'voided') return false;
-    const fulfillmentStatus = (r.fulfillment_status || '').toLowerCase();
+    // FIXED 2026-08-25 -- confirmed against a real export: this sheet has
+    // NO 'fulfillment_status' column at all. The real fulfillment info
+    // lives in the 'status' column itself (values: FULFILLED/
+    // UNFULFILLED). Split into two genuinely separate checks -- see the
+    // internal Website Sales page's isValidRow() for the full history.
+    // Also added partially_refunded alongside the existing
+    // refunded/cancelled/voided exclusions.
+    const financialStatus = (r.financial_status || '').toLowerCase();
+    if (financialStatus === 'refunded' || financialStatus === 'partially_refunded' || financialStatus === 'cancelled' || financialStatus === 'canceled' || financialStatus === 'voided') return false;
+    const fulfillmentStatus = (r.status || '').toLowerCase();
     if (fulfillmentStatus === 'unfulfilled') return false;
     // ADDED 2026-08-25 per Jaclyn -- Ashley Wilcox's orders are internal
     // Medaltus purchase orders, not real end-customer sales. See the
@@ -17191,9 +17195,13 @@ function ppcBlendedIsValidWalmartRow(r) {
   return status !== 'cancelled' && status !== 'canceled';
 }
 function ppcBlendedIsValidWebRow(r) {
-  const status = (r.financial_status || r.status || '').toLowerCase();
-  if (status === 'refunded' || status === 'cancelled' || status === 'canceled' || status === 'voided') return false;
-  if ((r.fulfillment_status || '').toLowerCase() === 'unfulfilled') return false;
+  // FIXED 2026-08-25 -- see the Website Sales page's isValidRow() for the
+  // full history: this sheet has no 'fulfillment_status' column at all,
+  // real fulfillment info is in 'status' (FULFILLED/UNFULFILLED). Also
+  // added partially_refunded to the financial_status exclusions.
+  const financialStatus = (r.financial_status || '').toLowerCase();
+  if (financialStatus === 'refunded' || financialStatus === 'partially_refunded' || financialStatus === 'cancelled' || financialStatus === 'canceled' || financialStatus === 'voided') return false;
+  if ((r.status || '').toLowerCase() === 'unfulfilled') return false;
   // ADDED 2026-08-25 per Jaclyn -- Ashley Wilcox's orders are internal
   // Medaltus purchase orders, not real end-customer sales. See the
   // Website Sales page's isValidRow() for the full comment.
@@ -21633,8 +21641,13 @@ async function loadAuditResultsFromSheet() {
     return true;
   }
   function isValidWebRow(row) {
-    const status = (row.financial_status || row.status || '').toLowerCase();
-    if (status === 'refunded' || status === 'cancelled' || status === 'canceled') return false;
+    // FIXED 2026-08-25 -- aligned with the same fixes made to the Website
+    // Sales page's isValidRow(): added voided/partially_refunded, and a
+    // separate fulfillment check reading 'status' (the real column --
+    // there's no 'fulfillment_status' field in this sheet at all).
+    const financialStatus = (row.financial_status || '').toLowerCase();
+    if (financialStatus === 'refunded' || financialStatus === 'partially_refunded' || financialStatus === 'cancelled' || financialStatus === 'canceled' || financialStatus === 'voided') return false;
+    if ((row.status || '').toLowerCase() === 'unfulfilled') return false;
     // ADDED 2026-08-25 per Jaclyn -- Ashley Wilcox's orders are internal
     // Medaltus purchase orders, not real end-customer sales. See the
     // Website Sales page's isValidRow() for the full comment. (Website is
@@ -22020,30 +22033,6 @@ async function loadAuditResultsFromSheet() {
       setKpi('ov-kpi-orders', mtd.orders.toLocaleString(), pctChange(mtd.orders, prev.orders));
       setKpi('ov-kpi-aov',    '$' + aov.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), pctChange(Math.round(aov * 100), Math.round(aovPrev * 100)));
 
-      // ADDED 2026-08-25 per Jaclyn -- Channel Breakdown table, full width,
-      // placed above the Revenue by Channel donut / Monthly Revenue Trend
-      // cards. Amazon + Walmart only, reusing the same netted figures the
-      // KPI cards above and the donut chart below already compute --
-      // no new data fetch needed.
-      (function renderOvChannelBreakdown() {
-        const tbody = document.getElementById('ov-channel-breakdown-tbody');
-        if (!tbody) return;
-        const rows = [
-          { label: 'Amazon',  units: amzMtdNetUnits, orders: amzMtd.totalOrders, revenue: amzMtdNetRevenue },
-          { label: 'Walmart', units: wmtMtdNetUnits, orders: wmtMtd.totalOrders, revenue: wmtMtdNetRevenue },
-        ];
-        tbody.innerHTML = rows.map(r => {
-          const rowAov = r.orders > 0 ? r.revenue / r.orders : 0;
-          return `<tr>
-            <td>${r.label}</td>
-            <td>${r.units.toLocaleString()}</td>
-            <td>${r.orders.toLocaleString()}</td>
-            <td>$${r.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-            <td>$${rowAov.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-          </tr>`;
-        }).join('');
-      })();
-
       // -- MTD Ad-Driven Orders / Pending Orders --
       // Amazon: per Jaclyn (2026-07-24), the ad orders cron runs daily and
       // captures every order, but only buckets by month — no day-of-purchase
@@ -22372,6 +22361,38 @@ async function loadAuditResultsFromSheet() {
           console.log('[Skinuva][overview] Walmart ad spend added — this month:', walmartSpendThisMonth, 'last month:', walmartSpendLastMonth);
         }
       } catch (e) { console.warn('[Skinuva][overview] Walmart Advertising Cache lookup failed:', e.message); }
+
+      // ADDED 2026-08-25 per Jaclyn -- Channel Breakdown table, full width,
+      // placed above the Revenue by Channel donut / Monthly Revenue Trend
+      // cards. Amazon + Walmart only. Moved to this point in the function
+      // (rather than right after the KPI cards above) specifically so Ad
+      // Spend/Ad Sales are available -- Amazon's is the same prorated
+      // MTD estimate the Ad Spend/ACOS KPI cards use (proratedSpend/
+      // proratedSales; see the file-level comment on that estimate for
+      // why it's not a true day-level figure), Walmart's is the actual
+      // ad summary row for the current month (walmartSpendThisMonth/
+      // walmartSalesThisMonth, just fetched above).
+      (function renderOvChannelBreakdown() {
+        const tbody = document.getElementById('ov-channel-breakdown-tbody');
+        if (!tbody) return;
+        const rows = [
+          { label: 'Amazon',  adSpend: proratedSpend,          adSales: proratedSales,          units: amzMtdNetUnits, orders: amzMtd.totalOrders, revenue: amzMtdNetRevenue },
+          { label: 'Walmart', adSpend: walmartSpendThisMonth,  adSales: walmartSalesThisMonth,  units: wmtMtdNetUnits, orders: wmtMtd.totalOrders, revenue: wmtMtdNetRevenue },
+        ];
+        tbody.innerHTML = rows.map(r => {
+          const rowAov = r.orders > 0 ? r.revenue / r.orders : 0;
+          const money = v => '$' + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          return `<tr>
+            <td>${r.label}</td>
+            <td>${money(r.adSpend)}</td>
+            <td>${money(r.adSales)}</td>
+            <td>${r.units.toLocaleString()}</td>
+            <td>${r.orders.toLocaleString()}</td>
+            <td>${money(r.revenue)}</td>
+            <td>${money(rowAov)}</td>
+          </tr>`;
+        }).join('');
+      })();
 
       const blendedSpend = proratedSpend + walmartSpendThisMonth;
       const blendedSpendPrev = proratedSpendPrev + walmartSpendLastMonth;
