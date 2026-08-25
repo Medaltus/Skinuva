@@ -7386,20 +7386,20 @@ async function initSns() {
     // unfulfilled orders per Jaclyn's explicit choice to only count sales
     // once shipped, not merely once paid.
     //
-    // FIXED 2026-08-25 -- confirmed against a real export: this sheet has
-    // NO 'fulfillment_status' column at all. The real fulfillment info
-    // lives in the 'status' column itself (values: FULFILLED/
-    // UNFULFILLED) -- the same column the line below was already
-    // reading as a *fallback* for financial_status, which is why this
-    // never actually excluded anything: financial_status is always
-    // present on a real row, so that fallback never triggered, and
-    // r.fulfillment_status was always undefined. Split into two
-    // genuinely separate checks now. Also added partially_refunded
-    // alongside the existing refunded/cancelled/voided exclusions --
-    // found in a real row while fixing this, wasn't excluded before.
+    // FIXED 2026-08-25, REVERTED same day -- attempted to fix this to
+    // read the real fulfillment column ('status', confirmed via a real
+    // July export: this sheet has no 'fulfillment_status' column at all,
+    // so the check below was always a no-op). That change broke Consumer
+    // data live (0 units / no data) for a reason not yet root-caused --
+    // possibly 'status' behaving differently outside the one month
+    // sampled, or a broader data-quality issue with that column. Reverted
+    // to the original no-op check until this can be verified against a
+    // fuller export without breaking production again. Do not re-attempt
+    // this fix without first confirming 'status' values across multiple
+    // months/periods, not just one.
     const financialStatus = (r.financial_status || '').toLowerCase();
     if (financialStatus === 'refunded' || financialStatus === 'partially_refunded' || financialStatus === 'cancelled' || financialStatus === 'canceled' || financialStatus === 'voided') return false;
-    const fulfillmentStatus = (r.status || '').toLowerCase();
+    const fulfillmentStatus = (r.fulfillment_status || '').toLowerCase();
     if (fulfillmentStatus === 'unfulfilled') return false;
     // ADDED 2026-08-25 per Jaclyn -- Ashley Wilcox's orders are internal
     // Medaltus purchase orders (confirmed: the outlier order that was
@@ -9842,16 +9842,13 @@ async function initSns() {
     // unfulfilled orders per Jaclyn's explicit choice to only count sales
     // once shipped, not merely once paid.
     //
-    // FIXED 2026-08-25 -- confirmed against a real export: this sheet has
-    // NO 'fulfillment_status' column at all. The real fulfillment info
-    // lives in the 'status' column itself (values: FULFILLED/
-    // UNFULFILLED). Split into two genuinely separate checks -- see the
-    // internal Website Sales page's isValidRow() for the full history.
-    // Also added partially_refunded alongside the existing
-    // refunded/cancelled/voided exclusions.
+    // FIXED 2026-08-25, REVERTED same day -- see the internal Website
+    // Sales page's isValidRow() for the full explanation: reading the
+    // real 'status' column here broke Consumer data live for a reason
+    // not yet root-caused. Reverted to the original no-op check.
     const financialStatus = (r.financial_status || '').toLowerCase();
     if (financialStatus === 'refunded' || financialStatus === 'partially_refunded' || financialStatus === 'cancelled' || financialStatus === 'canceled' || financialStatus === 'voided') return false;
-    const fulfillmentStatus = (r.status || '').toLowerCase();
+    const fulfillmentStatus = (r.fulfillment_status || '').toLowerCase();
     if (fulfillmentStatus === 'unfulfilled') return false;
     // ADDED 2026-08-25 per Jaclyn -- Ashley Wilcox's orders are internal
     // Medaltus purchase orders, not real end-customer sales. See the
@@ -17195,13 +17192,12 @@ function ppcBlendedIsValidWalmartRow(r) {
   return status !== 'cancelled' && status !== 'canceled';
 }
 function ppcBlendedIsValidWebRow(r) {
-  // FIXED 2026-08-25 -- see the Website Sales page's isValidRow() for the
-  // full history: this sheet has no 'fulfillment_status' column at all,
-  // real fulfillment info is in 'status' (FULFILLED/UNFULFILLED). Also
-  // added partially_refunded to the financial_status exclusions.
+  // FIXED 2026-08-25, REVERTED same day -- see the Website Sales page's
+  // isValidRow() for the full explanation. Reverted to the original
+  // no-op fulfillment check after it broke Consumer data live.
   const financialStatus = (r.financial_status || '').toLowerCase();
   if (financialStatus === 'refunded' || financialStatus === 'partially_refunded' || financialStatus === 'cancelled' || financialStatus === 'canceled' || financialStatus === 'voided') return false;
-  if ((r.status || '').toLowerCase() === 'unfulfilled') return false;
+  if ((r.fulfillment_status || '').toLowerCase() === 'unfulfilled') return false;
   // ADDED 2026-08-25 per Jaclyn -- Ashley Wilcox's orders are internal
   // Medaltus purchase orders, not real end-customer sales. See the
   // Website Sales page's isValidRow() for the full comment.
@@ -21641,13 +21637,15 @@ async function loadAuditResultsFromSheet() {
     return true;
   }
   function isValidWebRow(row) {
-    // FIXED 2026-08-25 -- aligned with the same fixes made to the Website
-    // Sales page's isValidRow(): added voided/partially_refunded, and a
-    // separate fulfillment check reading 'status' (the real column --
-    // there's no 'fulfillment_status' field in this sheet at all).
+    // FIXED 2026-08-25, REVERTED same day -- see the Website Sales page's
+    // isValidRow() for the full explanation. Reverted to the original
+    // no-op fulfillment check after it broke Consumer data live
+    // elsewhere. This function is currently inert anyway (Website is
+    // excluded from every Overview KPI/chart), kept aligned for
+    // consistency.
     const financialStatus = (row.financial_status || '').toLowerCase();
     if (financialStatus === 'refunded' || financialStatus === 'partially_refunded' || financialStatus === 'cancelled' || financialStatus === 'canceled' || financialStatus === 'voided') return false;
-    if ((row.status || '').toLowerCase() === 'unfulfilled') return false;
+    if ((row.fulfillment_status || '').toLowerCase() === 'unfulfilled') return false;
     // ADDED 2026-08-25 per Jaclyn -- Ashley Wilcox's orders are internal
     // Medaltus purchase orders, not real end-customer sales. See the
     // Website Sales page's isValidRow() for the full comment. (Website is
