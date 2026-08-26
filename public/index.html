@@ -16860,25 +16860,50 @@ async function ppcLoadProductPerformance() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// KEYWORD COVERAGE STATUS (PPC → Blended Context) — rebuilt 2026-08-07
-// per Jaclyn. Previously fully hardcoded, scoped only to Activators.
-// Now: keywords with any recorded sales in the last 60 days (Keyword
-// Tracker evolis tab, `keyword_sales` column), each checked against
-// that keyword's own ASIN's live listing content (Products Cache sheet
-// — Title, Item Highlights, Bullets 1–5, Description, Backend Keywords)
-// via a case-insensitive substring match, reporting which field(s) it
-// actually appears in — or "Not Found" if it's nowhere in the listing
-// despite driving sales.
+// KEYWORD COVERAGE STATUS (PPC → Blended Context) — rebuilt 2026-08-07,
+// UPDATED 2026-08-25 per Jaclyn.
+//
+// Keyword list + ASIN association still come from Keyword Tracker (same
+// as before) -- but which of those keywords actually qualify for the
+// table changed: instead of Keyword Tracker's own `keyword_sales` column
+// over a rolling 60-day window, a keyword now qualifies if it has real
+// recorded SALES **OR CLICKS** on the Ads Search Terms report
+// (SHEET_AD_SEARCH_TERMS -- the same sheet the Top Performing/Wasted
+// Spend/Opportunities/CPC Rising panels below already use). That's a
+// meaningfully different bar: a keyword can now show up here purely on
+// click activity even with zero attributed sales, which the old
+// sales-only criterion would have excluded entirely.
+//
+// Period: last FULL completed month, same convention as
+// ppcLoadSearchTermPanels() just below (ovGetLastFullMonth()) rather than
+// a rolling day count -- the Ads Search Terms sheet is month-granular,
+// not daily, so a rolling-window cutoff doesn't map onto it the way it
+// did for Keyword Tracker's own dated rows. If a wider window than one
+// month is wanted later, this is the one place to add prior-month rows
+// into the same lookup.
+//
+// Matching keyword -> search term is an exact (trimmed, case-insensitive)
+// string match. Amazon's real search-term text can vary more than a
+// single target keyword (e.g. broad-match traffic), so this intentionally
+// stays literal rather than attempting fuzzy/substring matching that
+// wasn't asked for -- a keyword with real traffic under a differently-
+// worded query won't show up here as "matched," which is expected given
+// this criterion, not a bug.
+//
+// Listing-location check (Products Cache: Title/Item Highlights/
+// Bullets 1-5/Description/Backend Keywords) is unchanged from before.
 async function ppcLoadKeywordCoverage() {
   const container = document.getElementById('ppc-keyword-coverage-container');
   if (!container) return;
   try {
-    const [kwCsv, cacheCsv] = await Promise.all([
+    const [kwCsv, cacheCsv, stCsv] = await Promise.all([
       fetch(ovCsvUrl(KEYWORD_TRACKER_SUMMARY_SHEET_ID, KEYWORD_TRACKER_EVOLIS_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
       fetch(ovCsvUrl(OV_PRODUCTS_CACHE_SHEET_ID, OV_PRODUCTS_CACHE_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
+      fetch(ovCsvUrl(PPC_SEARCH_TERMS_SHEET_ID, PPC_SEARCH_TERMS_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
     ]);
     const kwRows = parseCsvToRows(kwCsv);
     const cacheRows = parseCsvToRows(cacheCsv);
+    const stRows = parseCsvToRows(stCsv);
     if (!kwRows.length) {
       container.innerHTML = '<div style="color:var(--muted);font-size:12px;">No Keyword Tracker data found.</div>';
       return;
@@ -16892,33 +16917,48 @@ async function ppcLoadKeywordCoverage() {
       if (asin) listingByAsin[asin] = r;
     });
 
-    // 60-day cutoff (ISO string comparison — Keyword Tracker dates are
-    // YYYY-MM-DD, same convention as everywhere else on this dashboard).
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 60);
-    const cutoffStr = cutoff.toISOString().substring(0, 10);
+    // Ads Search Terms report, last full completed month -- same
+    // defensive numeric parsing as ppcLoadSearchTermPanels below (some
+    // cells export as currency-formatted text like "$1.00", which plain
+    // parseFloat silently reads as NaN → 0; stripping non-numeric
+    // characters first avoids that regardless of cell formatting).
+    function stNum(val) {
+      if (val == null) return 0;
+      const cleaned = String(val).replace(/[^0-9.\-]/g, '');
+      const n = parseFloat(cleaned);
+      return isNaN(n) ? 0 : n;
+    }
+    const { year: stYear, month: stMonth } = ovGetLastFullMonth();
+    const searchTermPerf = {}; // normalized search_term -> { sales, clicks }
+    stRows.forEach(r => {
+      if (parseInt(r.year, 10) !== stYear || parseInt(r.month, 10) !== stMonth) return;
+      const term = (r.search_term || '').trim().toLowerCase();
+      if (!term) return;
+      if (!searchTermPerf[term]) searchTermPerf[term] = { sales: 0, clicks: 0 };
+      searchTermPerf[term].sales  += stNum(r.sales);
+      searchTermPerf[term].clicks += stNum(r.clicks);
+    });
 
-    // Keywords with any sales in the window, summed across dates/ASINs,
-    // tracking which ASIN(s) each keyword is associated with.
+    // Keywords from Keyword Tracker, tracking which ASIN(s) each is
+    // associated with (unchanged from before) -- but now qualifying by
+    // sales-or-clicks on the Ads Search Terms report instead of Keyword
+    // Tracker's own keyword_sales column.
     const byKeyword = {};
     kwRows.forEach(r => {
-      const date = r.date || '';
-      if (date < cutoffStr) return;
-      const sales = parseFloat(r.keyword_sales) || 0;
-      if (sales <= 0) return;
       const kw = (r.keyword || '').trim();
       if (!kw) return;
+      const perf = searchTermPerf[kw.toLowerCase()];
+      if (!perf || (perf.sales <= 0 && perf.clicks <= 0)) return;
       const asin = (r.asin || '').trim().toUpperCase();
-      if (!byKeyword[kw]) byKeyword[kw] = { sales: 0, asins: new Set() };
-      byKeyword[kw].sales += sales;
+      if (!byKeyword[kw]) byKeyword[kw] = { sales: perf.sales, clicks: perf.clicks, asins: new Set() };
       if (asin) byKeyword[kw].asins.add(asin);
     });
 
     const keywordList = Object.keys(byKeyword);
-    console.log('[PPC][KeywordCoverage][qa] cutoff date:', cutoffStr, '— keywords with sales in last 60 days:', keywordList.length);
+    console.log('[PPC][KeywordCoverage][qa]', stYear + '-' + stMonth, '— keywords with sales or clicks on Ads Search Terms:', keywordList.length);
 
     if (!keywordList.length) {
-      container.innerHTML = '<div style="color:var(--muted);font-size:12px;">No keywords with recorded sales in the last 60 days.</div>';
+      container.innerHTML = '<div style="color:var(--muted);font-size:12px;">No keywords with recorded sales or clicks on the Ads Search Terms report this month.</div>';
       return;
     }
 
@@ -16951,6 +16991,7 @@ async function ppcLoadKeywordCoverage() {
       return `<tr>
         <td>${escapeHtmlOrg(kw)}</td>
         <td>$${info.sales.toFixed(2)}</td>
+        <td>${Math.round(info.clicks).toLocaleString()}</td>
         <td style="font-family:var(--mono);font-size:10px;">${asinList.map(a => escapeHtmlOrg(a)).join(', ')}</td>
         <td${whereStyle}>${escapeHtmlOrg(where)}</td>
       </tr>`;
@@ -16958,7 +16999,7 @@ async function ppcLoadKeywordCoverage() {
 
     container.innerHTML = `<div style="max-height:760px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);">
       <table class="data-table" style="margin:0;">
-        <thead><tr style="position:sticky;top:0;z-index:1;"><th>Keyword</th><th>Sales (60d)</th><th>ASIN</th><th>Where in Listing</th></tr></thead>
+        <thead><tr style="position:sticky;top:0;z-index:1;"><th>Keyword</th><th>Sales</th><th>Clicks</th><th>ASIN</th><th>Where in Listing</th></tr></thead>
         <tbody>${rowsHtml}</tbody>
       </table>
     </div>`;
