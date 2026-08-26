@@ -16929,28 +16929,45 @@ async function ppcLoadKeywordCoverage() {
       return isNaN(n) ? 0 : n;
     }
     const { year: stYear, month: stMonth } = ovGetLastFullMonth();
-    const searchTermPerf = {}; // normalized search_term -> { sales, clicks }
+    const stTermRows = []; // [{ term, sales, clicks }] for the target month only
     stRows.forEach(r => {
       if (parseInt(r.year, 10) !== stYear || parseInt(r.month, 10) !== stMonth) return;
       const term = (r.search_term || '').trim().toLowerCase();
       if (!term) return;
-      if (!searchTermPerf[term]) searchTermPerf[term] = { sales: 0, clicks: 0 };
-      searchTermPerf[term].sales  += stNum(r.sales);
-      searchTermPerf[term].clicks += stNum(r.clicks);
+      stTermRows.push({ term, sales: stNum(r.sales), clicks: stNum(r.clicks) });
     });
 
     // Keywords from Keyword Tracker, tracking which ASIN(s) each is
     // associated with (unchanged from before) -- but now qualifying by
     // sales-or-clicks on the Ads Search Terms report instead of Keyword
     // Tracker's own keyword_sales column.
+    //
+    // FIXED 2026-08-25 -- matching is CONTAINS, not exact-equals. A
+    // tracked target keyword ("scar cream") essentially never equals a
+    // real customer search query verbatim -- the report holds actual
+    // search text like "best scar cream for surgery." Exact matching
+    // returned close to nothing; this sums sales/clicks across every
+    // search term for that month that contains the keyword as a
+    // substring, matching the same substring approach the listing-
+    // location check below already uses.
     const byKeyword = {};
     kwRows.forEach(r => {
       const kw = (r.keyword || '').trim();
       if (!kw) return;
-      const perf = searchTermPerf[kw.toLowerCase()];
-      if (!perf || (perf.sales <= 0 && perf.clicks <= 0)) return;
+      const kwLower = kw.toLowerCase();
+      let sales = 0, clicks = 0;
+      stTermRows.forEach(t => {
+        if (t.term.includes(kwLower)) { sales += t.sales; clicks += t.clicks; }
+      });
+      if (sales <= 0 && clicks <= 0) return;
       const asin = (r.asin || '').trim().toUpperCase();
-      if (!byKeyword[kw]) byKeyword[kw] = { sales: perf.sales, clicks: perf.clicks, asins: new Set() };
+      if (!byKeyword[kw]) byKeyword[kw] = { sales: 0, clicks: 0, asins: new Set() };
+      // A keyword can appear on multiple Keyword Tracker rows (different
+      // ASINs) -- sum is already per-keyword above via stTermRows, so
+      // just take the computed total once per unique keyword rather than
+      // re-adding it for every ASIN row that keyword happens to have.
+      byKeyword[kw].sales = sales;
+      byKeyword[kw].clicks = clicks;
       if (asin) byKeyword[kw].asins.add(asin);
     });
 
