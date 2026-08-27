@@ -6549,8 +6549,13 @@ async function initSns() {
     if (pctVal == null) { badge.className = selector.replace('.','') + ' flat'; badge.textContent = ''; return; }
     const isGood = pctVal > 0;
     const cls = pctVal === 0 ? 'flat' : isGood ? 'up' : 'dn';
+    // FIXED 2026-08-27 per Jaclyn -- use the same ▲/▼ arrow convention as
+    // setKpiMom() (Amazon Ads KPIs) and setKpi() (Overview page) instead of
+    // a bare +/-% figure, so every KPI card's MOM badge on the Sales pages
+    // reads consistently with the rest of the dashboard.
+    const arrow = pctVal === 0 ? '' : pctVal > 0 ? '▲ ' : '▼ ';
     badge.className = selector.replace('.','') + ' ' + cls;
-    badge.textContent = `${pctVal > 0 ? '+' : ''}${pctVal}% ${label}`;
+    badge.textContent = `${arrow}${Math.abs(pctVal)}% ${label}`;
   }
 
   function renderKPIs(curr, prev, prevYear, adUnits = 0, prevAdUnits = 0, byTerritory = null, adUnitsByTerritory = null) {
@@ -7046,7 +7051,7 @@ async function initSns() {
       const adOrderRows = _amzAdOrdersRowsAll.filter(r => parseInt(r.year, 10) === cfg.year && parseInt(r.month, 10) === cfg.month);
       const prevAdOrderRows = cfg.prevYear ? _amzAdOrdersRowsAll.filter(r => parseInt(r.year, 10) === cfg.prevYear && parseInt(r.month, 10) === cfg.prevMonth) : [];
       console.log('[AmazonAdOrdersYearMonth][qa] cfg.year/cfg.month:', cfg.year, cfg.month, '-- adOrderRows after year/month filter:', adOrderRows.length, '-- sample:', adOrderRows.slice(0, 5).map(r => ({asin: r.asin, ad_units: r.ad_units, year: r.year, month: r.month})));
-      buildTopProductsTable(orderRows, cfg.year, cfg.month, adOrderRows, cfg.prevYear, cfg.prevMonth, prevAdOrderRows, currReturns.byAsin, prevReturns.byAsin, currReturns.byAsinByTerritory);
+      buildTopProductsTable(orderRows, cfg.year, cfg.month, adOrderRows, cfg.prevYear, cfg.prevMonth, prevAdOrderRows, currReturns.byAsin, prevReturns.byAsin, currReturns.byAsinByTerritory, prevReturns.byAsinByTerritory);
     }
   };
 
@@ -7171,7 +7176,7 @@ async function initSns() {
   const PRODUCT_NAMES_SHEET_ID = '1NNRTRQxQl2r4XivAvH700CC39p49GD2xfZlyRNqahGA';
   const PRODUCT_NAMES_GID      = '164358627';
 
-  async function buildTopProductsTable(allRows, targetYear, targetMonth, adOrderRows = [], prevYear = null, prevMonth = null, prevAdOrderRows = [], returnsByAsin = {}, returnsByAsinPrev = {}, returnsByAsinByTerritory = {}) {
+  async function buildTopProductsTable(allRows, targetYear, targetMonth, adOrderRows = [], prevYear = null, prevMonth = null, prevAdOrderRows = [], returnsByAsin = {}, returnsByAsinPrev = {}, returnsByAsinByTerritory = {}, returnsByAsinPrevByTerritory = {}) {
     const prefix = `${targetYear}-${String(targetMonth).padStart(2,'0')}`;
 
     // Filter to last full month (same rules as KPIs)
@@ -7231,6 +7236,14 @@ async function initSns() {
 
     // Build prev month ASIN units for MOM comparison
     const asinUnitsPrev = {};
+    // ADDED 2026-08-27 per Jaclyn -- same per-territory (US/CA/UK) split as
+    // asinUnitsByTerritory above, but for the prior month, so the table can
+    // show a MOM% badge next to each territory's unit count (previously
+    // only the combined per-ASIN total was compared MOM; the territory
+    // columns and the Ads/Organic columns showed a bare number with no
+    // comparison at all, even though the momSpan() helper below already
+    // existed to render one but was never called).
+    const asinUnitsByTerritoryPrev = {};
     if (prevYear && prevMonth) {
       const prevPrefix = `${prevYear}-${String(prevMonth).padStart(2,'0')}`;
       const prevMonthRows = allRows.filter(r => {
@@ -7248,6 +7261,9 @@ async function initSns() {
         const qty = parseInt(row.unit_count, 10) || 0;
         if (!qty) return;
         asinUnitsPrev[asin] = (asinUnitsPrev[asin] || 0) + qty;
+        const t = row._territory || 'US';
+        if (!asinUnitsByTerritoryPrev[asin]) asinUnitsByTerritoryPrev[asin] = { US: 0, CA: 0, UK: 0 };
+        if (asinUnitsByTerritoryPrev[asin][t] != null) asinUnitsByTerritoryPrev[asin][t] += qty;
       });
     }
 
@@ -7255,6 +7271,12 @@ async function initSns() {
     // the MOM comparison in the table is net-vs-net, not net-vs-gross.
     Object.keys(asinUnitsPrev).forEach(asin => {
       asinUnitsPrev[asin] = Math.max(0, asinUnitsPrev[asin] - (returnsByAsinPrev[asin] || 0));
+    });
+    Object.keys(asinUnitsByTerritoryPrev).forEach(asin => {
+      const territoryReturnsPrev = returnsByAsinPrevByTerritory[asin] || {};
+      ['US', 'CA', 'UK'].forEach(t => {
+        asinUnitsByTerritoryPrev[asin][t] = Math.max(0, asinUnitsByTerritoryPrev[asin][t] - (territoryReturnsPrev[t] || 0));
+      });
     });
 
     // Build prev month ASIN → ad_units map
@@ -7352,6 +7374,21 @@ async function initSns() {
       p.adUnits += asinAdUnitsMap[asin] || 0;
     });
 
+    // ADDED 2026-08-27 per Jaclyn -- same name-consolidation as productRows
+    // above, but for the prior month, keyed the same way so each current
+    // row can look up its own MOM comparison per territory/ads/organic
+    // via momSpan() below.
+    const productRowsPrev = {};
+    Object.keys(asinUnitsPrev).forEach(asin => {
+      const key = asinNameMap[asin] || asin;
+      if (!productRowsPrev[key]) productRowsPrev[key] = { units: 0, territory: { US: 0, CA: 0, UK: 0 }, adUnits: 0 };
+      const p = productRowsPrev[key];
+      p.units += asinUnitsPrev[asin] || 0;
+      const t = asinUnitsByTerritoryPrev[asin] || { US: 0, CA: 0, UK: 0 };
+      p.territory.US += t.US; p.territory.CA += t.CA; p.territory.UK += t.UK;
+      p.adUnits += prevAsinAdUnitsMap[asin] || 0;
+    });
+
     // Sort by units desc, remove zeros
     const sorted = Object.entries(productRows)
       .filter(([, p]) => p.units > 0)
@@ -7360,15 +7397,17 @@ async function initSns() {
     tbody.innerHTML = '';
     sorted.forEach(([name, p], idx) => {
       const orgUnits = Math.max(0, p.units - p.adUnits);
+      const prev = productRowsPrev[name] || { units: 0, territory: { US: 0, CA: 0, UK: 0 }, adUnits: 0 };
+      const prevOrgUnits = Math.max(0, prev.units - prev.adUnits);
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${idx + 1}.</td>
         <td>${name}</td>
-        <td><div class="tp-cell"><span class="tp-units">${p.territory.US.toLocaleString()}</span></div></td>
-        <td><div class="tp-cell"><span class="tp-units">${p.territory.CA.toLocaleString()}</span></div></td>
-        <td style="border-right:1px dotted var(--border);padding-right:22px;"><div class="tp-cell"><span class="tp-units">${p.territory.UK.toLocaleString()}</span></div></td>
-        <td style="border-left:1px dotted var(--border);padding-left:22px;"><div class="tp-cell"><span class="tp-units">${p.adUnits.toLocaleString()}</span></div></td>
-        <td><div class="tp-cell"><span class="tp-units">${orgUnits.toLocaleString()}</span></div></td>`;
+        <td><div class="tp-cell"><span class="tp-units">${p.territory.US.toLocaleString()}</span>${momSpan(p.territory.US, prev.territory.US)}</div></td>
+        <td><div class="tp-cell"><span class="tp-units">${p.territory.CA.toLocaleString()}</span>${momSpan(p.territory.CA, prev.territory.CA)}</div></td>
+        <td style="border-right:1px dotted var(--border);padding-right:22px;"><div class="tp-cell"><span class="tp-units">${p.territory.UK.toLocaleString()}</span>${momSpan(p.territory.UK, prev.territory.UK)}</div></td>
+        <td style="border-left:1px dotted var(--border);padding-left:22px;"><div class="tp-cell"><span class="tp-units">${p.adUnits.toLocaleString()}</span>${momSpan(p.adUnits, prev.adUnits)}</div></td>
+        <td><div class="tp-cell"><span class="tp-units">${orgUnits.toLocaleString()}</span>${momSpan(orgUnits, prevOrgUnits)}</div></td>`;
       tbody.appendChild(tr);
     });
 
@@ -7571,8 +7610,13 @@ async function initSns() {
     if (!badge) return;
     if (pctVal == null) { badge.className = selector.replace('.','') + ' flat'; badge.textContent = ''; return; }
     const cls = pctVal === 0 ? 'flat' : pctVal > 0 ? 'up' : 'dn';
+    // FIXED 2026-08-27 per Jaclyn -- use the same ▲/▼ arrow convention as
+    // setKpiMom() (Amazon Ads KPIs) and setKpi() (Overview page) instead of
+    // a bare +/-% figure, so every KPI card's MOM badge on the Sales pages
+    // reads consistently with the rest of the dashboard.
+    const arrow = pctVal === 0 ? '' : pctVal > 0 ? '▲ ' : '▼ ';
     badge.className = selector.replace('.','') + ' ' + cls;
-    badge.textContent = `${pctVal > 0 ? '+' : ''}${pctVal}% ${label}`;
+    badge.textContent = `${arrow}${Math.abs(pctVal)}% ${label}`;
   }
 
   // Aggregate ad conversions for a given year-month from ads sheet rows
@@ -8798,8 +8842,13 @@ async function initSns() {
     if (!badge) return;
     if (pctVal == null) { badge.className = selector.replace('.','') + ' flat'; badge.textContent = ''; return; }
     const cls = pctVal === 0 ? 'flat' : pctVal > 0 ? 'up' : 'dn';
+    // FIXED 2026-08-27 per Jaclyn -- use the same ▲/▼ arrow convention as
+    // setKpiMom() (Amazon Ads KPIs) and setKpi() (Overview page) instead of
+    // a bare +/-% figure, so every KPI card's MOM badge on the Sales pages
+    // reads consistently with the rest of the dashboard.
+    const arrow = pctVal === 0 ? '' : pctVal > 0 ? '▲ ' : '▼ ';
     badge.className = selector.replace('.','') + ' ' + cls;
-    badge.textContent = `${pctVal > 0 ? '+' : ''}${pctVal}% ${label || 'MOM'}`;
+    badge.textContent = `${arrow}${Math.abs(pctVal)}% ${label || 'MOM'}`;
   }
 
   // Period selector state, added 2026-08-12 — raw rows fetched once,
@@ -9446,8 +9495,13 @@ async function initSns() {
     if (pctVal == null) { badge.className = selector.replace('.','') + ' flat'; badge.textContent = ''; return; }
     const isGood = pctVal > 0;
     const cls = pctVal === 0 ? 'flat' : isGood ? 'up' : 'dn';
+    // FIXED 2026-08-27 per Jaclyn -- use the same ▲/▼ arrow convention as
+    // setKpiMom() (Amazon Ads KPIs) and setKpi() (Overview page) instead of
+    // a bare +/-% figure, so every KPI card's MOM badge on the Sales pages
+    // reads consistently with the rest of the dashboard.
+    const arrow = pctVal === 0 ? '' : pctVal > 0 ? '▲ ' : '▼ ';
     badge.className = selector.replace('.','') + ' ' + cls;
-    badge.textContent = `${pctVal > 0 ? '+' : ''}${pctVal}% ${label}`;
+    badge.textContent = `${arrow}${Math.abs(pctVal)}% ${label}`;
   }
 
   function renderKPIs(curr, prev, prevYear, adUnits = 0, prevAdUnits = 0) {
@@ -10065,8 +10119,13 @@ async function initSns() {
     if (!badge) return;
     if (pctVal == null) { badge.className = selector.replace('.','') + ' flat'; badge.textContent = ''; return; }
     const cls = pctVal === 0 ? 'flat' : pctVal > 0 ? 'up' : 'dn';
+    // FIXED 2026-08-27 per Jaclyn -- use the same ▲/▼ arrow convention as
+    // setKpiMom() (Amazon Ads KPIs) and setKpi() (Overview page) instead of
+    // a bare +/-% figure, so every KPI card's MOM badge on the Sales pages
+    // reads consistently with the rest of the dashboard.
+    const arrow = pctVal === 0 ? '' : pctVal > 0 ? '▲ ' : '▼ ';
     badge.className = selector.replace('.','') + ' ' + cls;
-    badge.textContent = `${pctVal > 0 ? '+' : ''}${pctVal}% ${label}`;
+    badge.textContent = `${arrow}${Math.abs(pctVal)}% ${label}`;
   }
 
   // Aggregate ad conversions for a given year-month from ads sheet rows
@@ -10634,8 +10693,13 @@ async function initSns() {
     if (!badge) return;
     if (pctVal == null) { badge.className = selector.replace('.','') + ' flat'; badge.textContent = ''; return; }
     const cls = pctVal === 0 ? 'flat' : pctVal > 0 ? 'up' : 'dn';
+    // FIXED 2026-08-27 per Jaclyn -- use the same ▲/▼ arrow convention as
+    // setKpiMom() (Amazon Ads KPIs) and setKpi() (Overview page) instead of
+    // a bare +/-% figure, so every KPI card's MOM badge on the Sales pages
+    // reads consistently with the rest of the dashboard.
+    const arrow = pctVal === 0 ? '' : pctVal > 0 ? '▲ ' : '▼ ';
     badge.className = selector.replace('.','') + ' ' + cls;
-    badge.textContent = `${pctVal > 0 ? '+' : ''}${pctVal}% ${label || 'MOM'}`;
+    badge.textContent = `${arrow}${Math.abs(pctVal)}% ${label || 'MOM'}`;
   }
 
   window.initWalmartExternal = function () {
