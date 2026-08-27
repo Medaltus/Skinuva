@@ -6090,9 +6090,11 @@ async function initSns() {
     return !row.brand || b === target || (target.length > 3 && b.endsWith(target.slice(1)));
   }
 
-  // Same spreadsheet as initStewardshipLive's SUMMARY_SHEET_ID, different tab.
-  const TOTALS_SHEET_ID    = window.SHEET_CFG.SHEET_STEWARDSHIP_SUMMARY.fileId; // Stewardship Summary
-  const TOTALS_GID         = window.SHEET_CFG.SHEET_STEWARDSHIP_SUMMARY.gid;                                   // évolis tab — corrected per Jaclyn 2026-07-14 (was 346552515, wrong tab)
+  // FIXED 2026-08-27 -- removed the Stewardship Summary sheet fetch here.
+  // Its 'total_subscriptions' column is confirmed empty for all 44 rows
+  // (every month since 2023), and this function no longer reads it at
+  // all -- see the comment above the Active Subscriptions block below for
+  // the real fix (now reading the Subscriptions cache sheet instead).
   const RETENTION_SHEET_ID = window.SHEET_CFG.SHEET_SUBSCRIPTIONS.fileId;  // Subscriptions cache — confirmed correct directly from Jaclyn's own URL text 2026-07-28 (my prior 'KR' correction was wrong — misread a screenshot; P and R look nearly identical in that font). The real bug was ONLY the gid below, which pointed at a tab with pbj's data instead of évolis's.
   const RETENTION_GID      = window.SHEET_CFG.SHEET_SUBSCRIPTIONS.gid;                                   // 'evolis' tab, confirmed directly from Jaclyn's screenshot 2026-07-28 (previous gid 1742224413 was also wrong — different tab in the wrong file entirely)
 
@@ -6101,26 +6103,32 @@ async function initSns() {
   const retentionKpiEl = document.querySelector('#kpi-retention .kpi-value') || null;
 
   try {
-    const [totalsCsv, retentionCsv] = await Promise.all([
-      fetch(csvUrl(TOTALS_SHEET_ID, TOTALS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Skinuva][subscriptions] totals sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva][subscriptions] totals sheet fetch error:', e.message), '')),
-      fetch(csvUrl(RETENTION_SHEET_ID, RETENTION_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Skinuva][subscriptions] retention sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva][subscriptions] retention sheet fetch error:', e.message), '')),
-    ]);
+    const retentionCsv = await fetch(csvUrl(RETENTION_SHEET_ID, RETENTION_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Skinuva][subscriptions] retention sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva][subscriptions] retention sheet fetch error:', e.message), ''));
 
     // ── Active Subscriptions: bar chart + KPI ───────────────────────────
-    if (looksLikeCsv(totalsCsv)) {
-      const rows = csvToRows(totalsCsv);
-      console.log('[Skinuva][subscriptions] totals sheet columns:', rows.length ? Object.keys(rows[0]) : '(no rows)');
-      console.log('[Skinuva][subscriptions] totals sheet total row count (before any filtering):', rows.length);
+    // FIXED 2026-08-27 -- this used to read totalsCsv's 'total_subscriptions'
+    // column. Confirmed directly from a real console export: that column
+    // exists (13 real columns, 'total_subscriptions' spelled exactly as
+    // expected) but is EMPTY for all 44 rows, every month from 2023
+    // through today -- not a naming mismatch, the column itself has never
+    // been populated. Switched to the Subscriptions cache sheet instead
+    // (retentionCsv, already being fetched for the Retention KPI below)
+    // -- it has its own real, populated 'active_subscriptions' column
+    // (confirmed: 354 for 2026-07). Uses the SAME strict brand filter
+    // already proven necessary on this sheet for Retention (it's shared
+    // across brands; a looser filter previously leaked another brand's
+    // row through as if it were this brand's own).
+    if (looksLikeCsv(retentionCsv)) {
+      const rows = csvToRows(retentionCsv);
+      const stripAccentsSnsChart = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const brandRows = rows.filter(r => stripAccentsSnsChart(r.brand).toLowerCase().trim() === (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase());
+      console.log('[Skinuva][subscriptions] active-subscriptions chart -- rows after STRICT brand filter:', brandRows.length, 'of', rows.length);
 
-      const brandRows = rows.filter(isEvolisRow);
-      const useRows = brandRows.length ? brandRows : rows;
-      console.log('[Skinuva][subscriptions] rows after brand filter:', useRows.length, '(', rows.length - useRows.length, 'dropped by brand filter )');
-
-      const withDate = useRows.map(r => ({ row: r, y: parseInt(r.year, 10), m: parseInt(r.month, 10) }));
+      const withDate = brandRows.map(r => ({ row: r, y: parseInt(r.year, 10), m: parseInt(r.month, 10) }));
       const sortable = withDate.length > 0 && withDate.every(x => !isNaN(x.y) && !isNaN(x.m));
       if (sortable) withDate.sort((a, b) => (a.y - b.y) || (a.m - b.m));
       if (withDate.length) {
-        console.log('[Skinuva][subscriptions] full year/month range present in sheet (regardless of whether total_subscriptions is populated):',
+        console.log('[Skinuva][subscriptions] full year/month range present in sheet (regardless of whether active_subscriptions is populated):',
           withDate[0].y + '-' + withDate[0].m, 'to', withDate[withDate.length - 1].y + '-' + withDate[withDate.length - 1].m);
       }
 
@@ -6129,7 +6137,7 @@ async function initSns() {
       const skipped = [];
       withDate.forEach(x => {
         const r = x.row;
-        const total = num(r.total_subscriptions ?? r.total_subs ?? r.subscriptions ?? r.active_subscriptions);
+        const total = num(r.active_subscriptions ?? r.total_subscriptions ?? r.total_subs ?? r.subscriptions);
         if (total === null || total === 0) { skipped.push(x.y + '-' + x.m); return; }
         const label = (!isNaN(x.y) && !isNaN(x.m)) ? `${monthAbbr[x.m - 1]} '${String(x.y).slice(2)}` : (r.month_label || r.month || r.date || '');
         labels.push(label);
@@ -6137,7 +6145,7 @@ async function initSns() {
         years.push(x.y);
       });
       if (skipped.length) {
-        console.warn('[Skinuva][subscriptions] skipped', skipped.length, 'row(s) with no usable total_subscriptions value — these months are NOT in the chart:', skipped.join(', '));
+        console.warn('[Skinuva][subscriptions] skipped', skipped.length, 'row(s) with no usable active_subscriptions value — these months are NOT in the chart:', skipped.join(', '));
       }
 
       // Trailing 13 months only — chronologically sorted already, so this
@@ -6185,10 +6193,10 @@ async function initSns() {
           }
         }
       } else {
-        console.warn('[Skinuva][subscriptions] no total_subscriptions values matched in totals sheet — check TOTALS_GID/column name. Available columns:', rows.length ? Object.keys(rows[0]) : '(none)');
+        console.warn('[Skinuva][subscriptions] no active_subscriptions values matched in Subscriptions cache sheet -- check RETENTION_GID/column name. Available columns:', rows.length ? Object.keys(rows[0]) : '(none)');
       }
     } else {
-      console.warn('[Skinuva][subscriptions] totals sheet did not return CSV (check it is published/shared, and TOTALS_GID is correct).');
+      console.warn('[Skinuva][subscriptions] Subscriptions cache sheet did not return CSV (check it is published/shared, and RETENTION_GID is correct).');
     }
 
     // ── Subscribe & Save Retention KPI ───────────────────────────────────
@@ -11758,9 +11766,11 @@ async function initSnsExternal() {
     return !row.brand || b === target || (target.length > 3 && b.endsWith(target.slice(1)));
   }
 
-  // Same spreadsheet as initStewardshipLive's SUMMARY_SHEET_ID, different tab.
-  const TOTALS_SHEET_ID    = window.SHEET_CFG.SHEET_STEWARDSHIP_SUMMARY.fileId; // Stewardship Summary
-  const TOTALS_GID         = window.SHEET_CFG.SHEET_STEWARDSHIP_SUMMARY.gid;                                   // évolis tab — corrected per Jaclyn 2026-07-14 (was 346552515, wrong tab)
+  // FIXED 2026-08-27 -- removed the Stewardship Summary sheet fetch here.
+  // Its 'total_subscriptions' column is confirmed empty for all 44 rows
+  // (every month since 2023), and this function no longer reads it at
+  // all -- see the comment above the Active Subscriptions block below for
+  // the real fix (now reading the Subscriptions cache sheet instead).
   const RETENTION_SHEET_ID = window.SHEET_CFG.SHEET_SUBSCRIPTIONS.fileId;  // Subscriptions cache — confirmed correct directly from Jaclyn's own URL text 2026-07-28 (my prior 'KR' correction was wrong — misread a screenshot; P and R look nearly identical in that font). The real bug was ONLY the gid below, which pointed at a tab with pbj's data instead of évolis's.
   const RETENTION_GID      = window.SHEET_CFG.SHEET_SUBSCRIPTIONS.gid;                                   // 'evolis' tab, confirmed directly from Jaclyn's screenshot 2026-07-28 (previous gid 1742224413 was also wrong — different tab in the wrong file entirely)
 
@@ -11769,26 +11779,32 @@ async function initSnsExternal() {
   const retentionKpiEl = document.querySelector('#mx-kpi-retention .kpi-value') || null;
 
   try {
-    const [totalsCsv, retentionCsv] = await Promise.all([
-      fetch(csvUrl(TOTALS_SHEET_ID, TOTALS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Skinuva][subscriptions] totals sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva][subscriptions] totals sheet fetch error:', e.message), '')),
-      fetch(csvUrl(RETENTION_SHEET_ID, RETENTION_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Skinuva][subscriptions] retention sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva][subscriptions] retention sheet fetch error:', e.message), '')),
-    ]);
+    const retentionCsv = await fetch(csvUrl(RETENTION_SHEET_ID, RETENTION_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : (console.warn('[Skinuva][subscriptions] retention sheet fetch not ok:', r.status, r.url), '')).catch(e => (console.warn('[Skinuva][subscriptions] retention sheet fetch error:', e.message), ''));
 
     // ── Active Subscriptions: bar chart + KPI ───────────────────────────
-    if (looksLikeCsv(totalsCsv)) {
-      const rows = csvToRows(totalsCsv);
-      console.log('[Skinuva][subscriptions] totals sheet columns:', rows.length ? Object.keys(rows[0]) : '(no rows)');
-      console.log('[Skinuva][subscriptions] totals sheet total row count (before any filtering):', rows.length);
+    // FIXED 2026-08-27 -- this used to read totalsCsv's 'total_subscriptions'
+    // column. Confirmed directly from a real console export: that column
+    // exists (13 real columns, 'total_subscriptions' spelled exactly as
+    // expected) but is EMPTY for all 44 rows, every month from 2023
+    // through today -- not a naming mismatch, the column itself has never
+    // been populated. Switched to the Subscriptions cache sheet instead
+    // (retentionCsv, already being fetched for the Retention KPI below)
+    // -- it has its own real, populated 'active_subscriptions' column
+    // (confirmed: 354 for 2026-07). Uses the SAME strict brand filter
+    // already proven necessary on this sheet for Retention (it's shared
+    // across brands; a looser filter previously leaked another brand's
+    // row through as if it were this brand's own).
+    if (looksLikeCsv(retentionCsv)) {
+      const rows = csvToRows(retentionCsv);
+      const stripAccentsSnsChart = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const brandRows = rows.filter(r => stripAccentsSnsChart(r.brand).toLowerCase().trim() === (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase());
+      console.log('[Skinuva][subscriptions] active-subscriptions chart -- rows after STRICT brand filter:', brandRows.length, 'of', rows.length);
 
-      const brandRows = rows.filter(isEvolisRow);
-      const useRows = brandRows.length ? brandRows : rows;
-      console.log('[Skinuva][subscriptions] rows after brand filter:', useRows.length, '(', rows.length - useRows.length, 'dropped by brand filter )');
-
-      const withDate = useRows.map(r => ({ row: r, y: parseInt(r.year, 10), m: parseInt(r.month, 10) }));
+      const withDate = brandRows.map(r => ({ row: r, y: parseInt(r.year, 10), m: parseInt(r.month, 10) }));
       const sortable = withDate.length > 0 && withDate.every(x => !isNaN(x.y) && !isNaN(x.m));
       if (sortable) withDate.sort((a, b) => (a.y - b.y) || (a.m - b.m));
       if (withDate.length) {
-        console.log('[Skinuva][subscriptions] full year/month range present in sheet (regardless of whether total_subscriptions is populated):',
+        console.log('[Skinuva][subscriptions] full year/month range present in sheet (regardless of whether active_subscriptions is populated):',
           withDate[0].y + '-' + withDate[0].m, 'to', withDate[withDate.length - 1].y + '-' + withDate[withDate.length - 1].m);
       }
 
@@ -11797,7 +11813,7 @@ async function initSnsExternal() {
       const skipped = [];
       withDate.forEach(x => {
         const r = x.row;
-        const total = num(r.total_subscriptions ?? r.total_subs ?? r.subscriptions ?? r.active_subscriptions);
+        const total = num(r.active_subscriptions ?? r.total_subscriptions ?? r.total_subs ?? r.subscriptions);
         if (total === null || total === 0) { skipped.push(x.y + '-' + x.m); return; }
         const label = (!isNaN(x.y) && !isNaN(x.m)) ? `${monthAbbr[x.m - 1]} '${String(x.y).slice(2)}` : (r.month_label || r.month || r.date || '');
         labels.push(label);
@@ -11805,7 +11821,7 @@ async function initSnsExternal() {
         years.push(x.y);
       });
       if (skipped.length) {
-        console.warn('[Skinuva][subscriptions] skipped', skipped.length, 'row(s) with no usable total_subscriptions value — these months are NOT in the chart:', skipped.join(', '));
+        console.warn('[Skinuva][subscriptions] skipped', skipped.length, 'row(s) with no usable active_subscriptions value — these months are NOT in the chart:', skipped.join(', '));
       }
 
       // Trailing 13 months only — chronologically sorted already, so this
@@ -11853,7 +11869,7 @@ async function initSnsExternal() {
           }
         }
       } else {
-        console.warn('[Skinuva][subscriptions] no total_subscriptions values matched in totals sheet — check TOTALS_GID/column name. Available columns:', rows.length ? Object.keys(rows[0]) : '(none)');
+        console.warn('[Skinuva][subscriptions] no active_subscriptions values matched in Subscriptions cache sheet -- check RETENTION_GID/column name. Available columns:', rows.length ? Object.keys(rows[0]) : '(none)');
       }
     } else {
       console.warn('[Skinuva][subscriptions] totals sheet did not return CSV (check it is published/shared, and TOTALS_GID is correct).');
