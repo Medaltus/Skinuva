@@ -7439,7 +7439,23 @@ async function initSns() {
 
   function normalizeDate(val) {
     if (!val) return '';
+    // Already ISO: YYYY-MM-DD or YYYY-MM-DDThh...
     if (/^\d{4}-\d{2}/.test(val)) return val.substring(0, 10);
+    // FIXED 2026-08-27 per Jaclyn -- this copy (Website/Shopify orders page)
+    // was silently passing through non-ISO date strings unchanged. The
+    // Shopify orders sheet's sync cron switched from M/D/YYYY text to ISO
+    // YYYY-MM-DD on 2026-07-27 without backfilling historical rows, so every
+    // row before that date failed the .substring(0,7) month-prefix filter
+    // and was silently dropped from Total Units/Orders/Revenue for all
+    // Website order-type tabs (Customer/Physician/International/Samples).
+    // Google Sheets M/D/YY or MM/DD/YY format:
+    const parts = val.split('/');
+    if (parts.length === 3) {
+      const m = parts[0].padStart(2, '0');
+      const d = parts[1].padStart(2, '0');
+      const y = parts[2].length === 2 ? '20' + parts[2] : parts[2];
+      return `${y}-${m}-${d}`;
+    }
     return val;
   }
 
@@ -9945,7 +9961,23 @@ async function initSns() {
 
   function normalizeDate(val) {
     if (!val) return '';
+    // Already ISO: YYYY-MM-DD or YYYY-MM-DDThh...
     if (/^\d{4}-\d{2}/.test(val)) return val.substring(0, 10);
+    // FIXED 2026-08-27 per Jaclyn -- this copy (Website/Shopify orders page)
+    // was silently passing through non-ISO date strings unchanged. The
+    // Shopify orders sheet's sync cron switched from M/D/YYYY text to ISO
+    // YYYY-MM-DD on 2026-07-27 without backfilling historical rows, so every
+    // row before that date failed the .substring(0,7) month-prefix filter
+    // and was silently dropped from Total Units/Orders/Revenue for all
+    // Website order-type tabs (Customer/Physician/International/Samples).
+    // Google Sheets M/D/YY or MM/DD/YY format:
+    const parts = val.split('/');
+    if (parts.length === 3) {
+      const m = parts[0].padStart(2, '0');
+      const d = parts[1].padStart(2, '0');
+      const y = parts[2].length === 2 ? '20' + parts[2] : parts[2];
+      return `${y}-${m}-${d}`;
+    }
     return val;
   }
 
