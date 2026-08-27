@@ -1971,7 +1971,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 
     <div class="channel-page" id="x-website">
       <div class="channel-hdr">
-        <span style="font-size:16px;font-weight:600;color:var(--navy);">WEB — evolisproducts.com</span>
+        <span style="font-size:16px;font-weight:600;color:var(--navy);">WEB — skinuva.com</span>
         <span id="x-web-hdr-date" style="font-size:11px;color:var(--muted);">📅 Loading…</span>
       </div>
       <div class="kpi-row">
@@ -20923,7 +20923,7 @@ async function loadAuditResultsFromSheet() {
           '<div class="pdfx-kpis">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
           '<div class="pdfx-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div class="pdfx-card-title" style="margin-bottom:0;">Sales Revenue by Month</div><div>' + pdfxLegendHtml('legend-amazon') + '</div></div>' + pdfxChartBlock('_amazonChart') + '</div>' +
           '<div class="pdfx-card"><div class="pdfx-card-title">Top Selling Products <span style="font-weight:400;color:var(--muted);">(by Units)</span></div>' +
-            pdfxTableHtml(['#', 'Product', 'Units', 'Units (Ads)', 'Units (Organic)'], rows) +
+            pdfxTableHtml(['#', 'Product', 'US', 'CA', 'UK', 'Units (Ads)', 'Units (Organic)'], rows) +
           '</div>' +
           (insight ? '<div class="pdfx-insight"><strong>Key Insight:</strong> ' + pdfxEscape(insight) + '</div>' : '') +
         '</div>' +
@@ -21568,7 +21568,7 @@ async function loadAuditResultsFromSheet() {
         pdf.addImage(imgData, 'JPEG', 0, 0, pageWidthIn, Math.min(renderedHeightIn, pageHeightIn));
       }
 
-      const filename = 'Evolis_Partnership_Report_' + (monthYear ? monthYear.replace(' ', '_') : 'Report') + '.pdf';
+      const filename = 'Skinuva_Partnership_Report_' + (monthYear ? monthYear.replace(' ', '_') : 'Report') + '.pdf';
       pdf.save(filename);
       console.log('[pdf-export] pdf.save() called — download should start now');
 
