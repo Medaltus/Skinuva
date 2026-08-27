@@ -1677,6 +1677,20 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
           <thead><tr><th style="width:32px;">#</th><th>Product</th><th>US</th><th>CA</th><th style="border-right:1px dotted var(--border);padding-right:22px;">UK</th><th style="border-left:1px dotted var(--border);padding-left:22px;">Ads</th><th>Organic</th></tr></thead>
           <tbody id="tp-tbody"><tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Loading…</td></tr></tbody>
         </table>
+        <!-- ADDED 2026-08-27 per Jaclyn -- surfaces the gap when this
+             period's Ad Orders Cache rows are missing their ASIN (a data
+             sync issue upstream, not a client-side bug -- confirmed live
+             for June 2026: all 13 rows for that month have a blank asin
+             cell, so none of their ad_units can be attributed to any
+             product and every row's Ads column reads 0 even though the
+             Units (Ads) KPI above is real). Populated/shown only when
+             buildTopProductsTable() below detects unattributed units for
+             the selected period; stays empty otherwise. This is
+             deliberately separate from the (expected, per Jaclyn) gap
+             between the KPI total and the table's Ads sum caused by
+             Sponsored Brands units, which have no ASIN-level report from
+             Amazon at all and are not flagged here. -->
+        <div id="tp-ads-gap-note" style="display:none;font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;padding:8px 10px;background:var(--bg);border-radius:var(--radius-sm);"></div>
       </div>
       <div class="insight-bar">
         <strong>Key Insight:</strong>
@@ -1760,6 +1774,17 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
             <thead><tr><th style="width:32px;">#</th><th>Product</th><th>Units</th><th>Units (Ads)</th><th>Units (Organic)</th></tr></thead>
             <tbody id="web-tp-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Loading…</td></tr></tbody>
           </table>
+          <!-- ADDED 2026-08-27 per Jaclyn -- same pattern as tp-ads-gap-note
+               on the Amazon page. Confirmed live: July 2026's Shopping tab
+               has 372 real rows for the month, but every one of them has a
+               blank SKU cell (the item_id -> SKU crosswalk was only run
+               going forward from Aug 7 on, never backfilled for July), so
+               none of that month's real ad conversions can be matched to
+               a product below even though the Units (Ads) KPI above (now
+               sourced from this same tab, see renderWebPeriod) shows a
+               real number. Populated/shown only when buildWebTopProducts()
+               detects unmatched conversions for the selected period. -->
+          <div id="web-tp-ads-gap-note" style="display:none;font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;padding:8px 10px;background:var(--bg);border-radius:var(--radius-sm);"></div>
         </div>
         <div class="insight-bar">
           <strong>Key Insight:</strong>
@@ -2012,6 +2037,8 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
           <thead><tr><th style="width:32px;">#</th><th>Product</th><th>Units</th><th>Units (Ads)</th><th>Units (Organic)</th></tr></thead>
           <tbody id="x-web-tp-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Loading…</td></tr></tbody>
         </table>
+        <!-- ADDED 2026-08-27 per Jaclyn -- external mirror of web-tp-ads-gap-note. -->
+        <div id="x-web-tp-ads-gap-note" style="display:none;font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;padding:8px 10px;background:var(--bg);border-radius:var(--radius-sm);"></div>
       </div>
       <div class="insight-bar" id="x-web-insight-bar">
         <strong>Key Insight:</strong>
@@ -7011,6 +7038,10 @@ async function initSns() {
     if (cfg.isHistorical) {
       const tbody = document.getElementById('tp-tbody');
       if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);font-style:italic;">Per-product breakdown not available for Last Year — ad-orders history is not confirmed to reach back this far. Showing headline KPIs only for this period.</td></tr>';
+      // Clear any unattributed-ads note left over from a previously
+      // selected period — added 2026-08-27 alongside that note itself.
+      const adsGapNote = document.getElementById('tp-ads-gap-note');
+      if (adsGapNote) { adsGapNote.style.display = 'none'; adsGapNote.innerHTML = ''; }
     } else {
       const adOrderRows = _amzAdOrdersRowsAll.filter(r => parseInt(r.year, 10) === cfg.year && parseInt(r.month, 10) === cfg.month);
       const prevAdOrderRows = cfg.prevYear ? _amzAdOrdersRowsAll.filter(r => parseInt(r.year, 10) === cfg.prevYear && parseInt(r.month, 10) === cfg.prevMonth) : [];
@@ -7243,10 +7274,32 @@ async function initSns() {
     }
     // Note: sheet column is named 'sku' but contains ASINs
     const asinAdUnitsMap = {};
+    // ADDED 2026-08-27 per Jaclyn -- some rows in the Ad Orders Cache for
+    // a given month come through with a blank asin/sku cell (confirmed
+    // live: every one of June 2026's 13 rows has asin=''). Those rows'
+    // ad_units are real spend/units, just not attributable to any
+    // product -- tracked separately here instead of silently vanishing,
+    // so the table can say *why* it's showing less than the Units (Ads)
+    // KPI for reasons beyond the expected Sponsored Brands gap (SB has
+    // no ASIN-level report from Amazon at all, and is not what this
+    // tracks -- this is specifically for known-but-unattributed rows).
+    let unattributedAdUnits = 0;
     adOrderRows.forEach(r => {
       const asin = (r.asin || r.sku || '').trim().toUpperCase();
-      if (asin) asinAdUnitsMap[asin] = (asinAdUnitsMap[asin] || 0) + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0);
+      const units = parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0;
+      if (asin) asinAdUnitsMap[asin] = (asinAdUnitsMap[asin] || 0) + units;
+      else unattributedAdUnits += units;
     });
+    const adsGapNote = document.getElementById('tp-ads-gap-note');
+    if (adsGapNote) {
+      if (unattributedAdUnits > 0) {
+        adsGapNote.style.display = '';
+        adsGapNote.innerHTML = `<strong>Note:</strong> ${unattributedAdUnits.toLocaleString()} ad unit${unattributedAdUnits === 1 ? '' : 's'} this period ${unattributedAdUnits === 1 ? 'has' : 'have'} no ASIN in the Ad Orders Cache sheet, so ${unattributedAdUnits === 1 ? "it can't" : "they can't"} be broken out per product below -- this is a data sync gap upstream, not missing sales. (Separate from Sponsored Brands units, which never carry an ASIN by design and aren't counted here.)`;
+      } else {
+        adsGapNote.style.display = 'none';
+        adsGapNote.innerHTML = '';
+      }
+    }
 
     // Fetch product name lookup sheet.
     // Tab gid=164358627: col A = ASIN, col B = SKU (base, no -SF), col C = Product Name.
@@ -7689,10 +7742,27 @@ async function initSns() {
     // correspondingly understated by that same amount. Only Consumer
     // (idPrefix === 'web') computes a real value now; the other three
     // always read zero ad units / all-organic.
+    //
+    // FIXED 2026-08-27 per Jaclyn -- this used to source from
+    // _webAdsRowsRaw, the campaign-level Ads tab (every Google Ads
+    // campaign type -- Search, Display, PMax across ALL countries --
+    // summed via that tab's own "conversions" metric, which is a
+    // marketing/attribution figure, not a count of product units sold).
+    // Confirmed live: for July 2026 this KPI read 257 while Total Units
+    // for the same period was only 79 -- "conversions" isn't scoped to
+    // Consumer/US or to a specific SKU, so it isn't comparable to units
+    // at all, and Units (Organic) = max(0, totalUnits - adUnits) was
+    // silently floored at 0 every time ads exceeded total units. There
+    // are no ASINs on the website side -- switched to _webShoppingRowsRaw
+    // (the Shopping/PMax-only, per-SKU tab, same "shopping tab" source
+    // buildWebTopProducts() already reads below for the table's Ads
+    // column), so the KPI card and the per-product breakdown are counting
+    // the same thing and can never disagree in a way that produces a
+    // negative/impossible Organic figure again.
     const ads = idPrefix === 'web'
       ? (cfg.isPartial
-          ? aggregateAdMonthThroughDay(_webAdsRowsRaw, cfg.year, cfg.month, cfg.throughDay, cfg.prevYear, cfg.prevMonth)
-          : aggregateAdMonth(_webAdsRowsRaw, cfg.year, cfg.month))
+          ? aggregateAdMonthThroughDay(_webShoppingRowsRaw, cfg.year, cfg.month, cfg.throughDay, cfg.prevYear, cfg.prevMonth)
+          : aggregateAdMonth(_webShoppingRowsRaw, cfg.year, cfg.month))
       : { totalConversions: 0, prevConversions: 0 };
 
     const fmt  = n => (n ?? 0).toLocaleString();
@@ -7727,8 +7797,16 @@ async function initSns() {
       return;
     }
 
-    const adUnits      = ads.totalConversions;
-    const prevAdUnits  = ads.prevConversions;
+    // FIXED 2026-08-27 per Jaclyn -- even scoped to the Shopping tab,
+    // Google's "conversions" is an attribution-weighted estimate (rows
+    // carry fractional values like 3.98), not a literal units count, so
+    // it can still exceed a period's real Total Units (confirmed live:
+    // 145 vs 79 for July 2026 even after the Shopping-tab fix above).
+    // Capped at Total Units here, same defensive pattern already used
+    // for Walmart's per-SKU ad units elsewhere in this file -- keeps
+    // Organic from silently flooring to 0 whenever the estimate runs hot.
+    const adUnits      = Math.min(ads.totalConversions, curr.totalUnits);
+    const prevAdUnits  = prev ? Math.min(ads.prevConversions, prev.totalUnits) : ads.prevConversions;
     const orgUnits     = Math.max(0, curr.totalUnits - adUnits);
     const prevOrgUnits = Math.max(0, (prev ? prev.totalUnits : 0) - prevAdUnits);
 
@@ -8029,6 +8107,8 @@ async function initSns() {
 
     if (!monthRows.length) {
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--slate);font-style:italic;font-size:12px;">No data for this period.</td></tr>';
+      const emptyGapNote = document.getElementById(idPrefix + '-tp-ads-gap-note');
+      if (emptyGapNote) { emptyGapNote.style.display = 'none'; emptyGapNote.innerHTML = ''; }
       return;
     }
 
@@ -8048,14 +8128,34 @@ async function initSns() {
     // Physician/International/Samples each showed Consumer's per-product
     // ad units as if they were their own.
     const skuAdConversions = {};
+    // ADDED 2026-08-27 per Jaclyn -- same idea as the Amazon page's
+    // tp-ads-gap-note. Confirmed live: July 2026's Shopping tab has 372
+    // real rows for the month, but every one has a blank SKU cell (the
+    // item_id -> SKU crosswalk was only run going forward from Aug 7 on,
+    // never backfilled for July) -- those conversions are real but can't
+    // be matched to any product below, so tracked separately instead of
+    // silently vanishing.
+    let unattributedAdConversions = 0;
     if (idPrefix === 'web') {
       (shoppingRows || [])
         .filter(r => (r.date || '').substring(0,7) === prefix)
         .forEach(r => {
           const sku = (findCI(r, 'sku') || '').trim().toUpperCase();
-          if (!sku) return; // not yet resolved to a real SKU
-          skuAdConversions[sku] = (skuAdConversions[sku] || 0) + (parseFloat(r.conversions) || 0);
+          const conv = parseFloat(r.conversions) || 0;
+          if (!sku) { unattributedAdConversions += conv; return; } // not yet resolved to a real SKU
+          skuAdConversions[sku] = (skuAdConversions[sku] || 0) + conv;
         });
+    }
+    const webAdsGapNote = document.getElementById(idPrefix + '-tp-ads-gap-note');
+    if (webAdsGapNote) {
+      const roundedUnattributed = Math.round(unattributedAdConversions);
+      if (roundedUnattributed > 0) {
+        webAdsGapNote.style.display = '';
+        webAdsGapNote.innerHTML = `<strong>Note:</strong> ~${roundedUnattributed.toLocaleString()} ad conversion${roundedUnattributed === 1 ? '' : 's'} this period ${roundedUnattributed === 1 ? "isn't" : "aren't"} yet matched to a SKU in the Shopping tab (the item_id-to-SKU crosswalk hadn't run for these rows when this was pulled), so ${roundedUnattributed === 1 ? "it can't" : "they can't"} be broken out per product below -- this is a data sync gap upstream, not missing sales.`;
+      } else {
+        webAdsGapNote.style.display = 'none';
+        webAdsGapNote.innerHTML = '';
+      }
     }
     const totalUnitsThisMonth = Object.values(skuUnits).reduce((s, v) => s + v, 0);
 
@@ -8149,10 +8249,17 @@ async function initSns() {
       // to a SKU) — genuinely unknown, not "confirmed zero". A SKU that DOES
       // have shopping data but converted 0 times this month shows a real 0.
       const hasAdData      = Object.prototype.hasOwnProperty.call(skuAdConversions, sku);
-      const skuAdUnits     = hasAdData ? Math.round(skuAdConversions[sku]) : null;
+      // FIXED 2026-08-27 per Jaclyn -- Google's "conversions" is an
+      // attribution-weighted estimate (rows carry fractional values like
+      // 3.98), not a literal units count, so it can exceed this SKU's own
+      // real units this month. Capped here -- same defensive pattern
+      // already used for Walmart's per-SKU ad units elsewhere in this
+      // file -- so a single SKU's Organic can't silently floor to 0 just
+      // because the ad estimate ran hot for that product.
+      const skuAdUnits     = hasAdData ? Math.min(Math.round(skuAdConversions[sku]), units) : null;
       const skuOrgUnits    = Math.max(0, units - (skuAdUnits || 0));
       const hasPrevAdData  = Object.prototype.hasOwnProperty.call(skuAdConversionsPrev, sku);
-      const skuPrevAdUnits = hasPrevAdData ? Math.round(skuAdConversionsPrev[sku]) : 0;
+      const skuPrevAdUnits = hasPrevAdData ? Math.min(Math.round(skuAdConversionsPrev[sku]), prevUnits) : 0;
       const skuPrevOrgUnits = Math.max(0, prevUnits - skuPrevAdUnits);
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -10020,7 +10127,16 @@ async function initSns() {
       const prevReturns = aggregateWebReturnsMonth(webReturnRows, prevYear, prevMonth);
       const curr    = aggregateMonth(allRows, year, month);
       const prev    = aggregateMonth(allRows, prevYear, prevMonth);
-      const ads     = aggregateAdMonth(adsRows, year, month);
+      // FIXED 2026-08-27 per Jaclyn -- matches the internal Website page's
+      // fix. This read from the campaign-level `adsRows` (all Google Ads
+      // campaign types across every country, via that tab's own
+      // "conversions" metric) instead of the per-SKU `shoppingRows` tab --
+      // confirmed live this produced a Units (Ads) KPI (257) larger than
+      // Total Units (79) for July 2026, which also silently floored Units
+      // (Organic) to 0 below. There are no ASINs on the website side, so
+      // switched to the same Shopping/PMax-only, per-SKU tab
+      // buildWebTopProducts() already uses for the table's Ads column.
+      const ads     = aggregateAdMonth(shoppingRows, year, month);
 
       // Net returns against Total Units — Units (Organic) below derives
       // from curr.totalUnits, so netting here alone covers both KPIs.
@@ -10042,8 +10158,13 @@ async function initSns() {
         return;
       }
 
-      const adUnits      = ads.totalConversions;
-      const prevAdUnits  = ads.prevConversions;
+      // FIXED 2026-08-27 per Jaclyn -- matches the internal page's fix.
+      // Google's "conversions" is attribution-weighted (fractional rows
+      // like 3.98), not a literal units count, and can exceed real Total
+      // Units even scoped to the Shopping tab -- capped here so Organic
+      // doesn't silently floor to 0.
+      const adUnits      = Math.min(ads.totalConversions, curr.totalUnits);
+      const prevAdUnits  = prev ? Math.min(ads.prevConversions, prev.totalUnits) : ads.prevConversions;
       const orgUnits     = Math.max(0, curr.totalUnits - adUnits);
       const prevOrgUnits = Math.max(0, (prev ? prev.totalUnits : 0) - prevAdUnits);
 
@@ -10192,6 +10313,8 @@ async function initSns() {
 
     if (!monthRows.length) {
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--slate);font-style:italic;font-size:12px;">No data for this period.</td></tr>';
+      const emptyGapNote = document.getElementById('x-web-tp-ads-gap-note');
+      if (emptyGapNote) { emptyGapNote.style.display = 'none'; emptyGapNote.innerHTML = ''; }
       return;
     }
 
@@ -10218,17 +10341,35 @@ async function initSns() {
     // 2026-07-28) — replaces the old site-wide-percentage estimate that
     // applied the same ratio to every product regardless of whether that
     // product was ever actually advertised. Note this only ever covers
-    // Shopping-campaign activity, not Search/Brand/Display — the top KPI
-    // card intentionally stays on the broader campaign-level source; see
-    // web-products-source note below the table.
+    // Shopping-campaign activity, not Search/Brand/Display.
+    // UPDATED 2026-08-27 per Jaclyn -- the top KPI card used to
+    // intentionally stay on the broader campaign-level source (see the
+    // comment this replaced); it's now switched to this same Shopping tab
+    // too (see aggregateAdMonth call in renderExternalWeb/renderWebPeriod)
+    // so the headline number and this table are counting the same thing.
     const skuAdConversions = {};
+    // ADDED 2026-08-27 per Jaclyn -- mirrors the internal page's
+    // unattributedAdConversions tracking below (web-tp-ads-gap-note).
+    let unattributedAdConversions = 0;
     (shoppingRows || [])
       .filter(r => (r.date || '').substring(0,7) === prefix)
       .forEach(r => {
         const sku = (findCI(r, 'sku') || '').trim().toUpperCase();
-        if (!sku) return; // not yet resolved to a real SKU
-        skuAdConversions[sku] = (skuAdConversions[sku] || 0) + (parseFloat(r.conversions) || 0);
+        const conv = parseFloat(r.conversions) || 0;
+        if (!sku) { unattributedAdConversions += conv; return; } // not yet resolved to a real SKU
+        skuAdConversions[sku] = (skuAdConversions[sku] || 0) + conv;
       });
+    const xWebAdsGapNote = document.getElementById('x-web-tp-ads-gap-note');
+    if (xWebAdsGapNote) {
+      const roundedUnattributed = Math.round(unattributedAdConversions);
+      if (roundedUnattributed > 0) {
+        xWebAdsGapNote.style.display = '';
+        xWebAdsGapNote.innerHTML = `<strong>Note:</strong> ~${roundedUnattributed.toLocaleString()} ad conversion${roundedUnattributed === 1 ? '' : 's'} this period ${roundedUnattributed === 1 ? "isn't" : "aren't"} yet matched to a SKU in the Shopping tab, so ${roundedUnattributed === 1 ? "it can't" : "they can't"} be broken out per product below -- this is a data sync gap upstream, not missing sales.`;
+      } else {
+        xWebAdsGapNote.style.display = 'none';
+        xWebAdsGapNote.innerHTML = '';
+      }
+    }
     const totalUnitsThisMonth = Object.values(skuUnits).reduce((s, v) => s + v, 0);
 
     // Prev month for MOM
@@ -10301,10 +10442,17 @@ async function initSns() {
       // to a SKU) — genuinely unknown, not "confirmed zero". A SKU that DOES
       // have shopping data but converted 0 times this month shows a real 0.
       const hasAdData      = Object.prototype.hasOwnProperty.call(skuAdConversions, sku);
-      const skuAdUnits     = hasAdData ? Math.round(skuAdConversions[sku]) : null;
+      // FIXED 2026-08-27 per Jaclyn -- Google's "conversions" is an
+      // attribution-weighted estimate (rows carry fractional values like
+      // 3.98), not a literal units count, so it can exceed this SKU's own
+      // real units this month. Capped here -- same defensive pattern
+      // already used for Walmart's per-SKU ad units elsewhere in this
+      // file -- so a single SKU's Organic can't silently floor to 0 just
+      // because the ad estimate ran hot for that product.
+      const skuAdUnits     = hasAdData ? Math.min(Math.round(skuAdConversions[sku]), units) : null;
       const skuOrgUnits    = Math.max(0, units - (skuAdUnits || 0));
       const hasPrevAdData  = Object.prototype.hasOwnProperty.call(skuAdConversionsPrev, sku);
-      const skuPrevAdUnits = hasPrevAdData ? Math.round(skuAdConversionsPrev[sku]) : 0;
+      const skuPrevAdUnits = hasPrevAdData ? Math.min(Math.round(skuAdConversionsPrev[sku]), prevUnits) : 0;
       const skuPrevOrgUnits = Math.max(0, prevUnits - skuPrevAdUnits);
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -16599,7 +16747,16 @@ async function renderReviewsTab() {
       const catReviews = [];
 
       products.forEach(p => {
-        const suffix = p.sku.replace('EVO', '');
+        // FIXED 2026-08-27 per Jaclyn -- this used to strip 'EVO', a
+        // leftover from the évolis version of this template (whose SKUs
+        // were EVO0001-style). Skinuva's SKUs are SVA0001-style, so
+        // .replace('EVO','') was a silent no-op -- suffix stayed the full
+        // 'SVA0001' string, which never matched the real DOM ids
+        // (revlist-0001, revlist-0003.2pk, etc., confirmed in the markup
+        // below), so listEl was always null and every review list stayed
+        // stuck on its static "Loading…" placeholder forever. Anchored to
+        // the start of the string so it only strips the brand prefix.
+        const suffix = p.sku.replace(/^SVA/, '');
         const productReviews = (bySku[p.sku] || []).slice();
         catReviews.push(...productReviews);
 
@@ -21004,6 +21161,13 @@ async function loadAuditResultsFromSheet() {
     const kpis = ['kpi-total-units', 'kpi-total-orders', 'kpi-avg-order', 'kpi-units-ads', 'kpi-units-organic'].map(pdfxKpi);
     const rows = pdfxTableRows('tp-tbody');
     const insight = pdfxText('#tp-insight-text');
+    // ADDED 2026-08-27 per Jaclyn -- carries the same unattributed-ads
+    // note the live table shows (see buildTopProductsTable()) into the
+    // PDF, so the "why is Ads lower than the KPI" context isn't lost
+    // when this page gets exported. pdfxText() returns '' when the live
+    // note is empty/hidden, so this renders nothing for a period with no
+    // unattributed rows -- same as the live page.
+    const adsGapText = pdfxText('#tp-ads-gap-note');
     return '' +
       '<div class="pdfx-page">' +
         '<div class="pdfx-inner">' +
@@ -21014,6 +21178,7 @@ async function loadAuditResultsFromSheet() {
           '<div class="pdfx-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div class="pdfx-card-title" style="margin-bottom:0;">Sales Revenue by Month</div><div>' + pdfxLegendHtml('legend-amazon') + '</div></div>' + pdfxChartBlock('_amazonChart') + '</div>' +
           '<div class="pdfx-card"><div class="pdfx-card-title">Top Selling Products <span style="font-weight:400;color:var(--muted);">(by Units)</span></div>' +
             pdfxTableHtml(['#', 'Product', 'US', 'CA', 'UK', 'Units (Ads)', 'Units (Organic)'], rows, 4, 6, true) +
+            (adsGapText ? '<div style="font-size:9px;color:var(--muted);margin-top:4px;line-height:1.4;">' + pdfxEscape(adsGapText) + '</div>' : '') +
           '</div>' +
           (insight ? '<div class="pdfx-insight"><strong>Key Insight:</strong> ' + pdfxEscape(insight) + '</div>' : '') +
         '</div>' +
