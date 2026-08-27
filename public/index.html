@@ -950,6 +950,16 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 .pdfx-kpi-mom.up{color:var(--green);}
 .pdfx-kpi-mom.dn{color:var(--danger);}
 .pdfx-kpi-mom.flat{color:var(--muted);}
+/* ADDED 2026-08-27 per Jaclyn -- marketplace (US/CA/UK) split for Amazon's
+   PDF KPI cards, mirroring the live dashboard's .kpi-territory row. Only
+   Amazon's 5 cards ever render this (see pdfxKpi/pdfxKpiCardHtml) -- other
+   pages' cards have no territory data and are unaffected, so .pdfx-kpi
+   itself doesn't need a fixed height bump; the grid row simply grows to
+   fit whichever cards in it are tallest. */
+.pdfx-kpi-territory{display:flex;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);width:100%;}
+.pdfx-kpi-territory-col{flex:1;text-align:center;}
+.pdfx-kpi-territory-lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:2px;}
+.pdfx-kpi-territory-val{font-size:12px;font-weight:700;color:var(--navy);}
 .pdfx-card{border:1px solid var(--border);border-radius:8px;padding:16px 18px;margin-bottom:14px;}
 .pdfx-card-title{font-size:12.5px;font-weight:600;color:var(--navy);margin-bottom:10px;font-family:var(--font-subheader);}
 .pdfx-chart-img{width:100%;display:block;}
@@ -960,6 +970,11 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 .pdfx-table tbody td strong{font-family:var(--font-bold);}
 .pdfx-table tbody td.num{text-align:left;}
 .pdfx-table tbody tr:nth-child(even){background:#f7f8fb;}
+/* ADDED 2026-08-27 per Jaclyn -- scoped tighter row spacing so Top
+   Selling Products can be shrunk without touching Website/Walmart's
+   tables, which don't pass the compact flag and keep the defaults above. */
+.pdfx-table.compact thead th{padding:5px 10px;}
+.pdfx-table.compact tbody td{padding:4px 10px;}
 .pdfx-insight{background:var(--sand);border-left:3px solid var(--warn);border-radius:0 6px 6px 0;padding:12px 16px;font-size:11.5px;color:var(--navy);line-height:1.55;margin-top:2px;}
 .pdfx-insight strong{color:#000;}
 .pdfx-two-col{display:grid;grid-template-columns:1fr;gap:16px;}
@@ -20277,7 +20292,7 @@ async function loadAuditResultsFromSheet() {
   // Reads a .kpi-card by element id → {label, value, mom, momClass}
   function pdfxKpi(id) {
     const el = pdfxById(id);
-    if (!el) return { label: '', value: '—', mom: '', momClass: 'flat' };
+    if (!el) return { label: '', value: '—', mom: '', momClass: 'flat', territory: [] };
     const label = pdfxText('.kpi-label', el);
     const value = pdfxText('.kpi-value', el);
     const momEl = el.querySelector('.kpi-mom');
@@ -20288,7 +20303,25 @@ async function loadAuditResultsFromSheet() {
       if (momEl.classList.contains('up')) momClass = 'up';
       else if (momEl.classList.contains('dn')) momClass = 'dn';
     }
-    return { label, value, mom, momClass };
+    // ADDED 2026-08-27 per Jaclyn -- pick up the US/CA/UK marketplace
+    // split already rendered on the live Amazon page (renderTerritory(),
+    // '#{id}-territory') and carry it into the PDF export, which
+    // previously only showed the blended total. Reads directly from the
+    // live DOM the same way label/value/mom already do above, rather
+    // than recomputing anything -- if the live card has no territory
+    // sub-row (every other page's KPI cards, which aren't Amazon-specific
+    // and have no US/CA/UK concept), this just returns an empty array and
+    // pdfxKpiCardHtml renders exactly as it did before.
+    const territoryEl = pdfxById(id + '-territory');
+    const territory = territoryEl
+      ? Array.prototype.map.call(territoryEl.querySelectorAll('.kpi-territory-col'), function (col) {
+          return {
+            label: (col.querySelector('.kpi-territory-lbl') || {}).textContent || '',
+            value: (col.querySelector('.kpi-territory-val') || {}).textContent || '',
+          };
+        })
+      : [];
+    return { label, value, mom, momClass, territory };
   }
 
   function pdfxKpiCardHtml(k) {
@@ -20299,10 +20332,21 @@ async function loadAuditResultsFromSheet() {
     // height across the row regardless of which cards happen to have a
     // MOM figure. An empty mom div still reserves its min-height (see CSS).
     const momHtml = '<div class="pdfx-kpi-mom ' + (k.mom ? k.momClass : 'flat') + '">' + (k.mom ? arrow + pdfxEscape(k.mom) : '') + '</div>';
+    // ADDED 2026-08-27 per Jaclyn -- same markup shape as the live
+    // dashboard's .kpi-territory row (see pdfxKpi above), styled for the
+    // PDF's own .pdfx-kpi-* namespace. Only rendered when territory data
+    // actually exists, so cards without a marketplace split (every page
+    // besides Amazon) are byte-for-byte unchanged from before this.
+    const territoryHtml = (k.territory && k.territory.length)
+      ? '<div class="pdfx-kpi-territory">' + k.territory.map(function (t) {
+          return '<div class="pdfx-kpi-territory-col"><div class="pdfx-kpi-territory-lbl">' + pdfxEscape(t.label) + '</div><div class="pdfx-kpi-territory-val">' + pdfxEscape(t.value) + '</div></div>';
+        }).join('') + '</div>'
+      : '';
     return '<div class="pdfx-kpi">' +
       '<div class="pdfx-kpi-lbl">' + pdfxEscape(k.label) + '</div>' +
       '<div class="pdfx-kpi-val">' + pdfxEscape(k.value) + '</div>' +
       momHtml +
+      territoryHtml +
       '</div>';
   }
 
@@ -20351,7 +20395,18 @@ async function loadAuditResultsFromSheet() {
     return rows;
   }
 
-  function pdfxTableHtml(headers, rows) {
+  // ADDED 2026-08-27 per Jaclyn -- optional dividerAfterIndex draws the
+  // same dotted divider the live dashboard's Amazon table has between UK
+  // and Units (Ads) (0-indexed column position; e.g. 4 for
+  // ['#','Product','US','CA','UK','Units (Ads)','Units (Organic)'] draws
+  // it after UK). Declared from BOTH adjacent cells' sides, same as the
+  // live table -- with border-collapse-style adjacency, a divider
+  // declared from only one side visually reads as belonging to that
+  // column rather than sitting neutrally in the gap between them (this
+  // was already learned once fixing the live table's own version of this
+  // same divider). Optional and unused by default, so Website/Walmart's
+  // tables (no dividerAfterIndex passed) are byte-for-byte unchanged.
+  function pdfxTableHtml(headers, rows, dividerAfterIndex, maxRows, compact) {
     if (!rows.length) {
       return '<div style="font-size:11px;color:var(--muted);font-style:italic;padding:10px 2px;">No sales data for this period.</div>';
     }
@@ -20361,14 +20416,33 @@ async function loadAuditResultsFromSheet() {
     // keeping. See pdfxCaptureAllChartImages/pdfxStretchChartToFillPage for
     // where the freed-up space is now going instead (the chart, not left
     // blank).
-    const MAX_ROWS = 8;
+    //
+    // ADDED 2026-08-27 per Jaclyn -- MAX_ROWS is now overridable per call
+    // (default stays 8, matching the above, for every table that doesn't
+    // pass a value). Amazon's table now passes a smaller number to make
+    // room for the new marketplace-split KPI rows without risking the
+    // whole-page-height distortion documented for this export pipeline --
+    // a fixed, predictable row-count cut, not a dynamic "measure
+    // remaining space" approach (that was already tried on the chart
+    // itself, produced visibly distorted results, and was removed --
+    // see the comment above pdfxStretchChartsToFillWhitespace's removal
+    // further down this file).
+    const MAX_ROWS = maxRows || 8;
     const shownRows = rows.length > MAX_ROWS ? rows.slice(0, MAX_ROWS) : rows;
+    function dividerStyle(i) {
+      if (dividerAfterIndex == null) return '';
+      if (i === dividerAfterIndex) return 'border-right:1px dotted var(--border);padding-right:18px;';
+      if (i === dividerAfterIndex + 1) return 'border-left:1px dotted var(--border);padding-left:18px;';
+      return '';
+    }
     let thead = '<tr>' + headers.map(function (h, i) {
-      return '<th' + (i > 1 ? ' class="num"' : '') + '>' + pdfxEscape(h) + '</th>';
+      const style = dividerStyle(i);
+      return '<th' + (i > 1 ? ' class="num"' : '') + (style ? ' style="' + style + '"' : '') + '>' + pdfxEscape(h) + '</th>';
     }).join('') + '</tr>';
     let tbody = shownRows.map(function (cells) {
       return '<tr>' + cells.map(function (c, i) {
         const isNum = i > 1;
+        const style = dividerStyle(i);
         let cellHtml;
         if (c.momText) {
           const color = c.momClass === 'up' ? 'var(--green)' : c.momClass === 'dn' ? 'var(--danger)' : 'rgba(107,123,162,.4)';
@@ -20386,10 +20460,10 @@ async function loadAuditResultsFromSheet() {
         } else {
           cellHtml = isNum ? '<strong>' + pdfxEscape(c.text) + '</strong>' : pdfxEscape(c.text);
         }
-        return '<td' + (isNum ? ' class="num"' : '') + '>' + cellHtml + '</td>';
+        return '<td' + (isNum ? ' class="num"' : '') + (style ? ' style="' + style + '"' : '') + '>' + cellHtml + '</td>';
       }).join('') + '</tr>';
     }).join('');
-    return '<table class="pdfx-table"><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table>';
+    return '<table class="pdfx-table' + (compact ? ' compact' : '') + '"><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table>';
   }
 
   // ── Chart image capture ────────────────────────────────────────────────
@@ -20939,7 +21013,7 @@ async function loadAuditResultsFromSheet() {
           '<div class="pdfx-kpis">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
           '<div class="pdfx-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div class="pdfx-card-title" style="margin-bottom:0;">Sales Revenue by Month</div><div>' + pdfxLegendHtml('legend-amazon') + '</div></div>' + pdfxChartBlock('_amazonChart') + '</div>' +
           '<div class="pdfx-card"><div class="pdfx-card-title">Top Selling Products <span style="font-weight:400;color:var(--muted);">(by Units)</span></div>' +
-            pdfxTableHtml(['#', 'Product', 'US', 'CA', 'UK', 'Units (Ads)', 'Units (Organic)'], rows) +
+            pdfxTableHtml(['#', 'Product', 'US', 'CA', 'UK', 'Units (Ads)', 'Units (Organic)'], rows, 4, 6, true) +
           '</div>' +
           (insight ? '<div class="pdfx-insight"><strong>Key Insight:</strong> ' + pdfxEscape(insight) + '</div>' : '') +
         '</div>' +
