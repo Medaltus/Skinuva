@@ -984,7 +984,21 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 .pdfx-table.compact tbody td{padding:4px 10px;}
 .pdfx-insight{background:var(--sand);border-left:3px solid var(--warn);border-radius:0 6px 6px 0;padding:12px 16px;font-size:11.5px;color:var(--navy);line-height:1.55;margin-top:2px;}
 .pdfx-insight strong{color:#000;}
-.pdfx-two-col{display:grid;grid-template-columns:1fr;gap:16px;}
+/* FIXED 2026-08-28 -- Brand Stewardship page in the PDF export was
+   rendering the Investments and Ad Impressions charts STACKED instead of
+   side-by-side: this rule is named "two-col" and is used in exactly one
+   place (buildStewardshipPage's .pdfx-two-col wrapper), but only ever
+   defined ONE column (grid-template-columns:1fr), same mistake present
+   verbatim in évolis' copy of this file too. That doubled the section's
+   vertical height, pushing the whole Stewardship page to ~12.09in of
+   rendered content against an 11in PDF page -- and since the final
+   pdf.addImage() call clamps an oversized page's height down to 11in
+   while keeping its width fixed (Math.min(renderedHeightIn, pageHeightIn)
+   -- see the page-capture loop below), that overflow was rendering as a
+   visibly squashed/distorted Stewardship page in the exported PDF, not a
+   cropped one. Confirmed live: forcing 2 real columns brought this page's
+   measured height from 12.09in down to exactly 11.00in. */
+.pdfx-two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 .pdfx-checks{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
 .pdfx-check{display:flex;align-items:center;gap:10px;background:#F5F6F9;border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
 .pdfx-check-icon{width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
@@ -21690,8 +21704,11 @@ async function loadAuditResultsFromSheet() {
     // Same pill-badge + headline pattern as Executive Summary on the cover
     // page (.pdfx-pill / .pdfx-cover-cols), so the two sections match
     // exactly as designed on the live dashboard. Per Jaclyn 2026-07-14.
-    return '<div class="pdfx-card" style="margin-top:14px;">' +
-      '<span class="pdfx-pill" style="margin-bottom:16px;">Future Opportunities</span>' +
+    // Margin/padding trimmed 2026-08-28 -- see the page-height comment in
+    // buildOpportunitiesPage above; this is the only caller of this
+    // function, so these overrides are effectively scoped to this one page.
+    return '<div class="pdfx-card" style="margin-top:6px;padding:10px 18px;">' +
+      '<span class="pdfx-pill" style="margin-bottom:8px;">Future Opportunities</span>' +
       '<div class="pdfx-cover-cols">' + cards + '</div>' +
       '</div>';
   }
@@ -21792,13 +21809,23 @@ async function loadAuditResultsFromSheet() {
 
   function buildOpportunitiesPage(monthYear) {
     const kpis = ['kpi-active-subs', 'kpi-retention'].map(pdfxKpi);
+    // FIXED 2026-08-28 -- this page's real content (KPIs + Active
+    // Subscriptions chart + up to 3 "Future Opportunities" cards + footer)
+    // measured ~11.79in tall against the PDF's 11in page height -- same
+    // downstream squash/distortion described above .pdfx-two-col, just
+    // from genuine content volume this time rather than a layout bug.
+    // Trimmed vertical spacing/padding SPECIFICALLY on this page's own
+    // markup (inline style overrides below, not the shared .pdfx-card/
+    // .pdfx-kpis/.pdfx-inner CSS rules other pages also use) rather than
+    // cutting any of Jaclyn's actual opportunity-card copy. Confirmed live
+    // this trims comfortably more than the ~0.79in needed.
     return '' +
       '<div class="pdfx-page">' +
-        '<div class="pdfx-inner">' +
+        '<div class="pdfx-inner" style="padding-top:18px;padding-bottom:18px;">' +
           pdfxHeaderBand(monthYear, 'Opportunities') +
           '<div class="pdfx-chlabel">Subscribe &amp; Save</div>' +
-          '<div class="pdfx-kpis n2" style="margin-top:6px;">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
-          '<div class="pdfx-card"><div class="pdfx-card-title">Active Subscriptions by Month</div>' + pdfxChartBlock('_snsChart') + '</div>' +
+          '<div class="pdfx-kpis n2" style="margin-top:6px;margin-bottom:8px;">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
+          '<div class="pdfx-card" style="margin-bottom:6px;padding:10px 18px;"><div class="pdfx-card-title">Active Subscriptions by Month</div>' + pdfxChartBlock('_snsChart') + '</div>' +
           pdfxFutureOpportunitiesBlock() +
           pdfxFooter(monthYear) +
         '</div>' +
@@ -22217,7 +22244,28 @@ async function loadAuditResultsFromSheet() {
         if (i > 0) pdf.addPage();
         // Scale the captured canvas to fill the page width, preserving aspect ratio
         const renderedHeightIn = pageWidthIn * (canvas.height / canvas.width);
-        pdf.addImage(imgData, 'JPEG', 0, 0, pageWidthIn, Math.min(renderedHeightIn, pageHeightIn));
+        // FIXED 2026-08-28 -- this used to be
+        // `pdf.addImage(imgData, 'JPEG', 0, 0, pageWidthIn, Math.min(renderedHeightIn, pageHeightIn))`,
+        // which clamped HEIGHT to the page while leaving WIDTH fixed at
+        // pageWidthIn. Whenever a page's real content rendered taller than
+        // one PDF page (exactly what happened to Brand Stewardship/
+        // Opportunities once their content grew past 11in), that silently
+        // squashed the whole page horizontally in the export -- not
+        // cropped, visibly distorted. Root-caused via Skinuva's Brand
+        // Stewardship/Opportunities pages measuring ~12.09in/~11.79in
+        // against an 11in page (fixed at the content level above/nearby),
+        // but this clamp itself is a latent bug for ANY page on ANY brand
+        // that runs long in the future. Scaling BOTH dimensions down
+        // together, by the same factor, keeps proportions intact -- a
+        // slightly smaller but fully undistorted page on the rare
+        // over-budget page, instead of a squashed one.
+        let drawWidthIn = pageWidthIn, drawHeightIn = renderedHeightIn;
+        if (drawHeightIn > pageHeightIn) {
+          const shrink = pageHeightIn / drawHeightIn;
+          drawWidthIn *= shrink;
+          drawHeightIn = pageHeightIn;
+        }
+        pdf.addImage(imgData, 'JPEG', 0, 0, drawWidthIn, drawHeightIn);
       }
 
       const filename = 'Skinuva_Partnership_Report_' + (monthYear ? monthYear.replace(' ', '_') : 'Report') + '.pdf';
