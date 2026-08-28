@@ -5084,7 +5084,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
           </table>
         </div>
         <div class="ppc-note">
-          ℹ Sessions/Units/Revenue/Conv% pulled live from the Business Report sheet, every product in the catalog.
+          ℹ Sessions/Units/Revenue/Conv% pulled live from the Business Report sheet, every product in the catalog. Sessions/Units show MOM vs. the prior full month.
         </div>
       </div>
 
@@ -17123,7 +17123,31 @@ async function ppcLoadProductPerformance() {
     }
 
     const { year, month } = ovGetLastFullMonth();
+    let prevYear = year, prevMonth = month - 1;
+    if (prevMonth < 1) { prevMonth = 12; prevYear--; }
     const monthRows = bizRows.filter(r => parseInt(r.year, 10) === year && parseInt(r.month, 10) === month);
+    // ADDED 2026-08-28 per Jaclyn -- MOM comparisons for Sessions/Units.
+    // Business Report sheet is monthly-grain per ASIN (same sheet/shape as
+    // the current-month rows above), so the prior month is just the same
+    // filter one month back -- no proration needed, both months are whole.
+    const prevMonthRows = bizRows.filter(r => parseInt(r.year, 10) === prevYear && parseInt(r.month, 10) === prevMonth);
+    const prevByAsin = {};
+    prevMonthRows.forEach(r => {
+      const asin = (r.asin || '').toUpperCase();
+      if (!asin) return;
+      prevByAsin[asin] = { sessions: parseInt(r.sessions, 10) || 0, units: parseInt(r.units_ordered, 10) || 0 };
+    });
+    // Same arrow-badge convention as the Amazon Sales page's own
+    // momSpan() (▲/▼ colored badges, .tp-mom-up/.tp-mom-dn/.tp-mom-flat --
+    // duplicated locally rather than shared scope, matching how every
+    // other page in this file already does it).
+    function ppcProductMomSpan(curr, prev) {
+      if (!prev) return '';
+      const pctVal = Math.round(((curr - prev) / prev) * 100);
+      if (pctVal > 0) return `<span class="tp-mom-up">▲ ${pctVal}%</span>`;
+      if (pctVal < 0) return `<span class="tp-mom-dn">▼ ${Math.abs(pctVal)}%</span>`;
+      return `<span class="tp-mom-flat">—</span>`;
+    }
 
     // ASIN -> product name, most recent Products Cache snapshot date only
     const nameRows = parseCsvToRows(namesCsv);
@@ -17148,9 +17172,12 @@ async function ppcLoadProductPerformance() {
       const revenue    = parseFloat(r.ordered_product_sales) || 0;
       const conv       = parseFloat(r.conversion_rate) || 0;
       const convClass  = conv >= 15 ? 'rank-top' : (conv > 0 ? 'rank-low' : 'rank-none');
+      const prevRow    = prevByAsin[asin] || {};
       return `<tr>
         <td><strong>${name}</strong> <span style="font-family:var(--mono);font-size:10px;color:var(--muted);">${r.sku || ''}</span></td>
-        <td>${sessions.toLocaleString()}</td><td>${units}</td><td>$${revenue.toFixed(2)}</td>
+        <td>${sessions.toLocaleString()}${ppcProductMomSpan(sessions, prevRow.sessions)}</td>
+        <td>${units.toLocaleString()}${ppcProductMomSpan(units, prevRow.units)}</td>
+        <td>$${revenue.toFixed(2)}</td>
         <td><span class="rank-pill ${convClass}">${conv.toFixed(2)}%</span></td>
       </tr>`;
     }).join('');
@@ -17702,6 +17729,40 @@ async function ppcLoadBlendedKpis() {
       return { totalAmt };
     }
 
+    // ADDED 2026-08-28 per Jaclyn -- "MOM comparisons for the PPC blended
+    // context page as well." A fair Month-to-Date comparison needs the
+    // SAME NUMBER OF DAYS from last month, not the whole prior month --
+    // this date-range variant is used only for that partial-month
+    // lookback (see computeMtdPriorComparison below); the existing
+    // whole-month version above is untouched and still used for the
+    // Last Month / Last Month vs. two-months-ago comparison.
+    function ppcBlendedAggregateReturnsRange(csv, startStr, endStr, dateField, opts) {
+      opts = opts || {};
+      const rows = parseCsvToRows(csv).filter(r => {
+        if (!ppcBlendedIsSkinuvaRow(r)) return false;
+        if (opts.skuPrefix && !(r.sku || '').trim().toUpperCase().startsWith(opts.skuPrefix)) return false;
+        const d = ppcBlendedNormalizeDate(r[dateField]);
+        return d && d >= startStr && d <= endStr;
+      });
+      let totalAmt = 0;
+      rows.forEach(r => {
+        if (opts.useAsinPrice) {
+          const qty = parseInt(r.quantity, 10) || 0;
+          const asin = (r.asin || '').trim().toUpperCase();
+          totalAmt += qty * (ppcAmzPriceByAsin[asin] || 0);
+        } else {
+          totalAmt += parseFloat(String(r.refund_amount || '').replace(/[$,]/g, '')) || 0;
+        }
+      });
+      return { totalAmt };
+    }
+    function ppcBlendedFilterOrdersRange(rows, startStr, endStr) {
+      return rows.filter(r => {
+        const d = ppcBlendedNormalizeDate(r.date);
+        return d && d >= startStr && d <= endStr;
+      });
+    }
+
     console.log('[PPCBlended][qa] raw row counts -- amzOrders:', amzOrders.length, 'wmtOrders:', wmtOrders.length, 'webOrders:', webOrders.length, 'amzAd:', amzAdRows.length, 'wmtAd:', wmtAdRows.length, 'webAd:', webAdRows.length);
     console.log('[PPCBlended][qa] amzAd header sample:', amzAdRows[0] || null);
     console.log('[PPCBlended][qa] wmtAd header sample:', wmtAdRows[0] || null);
@@ -17748,6 +17809,61 @@ async function ppcLoadBlendedKpis() {
       const adSales = num(amzAdRow.sales) + num(wmtAdRow.sales);
       const impressions = num(amzAdRow.impressions) + num(wmtAdRow.impressions);
       const clicks = num(amzAdRow.clicks) + num(wmtAdRow.clicks);
+
+      const acos = adSales > 0 ? (adSpend / adSales) * 100 : 0;
+      const tacos = totalSales > 0 ? (adSpend / totalSales) * 100 : 0;
+      const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+      const cpc = clicks > 0 ? adSpend / clicks : 0;
+      const aov = totalOrders > 0 ? totalSales / totalOrders : 0;
+
+      return { adSpend, adSales, acos, totalSales, tacos, impressions, clicks, ctr, cpc, totalOrders, aov };
+    }
+
+    // ADDED 2026-08-28 per Jaclyn -- "MOM comparisons for the PPC blended
+    // context page as well." Month to Date never had a prior-period
+    // comparison at all (see the old comment that used to sit where
+    // window._ppcBlendedData is built below) -- this builds one, matched
+    // to the SAME NUMBER OF DAYS elapsed in the prior month rather than
+    // the whole month, so it's a fair MTD-vs-MTD comparison instead of a
+    // partial month vs. a complete one.
+    //   - Total Sales / Orders / AOV / TACOS: real day-level order data
+    //     (amzOrders/wmtOrders both carry a `date` per row) -- filtered to
+    //     the prior month's first `throughDay` days directly, same
+    //     returns-netting as computeForPeriod above, no estimation needed.
+    //   - Ad Spend / Ad Sales / ACOS / Impressions / Clicks / CTR / CPC:
+    //     Amazon's and Walmart's advertising sheets are bucketed by WHOLE
+    //     MONTH only (one row per month, no daily breakdown) -- there's no
+    //     way to isolate "the first N days" of that row. Estimated instead
+    //     by prorating the prior month's real total by
+    //     (throughDay / days in that prior month), same technique the
+    //     Overview page already uses for its own MTD Ad Spend/ACOS
+    //     estimate.
+    function computeMtdPriorComparison(year, month, throughDay) {
+      let prevYear = year, prevMonth = month - 1;
+      if (prevMonth < 1) { prevMonth = 12; prevYear--; }
+      const daysInPrevMonth = new Date(prevYear, prevMonth, 0).getDate();
+      const cappedDay = Math.min(throughDay, daysInPrevMonth);
+      const mm = String(prevMonth).padStart(2, '0');
+      const startStr = `${prevYear}-${mm}-01`;
+      const endStr = `${prevYear}-${mm}-${String(cappedDay).padStart(2, '0')}`;
+
+      const amzO = ppcBlendedAggregateOrders(ppcBlendedFilterOrdersRange(amzOrders, startStr, endStr));
+      const wmtO = ppcBlendedAggregateOrders(ppcBlendedFilterOrdersRange(wmtOrders, startStr, endStr));
+      const totalOrders = amzO.totalOrders + wmtO.totalOrders;
+
+      const amzReturns = ppcBlendedAggregateReturnsRange(amzReturnsCsv, startStr, endStr, 'return_date', { useAsinPrice: true });
+      const wmtReturns = ppcBlendedAggregateReturnsRange(wmtReturnsCsv, startStr, endStr, 'return_date');
+      const totalSales = (amzO.totalRevenue - amzReturns.totalAmt) + (wmtO.totalRevenue - wmtReturns.totalAmt);
+
+      const amzAdRow = amzAdRows.find(r => parseInt(r.year, 10) === prevYear && parseInt(r.month, 10) === prevMonth) || {};
+      const wmtAdRow = wmtAdRows.find(r => parseInt(r.year, 10) === prevYear && parseInt(r.month, 10) === prevMonth) || {};
+      const num = v => parseFloat(String(v || '').replace(/[$,%]/g, '')) || 0;
+      const dayFrac = cappedDay / daysInPrevMonth;
+
+      const adSpend = (num(amzAdRow.spend) + num(wmtAdRow.spend)) * dayFrac;
+      const adSales = (num(amzAdRow.sales) + num(wmtAdRow.sales)) * dayFrac;
+      const impressions = (num(amzAdRow.impressions) + num(wmtAdRow.impressions)) * dayFrac;
+      const clicks = (num(amzAdRow.clicks) + num(wmtAdRow.clicks)) * dayFrac;
 
       const acos = adSales > 0 ? (adSpend / adSales) * 100 : 0;
       const tacos = totalSales > 0 ? (adSpend / totalSales) * 100 : 0;
@@ -17847,6 +17963,9 @@ async function ppcLoadBlendedKpis() {
 
     window._ppcBlendedData = {
       mtd: computeForPeriod(mtdYear, mtdMonth),
+      // ADDED 2026-08-28 per Jaclyn -- fair "same number of days elapsed"
+      // comparison for the MTD pill, see computeMtdPriorComparison above.
+      mtdPrev: computeMtdPriorComparison(mtdYear, mtdMonth, now.getDate()),
       lastFull: computeForPeriod(lastFullYear, lastFullMonth),
       lastFullPrev: computeForPeriod(lastFullPrevYear, lastFullPrevMonth),
     };
@@ -17881,23 +18000,33 @@ function ppcBlendedPct(current, previous) {
   if (!previous) return null;
   return Math.round(((current - previous) / previous) * 100);
 }
-function ppcBlendedSetMom(id, pctVal) {
+function ppcBlendedSetMom(id, pctVal, suffix) {
   const mom = document.querySelector(`#${id} .kpi-mom`);
   if (!mom) return;
   if (pctVal == null) { mom.className = 'kpi-mom flat'; mom.textContent = ''; return; }
   const cls = pctVal === 0 ? 'flat' : pctVal > 0 ? 'up' : 'dn';
   const arrow = pctVal > 0 ? '▲ ' : pctVal < 0 ? '▼ ' : '';
   mom.className = 'kpi-mom ' + cls;
-  mom.textContent = `${arrow}${Math.abs(pctVal)}% MOM`;
+  mom.textContent = `${arrow}${Math.abs(pctVal)}%${suffix || ' MOM'}`;
 }
 
 function renderPpcBlendedKpis() {
   if (!window._ppcBlendedData) return;
   const d = window._ppcBlendedData[window._ppcBlendedPeriod];
-  // Fair like-for-like comparison only exists for Last Full Month (full
-  // month vs. full prior month). MTD has no prior-month comparison here --
-  // see the comment where lastFullPrev is computed above.
-  const prev = window._ppcBlendedPeriod === 'lastFull' ? window._ppcBlendedData.lastFullPrev : null;
+  // FIXED 2026-08-28 per Jaclyn -- "MOM comparisons for the PPC blended
+  // context page as well." MTD now has a real comparison too
+  // (mtdPrev — see computeMtdPriorComparison above), matched to the same
+  // number of days elapsed in the prior month rather than the whole thing.
+  const isMtd = window._ppcBlendedPeriod === 'mtd';
+  const prev = isMtd ? window._ppcBlendedData.mtdPrev : window._ppcBlendedData.lastFullPrev;
+  // Total Sales/Orders/AOV/TACOS are real day-level comparisons even under
+  // MTD (order data has a date per row); Ad Spend/Ad Sales/ACOS/
+  // Impressions/Clicks/CTR/CPC under MTD are prorated estimates (Amazon's/
+  // Walmart's ad sheets are month-bucketed, no daily breakdown to slice) --
+  // flagged "(Est.)" so the distinction is visible, same convention
+  // Overview already uses for its own prorated MTD ad-spend estimate.
+  const realSuffix = isMtd ? ' vs MTD last month' : ' MOM';
+  const estSuffix = isMtd ? ' vs MTD last month (Est.)' : ' MOM';
   const setVal = (id, text) => { const el = document.querySelector(`#${id} .kpi-value`); if (el) el.textContent = text; };
   const money = v => `$${v.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
   const pct = v => `${v.toFixed(1)}%`;
@@ -17913,17 +18042,19 @@ function renderPpcBlendedKpis() {
   setVal('ppc-kpi-orders', d.totalOrders.toLocaleString());
   setVal('ppc-kpi-aov', `$${d.aov.toFixed(2)}`);
 
-  ppcBlendedSetMom('ppc-kpi-adspend', prev ? ppcBlendedPct(d.adSpend, prev.adSpend) : null);
-  ppcBlendedSetMom('ppc-kpi-adsales', prev ? ppcBlendedPct(d.adSales, prev.adSales) : null);
-  ppcBlendedSetMom('ppc-kpi-acos', prev ? ppcBlendedPct(d.acos, prev.acos) : null);
-  ppcBlendedSetMom('ppc-kpi-totalsales', prev ? ppcBlendedPct(d.totalSales, prev.totalSales) : null);
-  ppcBlendedSetMom('ppc-kpi-tacos', prev ? ppcBlendedPct(d.tacos, prev.tacos) : null);
-  ppcBlendedSetMom('ppc-kpi-impressions', prev ? ppcBlendedPct(d.impressions, prev.impressions) : null);
-  ppcBlendedSetMom('ppc-kpi-clicks', prev ? ppcBlendedPct(d.clicks, prev.clicks) : null);
-  ppcBlendedSetMom('ppc-kpi-ctr', prev ? ppcBlendedPct(d.ctr, prev.ctr) : null);
-  ppcBlendedSetMom('ppc-kpi-cpc', prev ? ppcBlendedPct(d.cpc, prev.cpc) : null);
-  ppcBlendedSetMom('ppc-kpi-orders', prev ? ppcBlendedPct(d.totalOrders, prev.totalOrders) : null);
-  ppcBlendedSetMom('ppc-kpi-aov', prev ? ppcBlendedPct(d.aov, prev.aov) : null);
+  // Ad-platform-sourced metrics (prorated under MTD, see comment above) get
+  // estSuffix; metrics built from real day-level order data get realSuffix.
+  ppcBlendedSetMom('ppc-kpi-adspend', prev ? ppcBlendedPct(d.adSpend, prev.adSpend) : null, estSuffix);
+  ppcBlendedSetMom('ppc-kpi-adsales', prev ? ppcBlendedPct(d.adSales, prev.adSales) : null, estSuffix);
+  ppcBlendedSetMom('ppc-kpi-acos', prev ? ppcBlendedPct(d.acos, prev.acos) : null, estSuffix);
+  ppcBlendedSetMom('ppc-kpi-totalsales', prev ? ppcBlendedPct(d.totalSales, prev.totalSales) : null, realSuffix);
+  ppcBlendedSetMom('ppc-kpi-tacos', prev ? ppcBlendedPct(d.tacos, prev.tacos) : null, estSuffix);
+  ppcBlendedSetMom('ppc-kpi-impressions', prev ? ppcBlendedPct(d.impressions, prev.impressions) : null, estSuffix);
+  ppcBlendedSetMom('ppc-kpi-clicks', prev ? ppcBlendedPct(d.clicks, prev.clicks) : null, estSuffix);
+  ppcBlendedSetMom('ppc-kpi-ctr', prev ? ppcBlendedPct(d.ctr, prev.ctr) : null, estSuffix);
+  ppcBlendedSetMom('ppc-kpi-cpc', prev ? ppcBlendedPct(d.cpc, prev.cpc) : null, estSuffix);
+  ppcBlendedSetMom('ppc-kpi-orders', prev ? ppcBlendedPct(d.totalOrders, prev.totalOrders) : null, realSuffix);
+  ppcBlendedSetMom('ppc-kpi-aov', prev ? ppcBlendedPct(d.aov, prev.aov) : null, realSuffix);
 }
 
 function renderPpcChannelBreakdown() {
