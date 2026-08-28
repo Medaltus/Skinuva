@@ -120,7 +120,14 @@ nav > .nav-btn:not(.active):hover{color:#fff;}
    shared .kpi-row's auto-fit would otherwise pack as many as fit per
    row (8+3 on a normal desktop width) rather than a clean 6+5 split. */
 #ppc-blended-kpi-row{grid-template-columns:repeat(6,1fr);}
-.kpi-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px 20px;height:116px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:flex-start;}
+/* FIXED 2026-08-28 per Jaclyn -- was a hard height:116px, so any card
+   whose sub-label text wrapped to 2 lines (e.g. Overview's "vs MTD last
+   month (Est.)" / "This month (Amazon orders + Walmart ad units)")
+   clipped/spilled out of the box instead of the box growing to fit.
+   min-height + height:auto keeps every normal short-text card at the
+   same 116px it always rendered at (nothing shrinks), while a card that
+   genuinely needs more room now grows instead of overflowing. */
+.kpi-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px 20px;min-height:116px;height:auto;box-sizing:border-box;display:flex;flex-direction:column;justify-content:flex-start;}
 .kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:11px;}
 .kpi-value{font-size:30px;font-weight:600;letter-spacing:-1px;line-height:1;color:var(--navy);font-family:var(--font-subheader);}
 .kpi-value.sm{font-size:30px;}
@@ -1336,10 +1343,21 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <div class="brand-tagline">Clinically backed skincare · Amazon · skinuva.com · Walmart</div>
       </div>
       <div class="brand-hero-right">
-        <div class="hero-stat"><div class="hero-stat-val" id="ov-hero-revenue">—</div><div class="hero-stat-lbl">Month-to-Date Revenue</div></div>
+        <div class="hero-stat"><div class="hero-stat-val" id="ov-hero-revenue">—</div><div class="hero-stat-lbl" id="ov-hero-revenue-lbl">Month-to-Date Revenue</div></div>
         <div class="hero-stat"><div class="hero-stat-val" id="ov-hero-channels">—</div><div class="hero-stat-lbl">Channels</div></div>
         <div class="hero-stat"><div class="hero-stat-val" id="ov-hero-skus">—</div><div class="hero-stat-lbl">Active SKUs (with Sales)</div></div>
       </div>
+    </div>
+
+    <!-- ADDED 2026-08-28 per Jaclyn -- Month to Date / Last Month toggle
+         for the Overview page, same period-pill pattern already used on
+         PPC's Blended Performance card and the Amazon/Website/Walmart
+         Sales pages. Re-runs window.initOverviewLive(key) on click, which
+         re-fetches and re-renders every KPI/chart/table on this page for
+         the selected period (see initOverviewLive's own comments). -->
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-bottom:14px;">
+      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);">Period</span>
+      <div class="period-pills" id="ov-period-pills" style="display:flex;background:var(--white);border:1px solid var(--border);border-radius:999px;padding:4px;gap:2px;"></div>
     </div>
 
     <div class="kpi-row">
@@ -1360,7 +1378,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     </div>
 
     <div class="card" style="margin-bottom:20px;">
-      <div class="card-title">Channel Breakdown <span style="font-weight:400;color:var(--muted);">(Amazon + Walmart, Month to Date)</span></div>
+      <div class="card-title">Channel Breakdown <span style="font-weight:400;color:var(--muted);" id="ov-channelbreak-title-suffix">(Amazon + Walmart, Month to Date)</span></div>
       <table class="data-table" style="width:100%;">
         <thead><tr><th>Channel</th><th>Ad Spend</th><th>Ad Sales</th><th>Units</th><th>Orders</th><th>Revenue</th><th>AOV</th></tr></thead>
         <tbody id="ov-channel-breakdown-tbody"><tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">Loading…</td></tr></tbody>
@@ -1379,7 +1397,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     </div>
 
     <div class="card" style="margin-bottom:20px;">
-      <div class="card-title">Top Selling Products <span style="font-weight:400;color:var(--muted);">(by Units, Amazon + Walmart, Month to Date)</span></div>
+      <div class="card-title">Top Selling Products <span style="font-weight:400;color:var(--muted);" id="ov-topproducts-title-suffix">(by Units, Amazon + Walmart, Month to Date)</span></div>
       <table class="tp-table" style="width:100%;border-collapse:collapse;font-size:12px;">
         <thead>
           <tr style="background:var(--navy);color:#fff;">
@@ -17613,6 +17631,7 @@ async function ppcLoadBlendedKpis() {
     const [
       amzOrdersCsv, wmtOrdersCsv, webOrdersCsv,
       amzAdCsv, wmtAdCsv, webAdCsv,
+      amzReturnsCsv, wmtReturnsCsv, webReturnsCsv,
     ] = await Promise.all([
       fetchCsvWithRetry(ovCsvUrl(window.SHEET_CFG.SHEET_ORDERS.fileId, window.SHEET_CFG.SHEET_ORDERS.gid) + `&_cb=${Date.now()}`),
       fetchCsvWithRetry(ovCsvUrl(window.SHEET_CFG.SHEET_WALMART_ORDERS.fileId, window.SHEET_CFG.SHEET_WALMART_ORDERS.gid) + `&_cb=${Date.now()}`),
@@ -17620,6 +17639,15 @@ async function ppcLoadBlendedKpis() {
       fetchCsvWithRetry(ovCsvUrl(window.SHEET_CFG.SHEET_ADVERTISING.fileId, window.SHEET_CFG.SHEET_ADVERTISING.gid) + `&_cb=${Date.now()}`),
       fetchCsvWithRetry(ovCsvUrl(window.SHEET_CFG.SHEET_WALMART_ADVERTISING.fileId, window.SHEET_CFG.SHEET_WALMART_ADVERTISING.gid) + `&_cb=${Date.now()}`),
       fetchCsvWithRetry(ovCsvUrl(window.SHEET_CFG.SHEET_SHOPIFY_ADS.fileId, window.SHEET_CFG.SHEET_SHOPIFY_ADS.gid) + `&_cb=${Date.now()}`),
+      // ADDED 2026-08-28 per Jaclyn -- "returns for sure need to be taken
+      // out of all metrics on that PPC page." Same 3 returns sheets/gids
+      // Overview already uses (OV_RETURNS_SHEET_ID etc., declared as
+      // top-level consts further down THIS SAME <script> block, so
+      // they're already initialized by the time this async function
+      // actually runs).
+      fetchCsvWithRetry(ovCsvUrl(OV_RETURNS_SHEET_ID, OV_RETURNS_EVOLIS_GID) + `&_cb=${Date.now()}`),
+      fetchCsvWithRetry(ovCsvUrl(OV_WMT_RETURNS_SHEET_ID, OV_WMT_RETURNS_GID) + `&_cb=${Date.now()}`),
+      fetchCsvWithRetry(ovCsvUrl(OV_WEB_ORDERS_SHEET_ID, OV_WEB_RETURNS_GID) + `&_cb=${Date.now()}`),
     ]);
 
 
@@ -17629,6 +17657,50 @@ async function ppcLoadBlendedKpis() {
     const amzAdRows = parseCsvToRows(amzAdCsv);
     const wmtAdRows = parseCsvToRows(wmtAdCsv);
     const webAdRows = parseCsvToRows(webAdCsv);
+
+    // ── Returns netting (ADDED 2026-08-28 per Jaclyn) ──────────────────
+    // Amazon's returns report has no dollar column at all (units only) --
+    // same situation Overview already solved: estimate each returned
+    // unit's $ impact as (qty × that ASIN's average item_price from the
+    // Amazon Orders sheet). Walmart/Website returns DO carry a real
+    // refund_amount column, used directly.
+    function ppcBlendedAsinPriceMap(rows) {
+      const sums = {}, counts = {};
+      rows.forEach(r => {
+        const asin = (r.asin || '').trim().toUpperCase();
+        const price = parseFloat(String(r.item_price || '').replace(/[$,]/g, '')) || 0;
+        if (!asin || !price) return;
+        sums[asin] = (sums[asin] || 0) + price;
+        counts[asin] = (counts[asin] || 0) + 1;
+      });
+      const avg = {};
+      Object.keys(sums).forEach(k => { avg[k] = sums[k] / counts[k]; });
+      return avg;
+    }
+    const ppcAmzPriceByAsin = ppcBlendedAsinPriceMap(amzOrders);
+
+    // Prefix-matched the same way computeForPeriod/computeChannelBreakdown
+    // already match orders/ad rows to a given month, for consistency.
+    function ppcBlendedAggregateReturns(csv, year, month, dateField, opts) {
+      opts = opts || {};
+      const prefix = `${year}-${String(month).padStart(2, '0')}`;
+      const rows = parseCsvToRows(csv).filter(r => {
+        if (!ppcBlendedIsSkinuvaRow(r)) return false;
+        if (opts.skuPrefix && !(r.sku || '').trim().toUpperCase().startsWith(opts.skuPrefix)) return false;
+        return ppcBlendedNormalizeDate(r[dateField]).substring(0, 7) === prefix;
+      });
+      let totalAmt = 0;
+      rows.forEach(r => {
+        if (opts.useAsinPrice) {
+          const qty = parseInt(r.quantity, 10) || 0;
+          const asin = (r.asin || '').trim().toUpperCase();
+          totalAmt += qty * (ppcAmzPriceByAsin[asin] || 0);
+        } else {
+          totalAmt += parseFloat(String(r.refund_amount || '').replace(/[$,]/g, '')) || 0;
+        }
+      });
+      return { totalAmt };
+    }
 
     console.log('[PPCBlended][qa] raw row counts -- amzOrders:', amzOrders.length, 'wmtOrders:', wmtOrders.length, 'webOrders:', webOrders.length, 'amzAd:', amzAdRows.length, 'wmtAd:', wmtAdRows.length, 'webAd:', webAdRows.length);
     console.log('[PPCBlended][qa] amzAd header sample:', amzAdRows[0] || null);
@@ -17652,7 +17724,21 @@ async function ppcLoadBlendedKpis() {
       // just not summed into Ad Spend/Sales/ACOS/Total Sales/TACOS/etc.
       // here anymore.
       const totalOrders = amzO.totalOrders + wmtO.totalOrders;
-      const totalSales = amzO.totalRevenue + wmtO.totalRevenue;
+      // FIXED 2026-08-28 per Jaclyn -- "returns for sure need to be taken
+      // out of all metrics on that PPC page." This used to sum GROSS
+      // amzO.totalRevenue + wmtO.totalRevenue with no returns netting at
+      // all, which is why this page's Total Sales ran ~$4K ahead of
+      // Overview's (Overview already nets returns). Netting here fixes
+      // Total Sales AND, since they're both derived from it, AOV and
+      // TACOS follow automatically -- no separate fix needed for those.
+      // Ad Sales/Ad Spend/ACOS are untouched: those come directly from
+      // the ad platforms' own monthly-reported figures (amzAdRow/
+      // wmtAdRow), not computed from our own order rows, and there's no
+      // way to tell from the returns sheet which returns came from an
+      // ad-driven purchase vs. an organic one.
+      const amzReturns = ppcBlendedAggregateReturns(amzReturnsCsv, year, month, 'return_date', { useAsinPrice: true });
+      const wmtReturns = ppcBlendedAggregateReturns(wmtReturnsCsv, year, month, 'return_date');
+      const totalSales = (amzO.totalRevenue - amzReturns.totalAmt) + (wmtO.totalRevenue - wmtReturns.totalAmt);
 
       const amzAdRow = amzAdRows.find(r => parseInt(r.year, 10) === year && parseInt(r.month, 10) === month) || {};
       const wmtAdRow = wmtAdRows.find(r => parseInt(r.year, 10) === year && parseInt(r.month, 10) === month) || {};
@@ -17689,6 +17775,16 @@ async function ppcLoadBlendedKpis() {
       const amzO = ppcBlendedAggregateOrders(amzOrders.filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix));
       const wmtO = ppcBlendedAggregateOrders(wmtOrders.filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix));
 
+      // ADDED 2026-08-28 per Jaclyn -- same returns netting as
+      // computeForPeriod above, applied per-channel here so the Channel
+      // Breakdown table's Total Sales/AOV/TACOS/CVR match the (now netted)
+      // blended KPI cards instead of running gross.
+      const amzReturns = ppcBlendedAggregateReturns(amzReturnsCsv, year, month, 'return_date', { useAsinPrice: true });
+      const wmtReturns = ppcBlendedAggregateReturns(wmtReturnsCsv, year, month, 'return_date');
+      const webReturns = ppcBlendedAggregateReturns(webReturnsCsv, year, month, 'refund_date', { skuPrefix: 'C-' });
+      const amzNetRevenue = amzO.totalRevenue - amzReturns.totalAmt;
+      const wmtNetRevenue = wmtO.totalRevenue - wmtReturns.totalAmt;
+
       const makeRow = (adSpend, adSales, impressions, clicks, totalSales, totalOrders) => {
         const acos = adSales > 0 ? (adSpend / adSales) * 100 : null;
         const tacos = totalSales != null && totalSales > 0 ? (adSpend / totalSales) * 100 : null;
@@ -17698,8 +17794,8 @@ async function ppcLoadBlendedKpis() {
         return { adSpend, adSales, acos, totalSales, tacos, impressions, clicks, cpc, orders: totalOrders, aov, cvr };
       };
 
-      const amazon = makeRow(num(amzAdRow.spend), num(amzAdRow.sales), num(amzAdRow.impressions), num(amzAdRow.clicks), amzO.totalRevenue, amzO.totalOrders);
-      const walmart = makeRow(num(wmtAdRow.spend), num(wmtAdRow.sales), num(wmtAdRow.impressions), num(wmtAdRow.clicks), wmtO.totalRevenue, wmtO.totalOrders);
+      const amazon = makeRow(num(amzAdRow.spend), num(amzAdRow.sales), num(amzAdRow.impressions), num(amzAdRow.clicks), amzNetRevenue, amzO.totalOrders);
+      const walmart = makeRow(num(wmtAdRow.spend), num(wmtAdRow.sales), num(wmtAdRow.impressions), num(wmtAdRow.clicks), wmtNetRevenue, wmtO.totalOrders);
 
       // Google — day-level rows, no year/month columns, "revenue" not
       // "sales" (see computeForPeriod above for the full explanation).
@@ -17718,8 +17814,17 @@ async function ppcLoadBlendedKpis() {
       // "fix" this to look more like the other rows without checking with
       // her first.
       const webO = ppcBlendedAggregateOrders(webOrders.filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix), true); // true = use order_total, not summed item_price -- Website-specific, see comment above ppcBlendedAggregateOrders
+      const webNetRevenue = webO.totalRevenue - webReturns.totalAmt;
 
-      const webAdMonthRows = webAdRows.filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix);
+      // ADDED 2026-08-28 per Jaclyn -- exclude any campaign with "blitz"
+      // (any case) in its name from Google's Ad Spend/Ad Sales here.
+      // Filtered before summing (rather than summing then subtracting a
+      // "blitz total") so impressions/clicks drop out of these Blitz
+      // campaigns too -- otherwise CPC/CTR would divide a Blitz-excluded
+      // spend by a Blitz-included click count and read wrong.
+      const webAdMonthRows = webAdRows
+        .filter(r => ppcBlendedNormalizeDate(r.date).substring(0, 7) === prefix)
+        .filter(r => !(r.campaign_name || '').toLowerCase().includes('blitz'));
       let gAdSpend = 0, gImpressions = 0, gClicks = 0, gAdSales = 0;
       webAdMonthRows.forEach(r => {
         gAdSpend += num(r.spend);
@@ -17727,7 +17832,7 @@ async function ppcLoadBlendedKpis() {
         gClicks += num(r.clicks);
         gAdSales += num(r.revenue);
       });
-      const google = makeRow(gAdSpend, gAdSales, gImpressions, gClicks, webO.totalRevenue, webO.totalOrders);
+      const google = makeRow(gAdSpend, gAdSales, gImpressions, gClicks, webNetRevenue, webO.totalOrders);
 
       return { amazon, google, walmart };
     }
@@ -21092,6 +21197,23 @@ async function loadAuditResultsFromSheet() {
       // explicit numeric resize again, same validated synchronous technique,
       // just going back down instead of up.
       liveChart.resize(originalWidthPx, originalHeightPx);
+      // FIXED 2026-08-28 per Jaclyn -- resize() alone was leaving BAR chart
+      // datasets (confirmed live on the Subscribe & Save "Active
+      // Subscriptions by Month" chart, window._snsChartExternal) with
+      // stale per-bar element geometry after a PDF export: chart.scales and
+      // chart.chartArea both correctly reported the full restored size, but
+      // chart.getDatasetMeta(0).data[i].x/y/width/height were still the
+      // tiny values computed during the earlier up-sized capture render,
+      // so every bar drew squeezed into the top-left corner of an
+      // otherwise-correctly-sized canvas -- on the LIVE dashboard itself,
+      // not just the exported PDF, since this is the same chart instance.
+      // resize() re-lays-out the scales/chart area but doesn't reliably
+      // re-run BarController's per-element updateElements() pass; a plain
+      // update() right after does, and empirically fixes it instantly (confirmed
+      // in the live console). Cheap enough to always call after every
+      // capture's restore, not just for bar charts, since every other
+      // chart type here was already rendering correctly either way.
+      liveChart.update();
 
       let dataInfo = 'no chart';
       if (liveChart.data && liveChart.data.datasets) {
@@ -21291,7 +21413,7 @@ async function loadAuditResultsFromSheet() {
         '<div class="pdfx-inner">' +
           pdfxHeaderBand(monthYear, 'Sales') +
           '<div class="pdfx-chlabel">Channel Performance</div>' +
-          '<div class="pdfx-chrow"><span class="pdfx-chname">Web — evolisproducts.com</span><span class="pdfx-chdate">' + pdfxEscape(dateRange) + '</span></div>' +
+          '<div class="pdfx-chrow"><span class="pdfx-chname">Web — skinuva.com</span><span class="pdfx-chdate">' + pdfxEscape(dateRange) + '</span></div>' +
           '<div class="pdfx-kpis">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
           '<div class="pdfx-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div class="pdfx-card-title" style="margin-bottom:0;">Sales by Month</div><div>' + pdfxLegendHtml('legend-web') + '</div></div>' + pdfxChartBlock('_webChart') + '</div>' +
           '<div class="pdfx-card"><div class="pdfx-card-title">Top Selling Products <span style="font-weight:400;color:var(--muted);">(by Units)</span></div>' +
@@ -22135,10 +22257,82 @@ async function loadAuditResultsFromSheet() {
     if (momEl) { momEl.className = 'kpi-mom flat'; momEl.textContent = label || ''; }
   }
 
-  window.initOverviewLive = async function () {
-    if (window._overviewLiveInit) return;
-    window._overviewLiveInit = true;
-    console.log('[Skinuva] initOverviewLive() called');
+  // ── Period selector — Month to Date / Last Month ────────────────────────
+  // ADDED 2026-08-28 per Jaclyn. Overview used to only ever compute "so far
+  // this month" -- there was no "Last Month" concept here at all (unlike
+  // Amazon/Website/Walmart Sales, which already compute several distinct
+  // periods, or PPC Blended, which already computes both 'mtd' and
+  // 'lastFull'). getOverviewPeriodConfig() gives every downstream
+  // computation in this function a single source of truth for "which
+  // month, and is it still in progress" instead of each block reaching
+  // for `new Date()` directly:
+  //   - 'mtd': the current calendar month, up through today -- exactly the
+  //     original (only) behavior, byte-for-byte unchanged.
+  //   - 'lastFull': the most recently COMPLETED calendar month in full
+  //     (matching Amazon Sales' own 'lastFull' pill), compared against the
+  //     full month before that -- no day-of-month truncation on either
+  //     side, since both months are already over.
+  const OV_PERIOD_LABELS = { mtd: 'Month to Date', lastFull: 'Last Month' };
+  window._overviewActivePeriod = window._overviewActivePeriod || 'mtd';
+
+  // This IIFE (Overview) never had its own getLastFullMonth() -- every
+  // other page that uses this pattern (Amazon/Website/Walmart Sales) defines
+  // it locally inside their OWN separate IIFE, so Overview can't reach
+  // theirs. Without this, selecting "Last Month" would throw a
+  // ReferenceError the first time getOverviewPeriodConfig('lastFull') ran.
+  function getLastFullMonth() {
+    const now = new Date();
+    let year = now.getFullYear();
+    let month = now.getMonth(); // 0-indexed, so this is last month's index
+    if (month === 0) { month = 12; year--; }
+    return { year, month }; // month is 1-indexed
+  }
+
+  function getOverviewPeriodConfig(key) {
+    if (key === 'lastFull') {
+      const { year, month } = getLastFullMonth(); // month before the current one, 1-indexed
+      let prevMonth = month - 1, prevYear = year;
+      if (prevMonth === 0) { prevMonth = 12; prevYear--; }
+      return {
+        key: 'lastFull', label: OV_PERIOD_LABELS.lastFull, isPartial: false,
+        year, month, day: new Date(year, month, 0).getDate(), // last calendar day of that month
+        prevYear, prevMonth, prevDay: new Date(prevYear, prevMonth, 0).getDate(),
+      };
+    }
+    // mtd (default) -- identical to the original hardcoded behavior.
+    const now = new Date();
+    const year = now.getFullYear(), month = now.getMonth() + 1, day = now.getDate();
+    let prevMonth = month - 1, prevYear = year;
+    if (prevMonth === 0) { prevMonth = 12; prevYear--; }
+    return { key: 'mtd', label: OV_PERIOD_LABELS.mtd, isPartial: true, year, month, day, prevYear, prevMonth, prevDay: day };
+  }
+
+  function renderOverviewPeriodPills() {
+    const el = document.getElementById('ov-period-pills');
+    if (!el) return;
+    el.innerHTML = Object.entries(OV_PERIOD_LABELS).map(([key, label]) =>
+      `<button class="period-pill${key === window._overviewActivePeriod ? ' active' : ''}" onclick="window.__overviewSelectPeriod('${key}')">${label}</button>`
+    ).join('');
+  }
+  window.__overviewSelectPeriod = function (key) {
+    window._overviewActivePeriod = key;
+    renderOverviewPeriodPills();
+    window.initOverviewLive(key);
+  };
+
+  window.initOverviewLive = async function (periodKey) {
+    const activeKey = periodKey || window._overviewActivePeriod || 'mtd';
+    window._overviewActivePeriod = activeKey;
+    renderOverviewPeriodPills();
+    // Idempotent PER PERIOD, same convention as every other initXLive() in
+    // this file ("calling it again on repeat tab visits is just a cheap
+    // early-return, not a duplicate fetch") -- but a genuine period switch
+    // is a deliberate re-render, not a repeat visit, so it must go through.
+    if (window._overviewLiveInit === activeKey) return;
+    window._overviewLiveInit = activeKey;
+    console.log('[Skinuva] initOverviewLive() called -- period:', activeKey);
+
+    const cfg = getOverviewPeriodConfig(activeKey);
 
     const AMAZON_SHEET_ID = window.SHEET_CFG.SHEET_ORDERS.fileId; const AMAZON_GID = window.SHEET_CFG.SHEET_ORDERS.gid;
     const WEB_SHEET_ID    = window.SHEET_CFG.SHOPIFY_ORDERS_SHEET.fileId; const WEB_GID    = window.SHEET_CFG.SHOPIFY_ORDERS_SHEET.gid;
@@ -22156,16 +22350,52 @@ async function loadAuditResultsFromSheet() {
     const WEB_ADS_GID = window.SHEET_CFG.SHEET_SHOPIFY_ADS.gid;
     const WEB_SHOPPING_GID = window.SHEET_CFG.SHEET_SHOPIFY_SHOPPING.gid;
 
+    // `now` stays literal wall-clock "today" -- still needed below for
+    // things that are genuinely period-independent (the trailing-6-months
+    // revenue trend chart, cache-busting timestamps). Everything that
+    // means "the month we're computing this page for" now reads from
+    // `cfg` instead, so it moves with the period toggle.
     const now = new Date();
     const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const daysElapsed = now.getDate();
-    const mtdStartStr = fmtDateStr(new Date(now.getFullYear(), now.getMonth(), 1));
-    const mtdEndStr   = fmtDateStr(now);
-    const prevStartStr = fmtDateStr(new Date(now.getFullYear(), now.getMonth() - 1, 1));
-    const prevEndStr   = fmtDateStr(new Date(now.getFullYear(), now.getMonth() - 1, daysElapsed));
+    const daysElapsed = cfg.day;
+    const mtdStartStr = fmtDateStr(new Date(cfg.year, cfg.month - 1, 1));
+    const mtdEndStr   = fmtDateStr(new Date(cfg.year, cfg.month - 1, cfg.day));
+    const prevStartStr = fmtDateStr(new Date(cfg.prevYear, cfg.prevMonth - 1, 1));
+    const prevEndStr   = fmtDateStr(new Date(cfg.prevYear, cfg.prevMonth - 1, cfg.prevDay));
+    // Reference year/month/prev used everywhere below that matches against
+    // a pre-aggregated MONTHLY sheet by exact (year, month) integers rather
+    // than a date-string range (ad-driven orders, per-ASIN ad units,
+    // Walmart ad spend) -- these used to just read `now`/`lastMonthYear`
+    // directly; now they read the selected period's own reference month.
+    const refYear = cfg.year, refMonth = cfg.month;
+    const lastMonthYear = cfg.prevYear, lastMonthNum = cfg.prevMonth;
 
     const titleEl = document.getElementById('ov-donut-title');
-    if (titleEl) titleEl.textContent = `Revenue by Channel \u2014 ${monthNames[now.getMonth()]} ${now.getFullYear()} MTD`;
+    if (titleEl) titleEl.textContent = `Revenue by Channel \u2014 ${monthNames[cfg.month - 1]} ${cfg.year}${cfg.isPartial ? ' MTD' : ''}`;
+    const channelBreakSuffixEl = document.getElementById('ov-channelbreak-title-suffix');
+    if (channelBreakSuffixEl) channelBreakSuffixEl.textContent = `(Amazon + Walmart, ${cfg.label})`;
+    const topProductsSuffixEl = document.getElementById('ov-topproducts-title-suffix');
+    if (topProductsSuffixEl) topProductsSuffixEl.textContent = `(by Units, Amazon + Walmart, ${cfg.label})`;
+    const heroRevLblEl = document.getElementById('ov-hero-revenue-lbl');
+    if (heroRevLblEl) heroRevLblEl.textContent = cfg.isPartial ? 'Month-to-Date Revenue' : 'Last Month\u2019s Revenue';
+
+    // Swap the 4 "MTD ..." KPI card labels for a period-neutral label when
+    // viewing a completed month, and build the shared MOM-suffix string
+    // used by the setKpi() calls further down (was hardcoded ' vs MTD
+    // last month (Est.)' everywhere -- only correct for the mtd period).
+    const OV_KPI_LABELS = {
+      'ov-kpi-organic-orders': cfg.isPartial ? 'MTD Organic Units' : 'Organic Units',
+      'ov-kpi-organic-sales':  cfg.isPartial ? 'MTD Organic Sales' : 'Organic Sales',
+      'ov-kpi-ad-orders':      cfg.isPartial ? 'MTD Ad-Driven Units' : 'Ad-Driven Units',
+      'ov-kpi-ad-sales':       cfg.isPartial ? 'MTD Ad Sales' : 'Ad Sales',
+    };
+    Object.entries(OV_KPI_LABELS).forEach(([id, text]) => {
+      const card = document.getElementById(id);
+      const lblEl = card && card.querySelector('.kpi-label');
+      if (lblEl) lblEl.textContent = text;
+    });
+    const ovMomSuffix = cfg.isPartial ? ' vs MTD last month (Est.)' : ' vs prior month';
+    const ovMomSuffixReal = cfg.isPartial ? ' vs MTD last month' : ' vs prior month';
 
     try {
       // Added 2026-08-03 per Jaclyn: net MTD revenue/units against actual
@@ -22424,10 +22654,10 @@ async function loadAuditResultsFromSheet() {
       // only (mtd.revenue/prev.revenue are already scoped that way, per
       // her earlier request to exclude Website from every Overview
       // metric).
-      setKpi('ov-kpi-total-sales', '$' + mtd.revenue.toLocaleString(undefined, { maximumFractionDigits: 0 }), pctChange(mtd.revenue, prev.revenue));
-      setKpi('ov-kpi-units',  mtd.units.toLocaleString(),  pctChange(mtd.units, prev.units));
-      setKpi('ov-kpi-orders', mtd.orders.toLocaleString(), pctChange(mtd.orders, prev.orders));
-      setKpi('ov-kpi-aov',    '$' + aov.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), pctChange(Math.round(aov * 100), Math.round(aovPrev * 100)));
+      setKpi('ov-kpi-total-sales', '$' + mtd.revenue.toLocaleString(undefined, { maximumFractionDigits: 0 }), pctChange(mtd.revenue, prev.revenue), ovMomSuffixReal);
+      setKpi('ov-kpi-units',  mtd.units.toLocaleString(),  pctChange(mtd.units, prev.units), ovMomSuffixReal);
+      setKpi('ov-kpi-orders', mtd.orders.toLocaleString(), pctChange(mtd.orders, prev.orders), ovMomSuffixReal);
+      setKpi('ov-kpi-aov',    '$' + aov.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), pctChange(Math.round(aov * 100), Math.round(aovPrev * 100)), ovMomSuffixReal);
 
       // -- MTD Ad-Driven Orders / Pending Orders --
       // Amazon: per Jaclyn (2026-07-24), the ad orders cron runs daily and
@@ -22446,16 +22676,18 @@ async function loadAuditResultsFromSheet() {
       // an exact Website sum with Amazon's monthly-bucketed estimate.
       let adDrivenOrders = 0;
       let adDrivenOrdersLastMonthFull = 0;
-      // now.getMonth() is 0-indexed, so it already equals "last month" in
-      // 1-indexed terms (e.g. August=7 -> July=7). Only needs adjusting
-      // when the current month is January.
-      let lastMonthYear = now.getFullYear(), lastMonthNum = now.getMonth();
-      if (lastMonthNum === 0) { lastMonthNum = 12; lastMonthYear--; }
+      // FIXED 2026-08-28 per Jaclyn -- lastMonthYear/lastMonthNum are now
+      // set once, up top, from the selected period's own cfg (refYear/
+      // refMonth are that same cfg's "current" side) -- this used to
+      // always mean literal today's month/last month regardless of what
+      // period was selected, which is exactly the class of bug that would
+      // have left this one card silently stuck on live data while every
+      // other card on the page switched to Last Month.
       if (isCsv(adOrdersCsv)) {
         const adRowsForOrders = parseCsv(adOrdersCsv);
         adDrivenOrders = adRowsForOrders.filter(r =>
-          parseInt(r.year, 10) === now.getFullYear() &&
-          parseInt(r.month, 10) === now.getMonth() + 1 &&
+          parseInt(r.year, 10) === refYear &&
+          parseInt(r.month, 10) === refMonth &&
           (r.brand || '').trim().toLowerCase() === (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase()
         ).length;
         adDrivenOrdersLastMonthFull = adRowsForOrders.filter(r =>
@@ -22479,12 +22711,12 @@ async function loadAuditResultsFromSheet() {
         const wmtAdOrdersCsvForOrders = await fetch(sheetCsvUrl(WALMART_AD_ORDERS_SHEET_ID, WALMART_AD_ORDERS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => '');
         if (isCsv(wmtAdOrdersCsvForOrders)) {
           walmartAdUnitsThisMonth = parseCsv(wmtAdOrdersCsvForOrders)
-            .filter(r => parseInt(r.year, 10) === now.getFullYear() && parseInt(r.month, 10) === now.getMonth() + 1)
+            .filter(r => parseInt(r.year, 10) === refYear && parseInt(r.month, 10) === refMonth)
             .reduce((s, r) => s + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0), 0);
         }
       } catch (e) { console.warn('[Skinuva][overview] Walmart ad units (for Ad-Driven Orders) lookup failed:', e.message); }
 
-      setKpiPlain('ov-kpi-ad-orders', (adDrivenOrders + walmartAdUnitsThisMonth).toLocaleString(), 'This month (Amazon orders + Walmart ad units)');
+      setKpiPlain('ov-kpi-ad-orders', (adDrivenOrders + walmartAdUnitsThisMonth).toLocaleString(), (cfg.isPartial ? 'This month' : 'Last month') + ' (Amazon + Walmart ad units)');
       // NOTE: this card's own MOM/"Organic Orders" companion logic moved
       // further down — see "MTD Organic Units" below, after per-ASIN net
       // units and ad-attributed units are available. Per Jaclyn
@@ -22566,7 +22798,7 @@ async function loadAuditResultsFromSheet() {
         const adOrdersCsv2 = await fetch(sheetCsvUrl('1N30haUFZkdv9rrvYuWwUhxEm0z7MGp1bz9F462aF-QI', '158578426') + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => '');
         if (isCsv(adOrdersCsv2)) {
           const adRows2All = parseCsv(adOrdersCsv2);
-          adRows2All.filter(r => parseInt(r.year, 10) === now.getFullYear() && parseInt(r.month, 10) === now.getMonth() + 1)
+          adRows2All.filter(r => parseInt(r.year, 10) === refYear && parseInt(r.month, 10) === refMonth)
             .forEach(r => {
               const asin = (r.asin || '').trim().toUpperCase();
               if (!asin) return;
@@ -22594,7 +22826,7 @@ async function loadAuditResultsFromSheet() {
         const wmtAdOrdersCsv2 = await fetch(sheetCsvUrl(WALMART_AD_ORDERS_SHEET_ID, WALMART_AD_ORDERS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => '');
         if (isCsv(wmtAdOrdersCsv2)) {
           const wmtAdRows2All = parseCsv(wmtAdOrdersCsv2);
-          wmtAdRows2All.filter(r => parseInt(r.year, 10) === now.getFullYear() && parseInt(r.month, 10) === now.getMonth() + 1)
+          wmtAdRows2All.filter(r => parseInt(r.year, 10) === refYear && parseInt(r.month, 10) === refMonth)
             .forEach(r => {
               const asin = walmartItemIdToAsinMap[(r.item_id || '').trim()];
               if (!asin) return; // no Walmart Item ID -> ASIN mapping for this row — skipped, not guessed
@@ -22634,7 +22866,7 @@ async function loadAuditResultsFromSheet() {
           + Math.min(wmtAdUnitsByAsinPrev[asin] || 0, wmtPrevUnitsByAsin[asin] || 0), 0);
       const organicUnits = Math.max(0, mtd.units - totalAdUnitsCurr);
       const organicUnitsPrev = Math.max(0, prev.units - totalAdUnitsPrev);
-      setKpi('ov-kpi-organic-orders', organicUnits.toLocaleString(), pctChange(organicUnits, organicUnitsPrev), ' vs MTD last month (Est.)');
+      setKpi('ov-kpi-organic-orders', organicUnits.toLocaleString(), pctChange(organicUnits, organicUnitsPrev), ovMomSuffix);
 
       function momBadge(curr, prevVal) {
         if (!prevVal) return '';
@@ -22663,7 +22895,7 @@ async function loadAuditResultsFromSheet() {
       const tbody = document.getElementById('ov-products-tbody');
       if (tbody) {
         if (!productRows.length) {
-          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);">No sales yet this month.</td></tr>';
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);">No sales ${cfg.isPartial ? 'yet this month' : 'this period'}.</td></tr>`;
         } else {
           tbody.innerHTML = productRows.map((r, i) => `
             <tr>
@@ -22710,26 +22942,47 @@ async function loadAuditResultsFromSheet() {
       let proratedSpend = 0, proratedSales = 0, proratedSpendPrev = 0, proratedSalesPrev = 0;
       if (isCsv(adOrdersCsv)) {
         const adRows = parseCsv(adOrdersCsv);
-        let lm = now.getMonth(), ly = now.getFullYear();
-        lm -= 1; if (lm === 0) { lm = 12; ly--; }
-        let lm2 = lm - 1, ly2 = ly;
-        if (lm2 === 0) { lm2 = 12; ly2--; }
+        if (cfg.isPartial) {
+          // MTD -- unchanged from the original (only) behavior: estimate
+          // "this month so far" by prorating the LAST FULL month's real
+          // total by the exact day-fraction elapsed, then do the same one
+          // month further back, for a fair MTD-vs-MTD comparison built
+          // from monthly-only ad data.
+          let lm = refMonth, ly = refYear;
+          lm -= 1; if (lm === 0) { lm = 12; ly--; }
+          let lm2 = lm - 1, ly2 = ly;
+          if (lm2 === 0) { lm2 = 12; ly2--; }
 
-        const lastMonthAdRows = adRows.filter(r => parseInt(r.year, 10) === ly && parseInt(r.month, 10) === lm);
-        const twoMonthsAgoAdRows = adRows.filter(r => parseInt(r.year, 10) === ly2 && parseInt(r.month, 10) === lm2);
+          const lastMonthAdRows = adRows.filter(r => parseInt(r.year, 10) === ly && parseInt(r.month, 10) === lm);
+          const twoMonthsAgoAdRows = adRows.filter(r => parseInt(r.year, 10) === ly2 && parseInt(r.month, 10) === lm2);
 
-        const lastMonthSpend = lastMonthAdRows.reduce((s, r) => s + parseAmt(r.spend), 0);
-        const lastMonthSales = lastMonthAdRows.reduce((s, r) => s + parseAmt(r.sales), 0);
-        const twoMonthsAgoSpend = twoMonthsAgoAdRows.reduce((s, r) => s + parseAmt(r.spend), 0);
-        const twoMonthsAgoSales = twoMonthsAgoAdRows.reduce((s, r) => s + parseAmt(r.sales), 0);
+          const lastMonthSpend = lastMonthAdRows.reduce((s, r) => s + parseAmt(r.spend), 0);
+          const lastMonthSales = lastMonthAdRows.reduce((s, r) => s + parseAmt(r.sales), 0);
+          const twoMonthsAgoSpend = twoMonthsAgoAdRows.reduce((s, r) => s + parseAmt(r.spend), 0);
+          const twoMonthsAgoSales = twoMonthsAgoAdRows.reduce((s, r) => s + parseAmt(r.sales), 0);
 
-        const daysInLastMonth = new Date(ly, lm, 0).getDate();
-        const daysInTwoMonthsAgo = new Date(ly2, lm2, 0).getDate();
+          const daysInLastMonth = new Date(ly, lm, 0).getDate();
+          const daysInTwoMonthsAgo = new Date(ly2, lm2, 0).getDate();
 
-        proratedSpend = lastMonthSpend * (daysElapsed / daysInLastMonth);
-        proratedSales = lastMonthSales * (daysElapsed / daysInLastMonth);
-        proratedSpendPrev = twoMonthsAgoSpend * (daysElapsed / daysInTwoMonthsAgo);
-        proratedSalesPrev = twoMonthsAgoSales * (daysElapsed / daysInTwoMonthsAgo);
+          proratedSpend = lastMonthSpend * (daysElapsed / daysInLastMonth);
+          proratedSales = lastMonthSales * (daysElapsed / daysInLastMonth);
+          proratedSpendPrev = twoMonthsAgoSpend * (daysElapsed / daysInTwoMonthsAgo);
+          proratedSalesPrev = twoMonthsAgoSales * (daysElapsed / daysInTwoMonthsAgo);
+        } else {
+          // ADDED 2026-08-28 per Jaclyn -- Last Month: both the reference
+          // month and the one before it are already fully complete, so use
+          // each month's real total directly. No proration applies (or is
+          // needed) once a month is over -- these vars keep the
+          // "prorated*" names below only so every downstream reference
+          // (blendedSpend, ACOS, the Channel Breakdown table, etc.) didn't
+          // need touching.
+          const curAdRows = adRows.filter(r => parseInt(r.year, 10) === refYear && parseInt(r.month, 10) === refMonth);
+          const prevAdRows = adRows.filter(r => parseInt(r.year, 10) === lastMonthYear && parseInt(r.month, 10) === lastMonthNum);
+          proratedSpend = curAdRows.reduce((s, r) => s + parseAmt(r.spend), 0);
+          proratedSales = curAdRows.reduce((s, r) => s + parseAmt(r.sales), 0);
+          proratedSpendPrev = prevAdRows.reduce((s, r) => s + parseAmt(r.spend), 0);
+          proratedSalesPrev = prevAdRows.reduce((s, r) => s + parseAmt(r.sales), 0);
+        }
       } else {
         console.warn('[Skinuva][overview] ad orders sheet did not return CSV — Ad Spend/ACOS will reflect Website only.');
       }
@@ -22750,7 +23003,7 @@ async function loadAuditResultsFromSheet() {
         const walmartAdvCsv = await fetch(sheetCsvUrl(WALMART_ADVERTISING_SHEET_ID, WALMART_ADVERTISING_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => '');
         if (isCsv(walmartAdvCsv)) {
           const wmtAdvRows = parseCsv(walmartAdvCsv);
-          const wmtThisMonth = wmtAdvRows.find(r => parseInt(r.year, 10) === now.getFullYear() && parseInt(r.month, 10) === now.getMonth() + 1);
+          const wmtThisMonth = wmtAdvRows.find(r => parseInt(r.year, 10) === refYear && parseInt(r.month, 10) === refMonth);
           const wmtLastMonth = wmtAdvRows.find(r => parseInt(r.year, 10) === lastMonthYear && parseInt(r.month, 10) === lastMonthNum);
           if (wmtThisMonth) { walmartSpendThisMonth = parseAmt(wmtThisMonth.spend); walmartSalesThisMonth = parseAmt(wmtThisMonth.sales); }
           if (wmtLastMonth) { walmartSpendLastMonth = parseAmt(wmtLastMonth.spend); walmartSalesLastMonth = parseAmt(wmtLastMonth.sales); }
@@ -22797,8 +23050,8 @@ async function loadAuditResultsFromSheet() {
       const acos = blendedSales > 0 ? (blendedSpend / blendedSales) * 100 : 0;
       const acosPrev = blendedSalesPrev > 0 ? (blendedSpendPrev / blendedSalesPrev) * 100 : 0;
 
-      setKpi('ov-kpi-adspend', '$' + blendedSpend.toLocaleString(undefined, { maximumFractionDigits: 0 }), pctChange(blendedSpend, blendedSpendPrev), ' vs MTD last month (Est.)');
-      setKpi('ov-kpi-acos', acos.toFixed(1) + '%', pctChange(Math.round(acos * 10), Math.round(acosPrev * 10)), ' vs MTD last month (Est.)');
+      setKpi('ov-kpi-adspend', '$' + blendedSpend.toLocaleString(undefined, { maximumFractionDigits: 0 }), pctChange(blendedSpend, blendedSpendPrev), ovMomSuffix);
+      setKpi('ov-kpi-acos', acos.toFixed(1) + '%', pctChange(Math.round(acos * 10), Math.round(acosPrev * 10)), ovMomSuffix);
 
       // ADDED 2026-08-25 per Jaclyn -- MTD Ad Sales (the same blended
       // ad-attributed sales figure ACOS above is already built from) and
@@ -22807,8 +23060,8 @@ async function loadAuditResultsFromSheet() {
       // pattern as the existing Organic Units card).
       const organicSales = Math.max(0, mtd.revenue - blendedSales);
       const organicSalesPrev = Math.max(0, prev.revenue - blendedSalesPrev);
-      setKpi('ov-kpi-ad-sales', '$' + blendedSales.toLocaleString(undefined, { maximumFractionDigits: 0 }), pctChange(blendedSales, blendedSalesPrev), ' vs MTD last month (Est.)');
-      setKpi('ov-kpi-organic-sales', '$' + organicSales.toLocaleString(undefined, { maximumFractionDigits: 0 }), pctChange(organicSales, organicSalesPrev), ' vs MTD last month (Est.)');
+      setKpi('ov-kpi-ad-sales', '$' + blendedSales.toLocaleString(undefined, { maximumFractionDigits: 0 }), pctChange(blendedSales, blendedSalesPrev), ovMomSuffix);
+      setKpi('ov-kpi-organic-sales', '$' + organicSales.toLocaleString(undefined, { maximumFractionDigits: 0 }), pctChange(organicSales, organicSalesPrev), ovMomSuffix);
 
       // -- Trend: trailing 6 COMPLETED months, blended revenue across channels --
       // ROOT CAUSE of the blank chart: these revenue-history sheets use
