@@ -5038,8 +5038,8 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <div class="kpi-card" id="ppc-kpi-clicks"><div class="kpi-label">Clicks</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
         <div class="kpi-card" id="ppc-kpi-ctr"><div class="kpi-label">CTR</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
         <div class="kpi-card" id="ppc-kpi-cpc"><div class="kpi-label">CPC</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-        <div class="kpi-card" id="ppc-kpi-orders"><div class="kpi-label">Orders</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
-        <div class="kpi-card" id="ppc-kpi-aov"><div class="kpi-label">AOV</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        <div class="kpi-card" id="ppc-kpi-orders"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+        <div class="kpi-card" id="ppc-kpi-aov"><div class="kpi-label">Avg. Sale per Unit</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
       </div>
 
       <!-- Channel Breakdown table — added 2026-08-19 per Jaclyn, for QA
@@ -5084,7 +5084,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
           </table>
         </div>
         <div class="ppc-note">
-          ℹ Sessions/Units/Revenue/Conv% pulled live from the Business Report sheet, every product in the catalog. Sessions/Units show MOM vs. the prior full month.
+          ℹ Sessions/Units/Revenue/Conv% pulled live from the Business Report sheet, every product in the catalog. Sessions/Units/Conv% show MOM vs. the prior full month.
         </div>
       </div>
 
@@ -17135,7 +17135,7 @@ async function ppcLoadProductPerformance() {
     prevMonthRows.forEach(r => {
       const asin = (r.asin || '').toUpperCase();
       if (!asin) return;
-      prevByAsin[asin] = { sessions: parseInt(r.sessions, 10) || 0, units: parseInt(r.units_ordered, 10) || 0 };
+      prevByAsin[asin] = { sessions: parseInt(r.sessions, 10) || 0, units: parseInt(r.units_ordered, 10) || 0, conv: parseFloat(r.conversion_rate) || 0 };
     });
     // Same arrow-badge convention as the Amazon Sales page's own
     // momSpan() (▲/▼ colored badges, .tp-mom-up/.tp-mom-dn/.tp-mom-flat --
@@ -17178,7 +17178,7 @@ async function ppcLoadProductPerformance() {
         <td>${sessions.toLocaleString()}${ppcProductMomSpan(sessions, prevRow.sessions)}</td>
         <td>${units.toLocaleString()}${ppcProductMomSpan(units, prevRow.units)}</td>
         <td>$${revenue.toFixed(2)}</td>
-        <td><span class="rank-pill ${convClass}">${conv.toFixed(2)}%</span></td>
+        <td><span class="rank-pill ${convClass}">${conv.toFixed(2)}%</span>${ppcProductMomSpan(conv, prevRow.conv)}</td>
       </tr>`;
     }).join('');
   } catch (err) {
@@ -17809,6 +17809,18 @@ async function ppcLoadBlendedKpis() {
       const adSales = num(amzAdRow.sales) + num(wmtAdRow.sales);
       const impressions = num(amzAdRow.impressions) + num(wmtAdRow.impressions);
       const clicks = num(amzAdRow.clicks) + num(wmtAdRow.clicks);
+      // FIXED 2026-08-28 per Jaclyn -- "everything else on that page is
+      // supposed to be telling a PPC specific story." Orders/AOV used to
+      // be totalOrders/totalSales -- ALL orders (organic + ads), same
+      // blended figure Total Sales uses. Neither Amazon's nor Walmart's
+      // advertising sheet reports an actual ad-attributed ORDER count
+      // though (confirmed live: both only ever carry ad_units, alongside
+      // spend/sales/impressions/clicks) -- so per Jaclyn, swapped for the
+      // real concrete ads-only number that does exist: ad_units. Total
+      // Sales/TACOS stay blended on purpose (TACOS needs total sales as
+      // its denominator) -- this only touches Orders/AOV.
+      const adUnits = num(amzAdRow.ad_units) + num(wmtAdRow.ad_units);
+      const avgSalePerUnit = adUnits > 0 ? adSales / adUnits : 0;
 
       const acos = adSales > 0 ? (adSpend / adSales) * 100 : 0;
       const tacos = totalSales > 0 ? (adSpend / totalSales) * 100 : 0;
@@ -17816,7 +17828,7 @@ async function ppcLoadBlendedKpis() {
       const cpc = clicks > 0 ? adSpend / clicks : 0;
       const aov = totalOrders > 0 ? totalSales / totalOrders : 0;
 
-      return { adSpend, adSales, acos, totalSales, tacos, impressions, clicks, ctr, cpc, totalOrders, aov };
+      return { adSpend, adSales, acos, totalSales, tacos, impressions, clicks, ctr, cpc, totalOrders, aov, adUnits, avgSalePerUnit };
     }
 
     // ADDED 2026-08-28 per Jaclyn -- "MOM comparisons for the PPC blended
@@ -17864,6 +17876,11 @@ async function ppcLoadBlendedKpis() {
       const adSales = (num(amzAdRow.sales) + num(wmtAdRow.sales)) * dayFrac;
       const impressions = (num(amzAdRow.impressions) + num(wmtAdRow.impressions)) * dayFrac;
       const clicks = (num(amzAdRow.clicks) + num(wmtAdRow.clicks)) * dayFrac;
+      // FIXED 2026-08-28 per Jaclyn -- same Orders/AOV -> Units (Ads)/Avg.
+      // Sale per Unit swap as computeForPeriod above, applied here too so
+      // the MTD comparison baseline matches what's actually being shown.
+      const adUnits = (num(amzAdRow.ad_units) + num(wmtAdRow.ad_units)) * dayFrac;
+      const avgSalePerUnit = adUnits > 0 ? adSales / adUnits : 0;
 
       const acos = adSales > 0 ? (adSpend / adSales) * 100 : 0;
       const tacos = totalSales > 0 ? (adSpend / totalSales) * 100 : 0;
@@ -17871,7 +17888,7 @@ async function ppcLoadBlendedKpis() {
       const cpc = clicks > 0 ? adSpend / clicks : 0;
       const aov = totalOrders > 0 ? totalSales / totalOrders : 0;
 
-      return { adSpend, adSales, acos, totalSales, tacos, impressions, clicks, ctr, cpc, totalOrders, aov };
+      return { adSpend, adSales, acos, totalSales, tacos, impressions, clicks, ctr, cpc, totalOrders, aov, adUnits, avgSalePerUnit };
     }
 
     // Per-channel breakdown (Channel Breakdown table) — added 2026-08-19
@@ -18019,12 +18036,13 @@ function renderPpcBlendedKpis() {
   // number of days elapsed in the prior month rather than the whole thing.
   const isMtd = window._ppcBlendedPeriod === 'mtd';
   const prev = isMtd ? window._ppcBlendedData.mtdPrev : window._ppcBlendedData.lastFullPrev;
-  // Total Sales/Orders/AOV/TACOS are real day-level comparisons even under
-  // MTD (order data has a date per row); Ad Spend/Ad Sales/ACOS/
-  // Impressions/Clicks/CTR/CPC under MTD are prorated estimates (Amazon's/
-  // Walmart's ad sheets are month-bucketed, no daily breakdown to slice) --
-  // flagged "(Est.)" so the distinction is visible, same convention
-  // Overview already uses for its own prorated MTD ad-spend estimate.
+  // Total Sales/TACOS are real day-level comparisons even under MTD (order
+  // data has a date per row); Ad Spend/Ad Sales/ACOS/Impressions/Clicks/
+  // CTR/CPC/Units (Ads)/Avg. Sale per Unit under MTD are prorated estimates
+  // (Amazon's/Walmart's ad sheets are month-bucketed, no daily breakdown to
+  // slice) -- flagged "(Est.)" so the distinction is visible, same
+  // convention Overview already uses for its own prorated MTD ad-spend
+  // estimate.
   const realSuffix = isMtd ? ' vs MTD last month' : ' MOM';
   const estSuffix = isMtd ? ' vs MTD last month (Est.)' : ' MOM';
   const setVal = (id, text) => { const el = document.querySelector(`#${id} .kpi-value`); if (el) el.textContent = text; };
@@ -18039,8 +18057,15 @@ function renderPpcBlendedKpis() {
   setVal('ppc-kpi-clicks', d.clicks.toLocaleString());
   setVal('ppc-kpi-ctr', pct(d.ctr));
   setVal('ppc-kpi-cpc', `$${d.cpc.toFixed(2)}`);
-  setVal('ppc-kpi-orders', d.totalOrders.toLocaleString());
-  setVal('ppc-kpi-aov', `$${d.aov.toFixed(2)}`);
+  // FIXED 2026-08-28 per Jaclyn -- "everything else on that page is
+  // supposed to be telling a PPC specific story." This card used to show
+  // totalOrders (all orders, organic + ads, same blended number Total
+  // Sales uses) under a generic "Orders" label. Neither Amazon's nor
+  // Walmart's advertising sheet reports an ad-attributed order count --
+  // only ad_units -- so per Jaclyn, swapped to the real ads-only number
+  // that exists (see the HTML label change alongside this).
+  setVal('ppc-kpi-orders', d.adUnits.toLocaleString());
+  setVal('ppc-kpi-aov', `$${d.avgSalePerUnit.toFixed(2)}`);
 
   // Ad-platform-sourced metrics (prorated under MTD, see comment above) get
   // estSuffix; metrics built from real day-level order data get realSuffix.
@@ -18053,8 +18078,8 @@ function renderPpcBlendedKpis() {
   ppcBlendedSetMom('ppc-kpi-clicks', prev ? ppcBlendedPct(d.clicks, prev.clicks) : null, estSuffix);
   ppcBlendedSetMom('ppc-kpi-ctr', prev ? ppcBlendedPct(d.ctr, prev.ctr) : null, estSuffix);
   ppcBlendedSetMom('ppc-kpi-cpc', prev ? ppcBlendedPct(d.cpc, prev.cpc) : null, estSuffix);
-  ppcBlendedSetMom('ppc-kpi-orders', prev ? ppcBlendedPct(d.totalOrders, prev.totalOrders) : null, realSuffix);
-  ppcBlendedSetMom('ppc-kpi-aov', prev ? ppcBlendedPct(d.aov, prev.aov) : null, realSuffix);
+  ppcBlendedSetMom('ppc-kpi-orders', prev ? ppcBlendedPct(d.adUnits, prev.adUnits) : null, estSuffix);
+  ppcBlendedSetMom('ppc-kpi-aov', prev ? ppcBlendedPct(d.avgSalePerUnit, prev.avgSalePerUnit) : null, estSuffix);
 }
 
 function renderPpcChannelBreakdown() {
@@ -22359,7 +22384,14 @@ async function loadAuditResultsFromSheet() {
     return map;
   }
 
-  function setKpi(cardId, value, pctVal, suffix) {
+  // ADDED 2026-08-28 per Jaclyn -- "if ACOS goes up that is bad ... that
+  // metric should read red since a low acos is good where an increasing
+  // acos is bad." The arrow direction should still literally follow the
+  // number (\u25b2 when it went up, \u25bc when it went down) -- only the COLOR
+  // needs to flip for a metric where "up" is the bad direction. `invert`
+  // swaps the up/dn CSS class (which controls color) while leaving the
+  // arrow glyph computed from the real, un-inverted sign of pctVal.
+  function setKpi(cardId, value, pctVal, suffix, invert) {
     const card = document.getElementById(cardId);
     if (!card) return;
     const valEl = card.querySelector('.kpi-value');
@@ -22367,8 +22399,9 @@ async function loadAuditResultsFromSheet() {
     if (valEl) valEl.textContent = value;
     if (momEl) {
       if (pctVal == null) { momEl.className = 'kpi-mom flat'; momEl.textContent = '\u2014'; return; }
-      const cls = pctVal === 0 ? 'flat' : pctVal > 0 ? 'up' : 'dn';
       const arrow = pctVal === 0 ? '' : pctVal > 0 ? '\u25b2 ' : '\u25bc ';
+      const isGoodDirection = invert ? pctVal < 0 : pctVal > 0;
+      const cls = pctVal === 0 ? 'flat' : isGoodDirection ? 'up' : 'dn';
       momEl.className = 'kpi-mom ' + cls;
       momEl.textContent = `${arrow}${Math.abs(pctVal)}%${suffix || ' vs MTD last month'}`;
     }
@@ -22536,7 +22569,21 @@ async function loadAuditResultsFromSheet() {
       // already declared globally further down this file (used by the
       // existing "Returns Processed" KPI on Marketing → Fulfillment & CS),
       // reused here rather than redeclared.
-      const [amzCsv, webCsv, wmtCsv, adOrdersCsv, amzReturnsCsv, wmtReturnsCsv, webReturnsCsv, namesCsv, webAdsCsv, webShoppingCsv] = await Promise.all([
+      // ADDED 2026-08-28 per Jaclyn's "thorough QA" request -- Skinuva-CA
+      // orders/returns live on DEDICATED tabs (same 2 files, different
+      // gids), split out 2026-08-19 per the Amazon Sales page's own
+      // history (see its "Merge in the skinuva-ca tabs" comment) -- but
+      // that split was only ever wired into the Amazon Sales page's own
+      // fetch, never into Overview's. Confirmed live: this silently
+      // dropped 100% of Canada's Amazon orders/units/revenue from every
+      // Overview KPI, the Channel Breakdown table, and Top Selling
+      // Products -- not a deliberate US-only scope, just a page that
+      // never got updated when the CA split happened. Same gids the
+      // Amazon Sales page uses (hardcoded there too, not in SHEET_CFG).
+      const CA_SYNC_GID = '1347068338';
+      const CA_RETURNS_GID = '2019659648';
+      const CA_AD_ORDERS_GID = '1657515163';
+      const [amzCsv, webCsv, wmtCsv, adOrdersCsv, amzReturnsCsv, wmtReturnsCsv, webReturnsCsv, namesCsv, webAdsCsv, webShoppingCsv, caSyncCsv, caReturnsCsv, caAdOrdersCsv] = await Promise.all([
         fetch(sheetCsvUrl(AMAZON_SHEET_ID, AMAZON_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
         fetch(sheetCsvUrl(WEB_SHEET_ID, WEB_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
         fetch(sheetCsvUrl(WMT_SHEET_ID, WMT_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
@@ -22565,9 +22612,43 @@ async function loadAuditResultsFromSheet() {
         // available source for per-ASIN Website ad units (not a full picture
         // of every Google campaign type).
         fetch(sheetCsvUrl(OV_WEB_ORDERS_SHEET_ID, WEB_SHOPPING_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+        // Skinuva-CA orders/returns — same 2 files as above, dedicated
+        // CA-only tabs (see comment above CA_SYNC_GID/CA_RETURNS_GID).
+        fetch(sheetCsvUrl(AMAZON_SHEET_ID, CA_SYNC_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+        fetch(ovCsvUrl(OV_RETURNS_SHEET_ID, CA_RETURNS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+        // Skinuva-CA ad orders (per-ASIN, month-bucketed) — same file as
+        // adOrdersCsv below (AD_ORDERS_SHEET_ID), dedicated CA gid. Rows
+        // carry brand:"skinuva-ca" (confirmed live), normalized back to
+        // BRAND_SLUG on merge below so the existing brand filters at each
+        // adOrdersCsv consumer keep working unchanged.
+        fetch(sheetCsvUrl(AD_ORDERS_SHEET_ID, CA_AD_ORDERS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
       ]);
 
       const amzRows = isCsv(amzCsv) ? parseCsv(amzCsv).filter(isEvolisRow) : [];
+      // Merge in the skinuva-ca tab — every row unconditionally tagged CA
+      // (not run through any territory classifier, since the whole tab is
+      // CA-dedicated now), matching the Amazon Sales page's own "Merge in
+      // the skinuva-ca tabs" convention (see that page's fetch code).
+      const caSyncRows = isCsv(caSyncCsv) ? parseCsv(caSyncCsv).filter(isEvolisRow) : [];
+      caSyncRows.forEach(r => { r._territory = 'CA'; });
+      amzRows.push(...caSyncRows);
+      console.log('[Skinuva][overview][CA-merge] caSyncRows:', caSyncRows.length, 'caReturnRows pending merge below');
+
+      // Merged Ad Orders rows (US main tab + Skinuva-CA dedicated tab).
+      // Every consumer of adOrdersCsv below (Ad-Driven Units KPI,
+      // adUnitsByAsin organic-split, Ad Spend/ACOS proration) should see
+      // CA's ad spend/sales/ad_units too, not just US. CA rows' brand is
+      // normalized from "skinuva-ca" to BRAND_SLUG here so each existing
+      // brand-equality filter downstream keeps working without any other
+      // changes at those call sites.
+      const adOrdersRowsMerged = (isCsv(adOrdersCsv) ? parseCsv(adOrdersCsv) : []).concat(
+        (isCsv(caAdOrdersCsv) ? parseCsv(caAdOrdersCsv) : []).map(r => {
+          r._territory = 'CA';
+          r.brand = (window.SHEET_CFG.BRAND_SLUG || 'evolis');
+          return r;
+        })
+      );
+      console.log('[Skinuva][overview][CA-merge] caAdOrdersCsv rows merged into adOrders:', adOrdersRowsMerged.length - (isCsv(adOrdersCsv) ? parseCsv(adOrdersCsv).length : 0));
       // Customer-only (C-) filter added 2026-08-10 per Jaclyn — Skinuva's
       // website orders also include Physician (P-), International (I-),
       // and Sample (S-) order types mixed into the same sheet. Overview
@@ -22713,10 +22794,15 @@ async function loadAuditResultsFromSheet() {
       // only ever carry a `sku`, so those are resolved through
       // skuToAsinMap (falling back to the raw SKU if no crosswalk entry
       // exists) — same convention as unitsByAsin() elsewhere on this page.
+      // `csv` may be a raw CSV string (the original convention) OR an
+      // already-parsed array of rows -- ADDED 2026-08-28 so the CA-merge
+      // fix below can pass a combined [US rows, CA rows] array without
+      // gluing two CSV texts together (which would duplicate the header
+      // row and break parseCsv).
       function aggregateReturnsRange(csv, startStr, endStr, dateField, opts) {
         opts = opts || {};
-        if (!isCsv(csv)) return { totalQty: 0, totalAmt: 0, byAsin: {} };
-        const filtered = parseCsv(csv).filter(r => {
+        if (!Array.isArray(csv) && !isCsv(csv)) return { totalQty: 0, totalAmt: 0, byAsin: {} };
+        const filtered = (Array.isArray(csv) ? csv : parseCsv(csv)).filter(r => {
           if (!isEvolisRow(r)) return false;
           if (opts.skuPrefix && !(r.sku || '').trim().toUpperCase().startsWith(opts.skuPrefix)) return false;
           const d = normalizeDate(r[dateField]);
@@ -22738,8 +22824,17 @@ async function loadAuditResultsFromSheet() {
         return { totalQty, totalAmt, byAsin };
       }
 
-      const amzReturnsMtd  = aggregateReturnsRange(amzReturnsCsv, mtdStartStr, mtdEndStr, 'return_date', { useAsinPrice: true });
-      const amzReturnsPrev = aggregateReturnsRange(amzReturnsCsv, prevStartStr, prevEndStr, 'return_date', { useAsinPrice: true });
+      // Merge Skinuva-CA returns into the same rows array before
+      // aggregating — aggregateReturnsRange accepts either a raw CSV
+      // string or an already-parsed row array (Array.isArray check),
+      // added specifically so this US+CA merge doesn't require
+      // concatenating raw CSV text (which would duplicate header rows).
+      const amzReturnRowsAll = (isCsv(amzReturnsCsv) ? parseCsv(amzReturnsCsv) : []).concat(
+        (isCsv(caReturnsCsv) ? parseCsv(caReturnsCsv) : []).map(r => { r._territory = 'CA'; return r; })
+      );
+      console.log('[Skinuva][overview][CA-merge] caReturnRows:', amzReturnRowsAll.filter(r => r._territory === 'CA').length);
+      const amzReturnsMtd  = aggregateReturnsRange(amzReturnRowsAll, mtdStartStr, mtdEndStr, 'return_date', { useAsinPrice: true });
+      const amzReturnsPrev = aggregateReturnsRange(amzReturnRowsAll, prevStartStr, prevEndStr, 'return_date', { useAsinPrice: true });
       const wmtReturnsMtd  = aggregateReturnsRange(wmtReturnsCsv, mtdStartStr, mtdEndStr, 'return_date');
       const wmtReturnsPrev = aggregateReturnsRange(wmtReturnsCsv, prevStartStr, prevEndStr, 'return_date');
       const webReturnsMtd  = aggregateReturnsRange(webReturnsCsv, mtdStartStr, mtdEndStr, 'refund_date', { skuPrefix: 'C-' });
@@ -22814,18 +22909,31 @@ async function loadAuditResultsFromSheet() {
       // period was selected, which is exactly the class of bug that would
       // have left this one card silently stuck on live data while every
       // other card on the page switched to Last Month.
-      if (isCsv(adOrdersCsv)) {
-        const adRowsForOrders = parseCsv(adOrdersCsv);
-        adDrivenOrders = adRowsForOrders.filter(r =>
+      // FIXED 2026-08-28 per Jaclyn -- "why are we seeing only 16 ad
+      // driven units." This sheet is monthly-grain per ASIN (one row per
+      // ASIN per month, with its own ad_units/spend/sales/acos columns)
+      // -- confirmed live: August had 16 rows (16 ASINs with ad activity),
+      // and .length was counting THOSE ROWS as if each were one order,
+      // instead of summing their ad_units column (which totals 436 for
+      // the same 16 rows). Every other place in this file that reads this
+      // exact sheet (Amazon Sales page's buildTopProductsTable, the Prime
+      // Day comparison, etc.) already sums ad_units per row -- this was
+      // the one place still treating it as one-row-per-order. The old
+      // "not a pre-aggregated units total" comment here no longer matches
+      // the sheet's real shape.
+      if (adOrdersRowsMerged.length) {
+        const adRowsForOrders = adOrdersRowsMerged;
+        const sumAdUnits = rows => rows.reduce((s, r) => s + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0), 0);
+        adDrivenOrders = sumAdUnits(adRowsForOrders.filter(r =>
           parseInt(r.year, 10) === refYear &&
           parseInt(r.month, 10) === refMonth &&
           (r.brand || '').trim().toLowerCase() === (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase()
-        ).length;
-        adDrivenOrdersLastMonthFull = adRowsForOrders.filter(r =>
+        ));
+        adDrivenOrdersLastMonthFull = sumAdUnits(adRowsForOrders.filter(r =>
           parseInt(r.year, 10) === lastMonthYear &&
           parseInt(r.month, 10) === lastMonthNum &&
           (r.brand || '').trim().toLowerCase() === (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase()
-        ).length;
+        ));
       }
 
       // Walmart — added 2026-08-06 per Jaclyn, explicit choice: sum
@@ -22926,9 +23034,22 @@ async function loadAuditResultsFromSheet() {
       let adUnitsByAsin = {};
       let adUnitsByAsinPrev = {};
       try {
-        const adOrdersCsv2 = await fetch(sheetCsvUrl('1N30haUFZkdv9rrvYuWwUhxEm0z7MGp1bz9F462aF-QI', '158578426') + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => '');
-        if (isCsv(adOrdersCsv2)) {
-          const adRows2All = parseCsv(adOrdersCsv2);
+        // FIXED 2026-08-28 per Jaclyn's "thorough QA" request -- this used
+        // to run a SECOND, separate fetch against gid 158578426 on the ad
+        // orders file. Confirmed live: that gid is the ÉVOLIS brand's tab
+        // (brand="evolis" on every row), not Skinuva's, and this block had
+        // no brand filter at all. Since Évolis ASINs never match Skinuva
+        // ASINs, adUnitsByAsin[asin] was silently always 0 for every real
+        // Skinuva ASIN -- meaning "MTD Organic Units" and the Top Products
+        // table's ad/organic split were treating 100% of Amazon units as
+        // organic, with Amazon's ad-attributed units never actually
+        // subtracted (Walmart's separate subtraction, further down, was
+        // unaffected). Fixed by reusing adOrdersCsv -- already fetched
+        // above from the correct SHEET_AD_ORDERS/evolis(-tab-named,
+        // actually skinuva-scoped) gid for this exact purpose (adDrivenOrders) --
+        // instead of a second, wrongly-pointed fetch.
+        if (adOrdersRowsMerged.length) {
+          const adRows2All = adOrdersRowsMerged.filter(r => (r.brand || '').trim().toLowerCase() === (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase());
           adRows2All.filter(r => parseInt(r.year, 10) === refYear && parseInt(r.month, 10) === refMonth)
             .forEach(r => {
               const asin = (r.asin || '').trim().toUpperCase();
@@ -23071,8 +23192,8 @@ async function loadAuditResultsFromSheet() {
       // day-aligned MTD and prior-MTD sums. They're added directly to
       // Amazon's prorated figures for one blended Ad Spend / ACOS number.
       let proratedSpend = 0, proratedSales = 0, proratedSpendPrev = 0, proratedSalesPrev = 0;
-      if (isCsv(adOrdersCsv)) {
-        const adRows = parseCsv(adOrdersCsv);
+      if (adOrdersRowsMerged.length) {
+        const adRows = adOrdersRowsMerged;
         if (cfg.isPartial) {
           // MTD -- unchanged from the original (only) behavior: estimate
           // "this month so far" by prorating the LAST FULL month's real
@@ -23182,7 +23303,7 @@ async function loadAuditResultsFromSheet() {
       const acosPrev = blendedSalesPrev > 0 ? (blendedSpendPrev / blendedSalesPrev) * 100 : 0;
 
       setKpi('ov-kpi-adspend', '$' + blendedSpend.toLocaleString(undefined, { maximumFractionDigits: 0 }), pctChange(blendedSpend, blendedSpendPrev), ovMomSuffix);
-      setKpi('ov-kpi-acos', acos.toFixed(1) + '%', pctChange(Math.round(acos * 10), Math.round(acosPrev * 10)), ovMomSuffix);
+      setKpi('ov-kpi-acos', acos.toFixed(1) + '%', pctChange(Math.round(acos * 10), Math.round(acosPrev * 10)), ovMomSuffix, true);
 
       // ADDED 2026-08-25 per Jaclyn -- MTD Ad Sales (the same blended
       // ad-attributed sales figure ACOS above is already built from) and
