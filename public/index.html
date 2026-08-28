@@ -1380,7 +1380,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     <div class="card" style="margin-bottom:20px;">
       <div class="card-title">Channel Breakdown <span style="font-weight:400;color:var(--muted);" id="ov-channelbreak-title-suffix">(Amazon + Walmart, Month to Date)</span></div>
       <table class="data-table" style="width:100%;">
-        <thead><tr><th>Channel</th><th>Ad Spend</th><th>Ad Sales</th><th>Units</th><th>Orders</th><th>Revenue</th><th>AOV</th></tr></thead>
+        <thead><tr><th>Channel</th><th>Ad Spend</th><th>Ad Sales</th><th>Units</th><th>Total Orders</th><th>Revenue</th><th>AOV</th></tr></thead>
         <tbody id="ov-channel-breakdown-tbody"><tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">Loading…</td></tr></tbody>
       </table>
     </div>
@@ -5060,7 +5060,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
             <thead><tr>
               <th>Channel</th><th>Ad Spend</th><th>Ad Sales</th><th>ACOS</th>
               <th>Total Sales</th><th>TACOS</th><th>Impressions</th><th>Clicks</th>
-              <th>CPC</th><th>Orders</th><th>AOV</th><th>CVR</th>
+              <th>CPC</th><th>Total Orders</th><th>AOV</th><th>CVR</th>
             </tr></thead>
             <tbody id="ppc-channel-breakdown-tbody">
               <tr><td colspan="12" style="text-align:center;color:var(--muted);">Loading…</td></tr>
@@ -16830,11 +16830,34 @@ function revRenderStarDistribution(reviews) {
     ${rows}`;
 }
 
+// ADDED 2026-08-28 per Jaclyn -- reviews weren't loading on the Insights
+// page. Root cause confirmed live: window.SHEET_CFG.SHEET_AMAZON_REVIEWS.gid
+// comes back `null` from /api/sheet-config for this brand, so the old
+// gid-based URL literally requested "...&gid=null", which Google Sheets
+// 400s on (confirmed in the console: a 400 on that exact URL, "0 rows
+// loaded"). This is a backend/config issue (the sheet-config source is
+// missing this brand's gid), not something fixable in this file -- worth
+// flagging on your end too. As a resilient fix here: fetch by TAB NAME via
+// the gviz endpoint instead, which doesn't need a gid at all. Confirmed
+// live that the real review rows (174k+ chars, correct header row) live on
+// a tab literally named after the brand slug ("skinuva") -- gid=0 and the
+// generic "Reviews"/"Sheet1" tab names all came back empty. Falls back to
+// the normal gid-based URL first if SHEET_CFG ever does supply a real gid,
+// so this self-heals once the backend config is fixed and doesn't rely on
+// the brand-slug-as-tab-name assumption forever.
+function reviewsCsvUrl() {
+  if (SHEET_AMAZON_REVIEWS_GID !== null && SHEET_AMAZON_REVIEWS_GID !== undefined && SHEET_AMAZON_REVIEWS_GID !== '') {
+    return ovCsvUrl(SHEET_AMAZON_REVIEWS_ID, SHEET_AMAZON_REVIEWS_GID);
+  }
+  const brandSlug = window.SHEET_CFG.BRAND_SLUG || 'evolis';
+  return `https://docs.google.com/spreadsheets/d/${SHEET_AMAZON_REVIEWS_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(brandSlug)}`;
+}
+
 let _amazonReviewsPromise = null;
 function fetchAmazonReviews() {
   if (_amazonReviewsPromise) return _amazonReviewsPromise;
   _amazonReviewsPromise = (async () => {
-    const csv = await fetch(ovCsvUrl(SHEET_AMAZON_REVIEWS_ID, SHEET_AMAZON_REVIEWS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => '');
+    const csv = await fetch(reviewsCsvUrl() + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => '');
     const rows = parseCsvToRows(csv);
     console.log('[Reviews][qa] total review rows loaded:', rows.length, '— header keys:', rows.length ? Object.keys(rows[0]).join(' | ') : '(none)');
     return rows;
