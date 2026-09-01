@@ -18518,20 +18518,37 @@ window.initInventoryPage = async function() {
 
 // ═══════════════════════════════════════════════════════════════════
 // OUT-OF-STOCK LOG — Option 2 (grouped by SKU), lazy-loaded on first
-// visit to that tab, not on initial page load. This needs the FULL
-// daily history per SKU (not just the latest date, which is all the
-// Snapshot tab needs), so it's a separate, heavier fetch — keeping it
-// lazy is what keeps the Snapshot tab's initial load fast.
+// visit to that tab, not on initial page load.
 //
-// A day counts as OOS when Available (total_quantity) = 0. Consecutive
-// OOS days group into one incident. Missing daily-log rows (the cron
-// didn't run that day) are skipped over rather than treated as a break
-// in the streak — there's no data contradicting continuity, so the
-// streak is assumed to continue through the gap. A row that exists but
-// has a blank/unparseable total_quantity is treated as "unknown, not
-// OOS" — same reasoning, we don't have evidence either way so we don't
-// claim OOS without it.
+// SWITCHED 2026-09-01 — ported from évolis per the "OOS Log Tab — Switch
+// to sync-oos-history.js" handoff doc. Now reads pre-computed OOS
+// incidents from sync-oos-history.js's cache sheet instead of re-deriving
+// streaks client-side from the full daily Products Cache history. The
+// cron does the day-by-day scan (a day counts as OOS when Available/
+// total_quantity = 0, consecutive OOS days group into one incident,
+// missing daily-log rows are skipped over rather than treated as a break
+// in the streak) once, server-side, for every brand — this just reads
+// its output and groups by SKU. One shared sheet/tab across all brands
+// (columns: brand, sku, asin, type, start_date, end_date, status,
+// last_updated), filtered to Skinuva's rows below.
+//
+// PORTING CAVEATS (per the handoff doc's own "known unconfirmed
+// assumptions," not yet checked against real cron output for Skinuva):
+// the exact spelling/casing of the "status" value that marks an incident
+// as still-open, and of the "brand" column's Skinuva value, and the
+// meaning/use of the "type" column (not used below — unclear from the
+// doc whether it should filter which rows count as real OOS incidents).
+// Verify all three against a live fetch once the cron has run for
+// Skinuva, the same way évolis's was checked.
 // ═══════════════════════════════════════════════════════════════════
+
+// sync-oos-history.js cache sheet — shared across all brands on one tab,
+// filtered by the "brand" column below. Sheet ID + gid confirmed
+// 2026-09-01 per Jaclyn (same sheet/gid évolis's dashboard reads from —
+// per the handoff doc this is one shared tab with a brand column, not a
+// separate tab per brand).
+const OV_OOS_HISTORY_SHEET_ID = '1lbvdt8qcSRItrkWGjWnaJHcoBhjY275b1M6fM5_dKAM';
+const OV_OOS_HISTORY_GID      = '1494905008';
 
 let _oosLogLoaded = false;
 
@@ -18539,20 +18556,24 @@ async function loadOosLog() {
   const body = document.getElementById('oos-log-body');
   if (!body) return;
   try {
-    const csv = await fetch(ovCsvUrl(OV_PRODUCTS_CACHE_SHEET_ID, OV_PRODUCTS_CACHE_GID)).then(r => r.ok ? r.text() : '').catch(() => '');
-    const rows = parseCsvToRows(csv);
+    const csv = await fetch(ovCsvUrl(OV_OOS_HISTORY_SHEET_ID, OV_OOS_HISTORY_GID)).then(r => r.ok ? r.text() : '').catch(() => '');
+    const allRows = parseCsvToRows(csv);
+    if (!allRows.length) { body.innerHTML = '<div class="ppc-card" style="color:var(--muted);">No data</div>'; return; }
+
+    // Brand casing unconfirmed (see caveats above) — matched
+    // case-insensitively so a "Skinuva"/"skinuva"/"SKINUVA" spelling
+    // difference on the cron's output can't silently show zero rows.
+    const rows = allRows.filter(r => (r.brand || '').trim().toLowerCase() === 'skinuva');
     if (!rows.length) { body.innerHTML = '<div class="ppc-card" style="color:var(--muted);">No data</div>'; return; }
 
-    const todayStr = rows.reduce((max, r) => ((r.date || '') > max ? r.date : max), '');
+    const todayStr = new Date().toISOString().slice(0, 10);
 
     // FIXED 2026-08-14 per Jaclyn — bundle SKUs ("SVA0001+03") and VMP
     // multi-packs ("VMP_SVA0001-STICKERLESS_2_PK") are virtual products
-    // with no inventory of their own — total_quantity is always 0/blank
-    // for these rows on Products Cache, since they're not real,
-    // separately-stocked items. Without this filter, every bundle shows
-    // up as a permanent, ongoing OOS incident from day one, which isn't
-    // a real stockout — it's just a SKU type that was never supposed to
-    // carry its own stock in the first place.
+    // with no inventory of their own. Carried over from the pre-
+    // sync-oos-history.js version since it's unconfirmed whether the
+    // cron already excludes these upstream (if it does, this is a
+    // harmless no-op filter; if it doesn't, this is still needed).
     function isCatalogSkuForOos(rawSku) {
       const upper = (rawSku || '').trim().toUpperCase();
       if (!upper) return false;
@@ -18561,46 +18582,78 @@ async function loadOosLog() {
       return true;
     }
 
-    // Group by SKU, sort each group's rows by date ascending
+    // Product name lookup — Skinuva's own Master SKU / Product Short Name
+    // sheet (col A=ASIN, col B=SKU base no -SF, col C=Product Name), same
+    // sheet used everywhere else in this file for SKU→name. The incidents
+    // sheet only carries sku/asin, not a product name.
+    function isCsv(text) {
+      const t = text.trim();
+      return t.length > 0 && !t.startsWith('<') && !t.startsWith('{');
+    }
+    function parseCsvLine(line) {
+      const result = [];
+      let cur = '', inQuote = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') { inQuote = !inQuote; cur += c; }
+        else if (c === ',' && !inQuote) { result.push(cur); cur = ''; }
+        else { cur += c; }
+      }
+      result.push(cur);
+      return result;
+    }
+    const skuNameMap = {};
+    try {
+      const namesCsv = await fetch(ovCsvUrl('1NNRTRQxQl2r4XivAvH700CC39p49GD2xfZlyRNqahGA', '164358627')).then(r => r.ok ? r.text() : '').catch(() => '');
+      if (isCsv(namesCsv)) {
+        const lines = namesCsv.trim().split('\n');
+        for (let i = 1; i < lines.length; i++) {
+          const cols = parseCsvLine(lines[i]);
+          const sku  = (cols[1] || '').replace(/^"|"$/g, '').trim().toUpperCase().replace(/-SF$/i, '');
+          const name = (cols[2] || '').replace(/^"|"$/g, '').trim();
+          if (sku && name) skuNameMap[sku] = name;
+        }
+      }
+    } catch (e) {
+      console.warn('[OOS Log] name lookup failed:', e.message);
+    }
+    function rootSku(s) {
+      const m = s.match(/^[A-Z]+\d+/);
+      return m ? m[0] : s;
+    }
+
+    const dayCount = (start, end) => Math.round((new Date(end) - new Date(start)) / 86400000) + 1;
+
+    // Group precomputed incidents by SKU
     const bySku = {};
     rows.filter(r => isCatalogSkuForOos(r.sku)).forEach(r => {
-      const sku = (r.sku || '').trim();
+      const sku = (r.sku || '').trim().toUpperCase();
       if (!sku) return;
-      if (!bySku[sku]) bySku[sku] = { name: r.name || sku, rows: [] };
-      bySku[sku].rows.push(r);
-      if (r.name) bySku[sku].name = r.name; // keep the most recently seen name
+      if (!bySku[sku]) bySku[sku] = [];
+      bySku[sku].push(r);
     });
 
     const skuLogs = [];
-    Object.entries(bySku).forEach(([sku, data]) => {
-      const sorted = [...data.rows].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-      const periods = [];
-      let streakStart = null, streakLastDate = null;
-
-      sorted.forEach(r => {
-        const avail = r.total_quantity === '' || r.total_quantity === null || r.total_quantity === undefined
-          ? NaN : parseFloat(r.total_quantity);
-        const isOos = avail === 0;
-
-        if (isOos) {
-          if (!streakStart) streakStart = r.date;
-          streakLastDate = r.date;
-        } else if (streakStart) {
-          periods.push({ start: streakStart, end: streakLastDate, ongoing: false });
-          streakStart = null; streakLastDate = null;
-        }
-      });
-      if (streakStart) periods.push({ start: streakStart, end: streakLastDate, ongoing: streakLastDate === todayStr });
+    Object.entries(bySku).forEach(([sku, incidents]) => {
+      const periods = incidents.map(r => {
+        // Status spelling unconfirmed (see caveats above) — matched
+        // case-insensitively against the likely spellings for "still out
+        // of stock," and falls back to "no end date yet" either way.
+        const statusRaw = (r.status || '').trim().toLowerCase();
+        const start = (r.start_date || '').trim();
+        const ongoing = statusRaw === 'ongoing' || statusRaw === 'open' || !(r.end_date || '').trim();
+        if (!start) return null;
+        const end = ongoing ? todayStr : (r.end_date || '').trim();
+        return { start, end: ongoing ? null : end, ongoing, days: dayCount(start, end) };
+      }).filter(Boolean).sort((a, b) => (a.start || '').localeCompare(b.start || ''));
 
       if (!periods.length) return; // never OOS — not part of this log
 
-      const dayCount = (start, end) => Math.round((new Date(end) - new Date(start)) / 86400000) + 1;
-      periods.forEach(p => { p.days = dayCount(p.start, p.ongoing ? todayStr : p.end); });
-
       const totalDays = periods.reduce((s, p) => s + p.days, 0);
       const isOngoing = periods.some(p => p.ongoing);
+      const name = skuNameMap[sku] || skuNameMap[rootSku(sku)] || sku;
 
-      skuLogs.push({ sku, name: data.name, periods: periods.reverse(), totalDays, isOngoing });
+      skuLogs.push({ sku, name, periods: periods.reverse(), totalDays, isOngoing });
     });
 
     // Ongoing (worst first by days) surface above fully-resolved history
