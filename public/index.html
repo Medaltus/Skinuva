@@ -21769,7 +21769,7 @@ async function loadAuditResultsFromSheet() {
       : '<span style="font-family:Georgia,\'Times New Roman\',serif;font-style:italic;">Skinuva</span>';
   }
 
-  function pdfxChartBlock(varName, fallbackLabel) {
+  function pdfxChartBlock(varName, fallbackLabel, heightScale) {
     const img = pdfxChartImg(varName);
     if (img) {
       // Height computed from the chart's OWN real captured aspect ratio at
@@ -21785,7 +21785,18 @@ async function loadAuditResultsFromSheet() {
       // captured aspect ratio. Confirmed 2026-07-14.
       const aspect = pdfxChartAspect(varName);
       const cardWidthPx = 686; // exact .pdfx-card inner width: 816px page − 92px page padding − 38px card padding/border
-      const heightPx = aspect ? Math.round(cardWidthPx * aspect) : 230;
+      let heightPx = aspect ? Math.round(cardWidthPx * aspect) : 230;
+      // ADDED 2026-09-10 per Jaclyn -- optional deliberate shrink, on top of
+      // the real-aspect sizing above, for one specific chart on one
+      // specific PDF page (Brand Stewardship's Ad Impressions) that was
+      // pushing the Marketing Strategy check cards below it off the
+      // bottom of the page. This is a PDF-export-only resize -- it scales
+      // the already-captured chart IMAGE down vertically (a mild, even
+      // squish across the whole image, not a crop), it does not touch the
+      // live dashboard chart's own size/aspect/config at all. Every other
+      // pdfxChartBlock() caller omits this argument and keeps the chart's
+      // true captured proportions exactly as before.
+      if (heightScale) heightPx = Math.round(heightPx * heightScale);
       // Explicit pixel WIDTH too, not just height — the img was relying on
       // an external width:100% CSS rule for its width, and html2canvas has
       // already proven unreliable resolving percentage-based sizing on
@@ -22000,7 +22011,7 @@ async function loadAuditResultsFromSheet() {
                   '<span style="display:flex;align-items:center;gap:6px;"><span style="width:11px;height:11px;background:var(--sand);border-radius:2px;display:inline-block;"></span>' + (new Date().getFullYear() - 1) + '</span>' +
                 '</div>' +
               '</div>' +
-              pdfxChartBlock('_impressChart') +
+              pdfxChartBlock('_impressChart', undefined, 0.78) +
               (adimpInsight ? '<div class="pdfx-insight" style="margin-top:8px;padding:8px 14px;"><strong>Note:</strong> ' + pdfxEscape(adimpInsight) + '</div>' : '') +
             '</div>' +
           '</div>' +
