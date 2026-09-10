@@ -941,7 +941,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 .pdfx-tabs{display:flex;gap:22px;}
 .pdfx-tab{font-size:12px;font-weight:600;color:rgba(255,255,255,.55);padding-bottom:12px;border-bottom:3px solid transparent;}
 .pdfx-tab.on{color:#fff;border-bottom-color:var(--green);}
-.pdfx-header-divider{height:1px;background:var(--border);margin:0 -46px 20px -46px;}
+.pdfx-header-divider{height:1px;background:var(--border);margin:0 -46px 12px -46px;} /* TRIMMED 2026-09-10 -- 20px->12px, shared by every pdfx-page, to help claw back height on pages running over 11in (see pdf.addImage comment further down). */
 .pdfx-chlabel{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-family:var(--font-subheader);}
 .pdfx-chrow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;}
 .pdfx-chname{font-size:17px;font-weight:600;color:var(--navy);font-family:var(--font-subheader);}
@@ -984,30 +984,36 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 .pdfx-table.compact tbody td{padding:4px 10px;}
 .pdfx-insight{background:var(--sand);border-left:3px solid var(--warn);border-radius:0 6px 6px 0;padding:12px 16px;font-size:11.5px;color:var(--navy);line-height:1.55;margin-top:2px;}
 .pdfx-insight strong{color:#000;}
-/* FIXED 2026-08-28 -- Brand Stewardship page in the PDF export was
-   rendering the Investments and Ad Impressions charts STACKED instead of
-   side-by-side: this rule is named "two-col" and is used in exactly one
-   place (buildStewardshipPage's .pdfx-two-col wrapper), but only ever
-   defined ONE column (grid-template-columns:1fr), same mistake present
-   verbatim in évolis' copy of this file too. That doubled the section's
-   vertical height, pushing the whole Stewardship page to ~12.09in of
-   rendered content against an 11in PDF page -- and since the final
-   pdf.addImage() call clamps an oversized page's height down to 11in
-   while keeping its width fixed (Math.min(renderedHeightIn, pageHeightIn)
-   -- see the page-capture loop below), that overflow was rendering as a
-   visibly squashed/distorted Stewardship page in the exported PDF, not a
-   cropped one. Confirmed live: forcing 2 real columns brought this page's
-   measured height from 12.09in down to exactly 11.00in. */
-.pdfx-two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+/* REVERTED 2026-09-10 per Jaclyn -- the "FIXED 2026-08-28" change below
+   (kept here for history) made this 2 real columns so Investments and Ad
+   Impressions sat side-by-side, to fix a page-height overflow. But at
+   this page's real 8.5in-minus-padding content width, the two chart
+   cards side-by-side don't actually fit -- Ad Impressions was rendering
+   cut off at the page's right edge instead of flowing below Investments,
+   which is what got reported. Jaclyn confirmed these should be STACKED
+   (single column), which is what this rule now does again. The page-
+   height problem the 2-col version was solving is instead addressed with
+   spacing trims inside buildStewardshipPage() itself (padding/margin
+   overrides, not a layout change) -- same approach already used on
+   Opportunities. Original 2026-08-28 note, for context: "Brand
+   Stewardship page in the PDF export was rendering the Investments and
+   Ad Impressions charts STACKED instead of side-by-side: this rule is
+   named 'two-col' and is used in exactly one place (buildStewardshipPage's
+   .pdfx-two-col wrapper), but only ever defined ONE column
+   (grid-template-columns:1fr)... That doubled the section's vertical
+   height, pushing the whole Stewardship page to ~12.09in of rendered
+   content against an 11in PDF page... forcing 2 real columns brought
+   this page's measured height from 12.09in down to exactly 11.00in." */
+.pdfx-two-col{display:grid;grid-template-columns:1fr;gap:10px;}
 .pdfx-checks{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.pdfx-check{display:flex;align-items:center;gap:10px;background:#F5F6F9;border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
+.pdfx-check{display:flex;align-items:center;gap:10px;background:#F5F6F9;border:1px solid var(--border);border-radius:8px;padding:9px 14px;} /* TRIMMED 2026-09-10 -- 12px->9px vertical padding; only used on Stewardship's PDF page, part of clawing back height there after .pdfx-two-col reverted to stacked. */
 .pdfx-check-icon{width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
 .pdfx-check-title{font-size:11.5px;font-weight:700;color:var(--navy);}
 .pdfx-check-status{font-size:10px;color:var(--muted);}
 .pdfx-ltd{margin-top:10px;}
 .pdfx-ltd-val{font-size:19px;font-weight:700;color:var(--navy);font-family:var(--font-subheader);}
 .pdfx-ltd-lbl{font-size:9.5px;color:var(--muted);}
-.pdfx-footer{display:flex;justify-content:space-between;align-items:center;margin-top:36px;padding-top:16px;border-top:1px solid var(--border);}
+.pdfx-footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);} /* TRIMMED 2026-09-10 -- margin-top 36px->16px, padding-top 16px->12px. Only used by pdfxFooter(), called from buildOpportunitiesPage/buildStrategyPage/buildEventPage, so this is effectively scoped to those 3 PDF-only page types -- part of clawing back height on pages running over 11in. */
 .pdfx-footer-brand{font-size:13px;font-weight:700;color:var(--navy);}
 .pdfx-footer-tag{font-size:9.5px;color:var(--muted);}
 .pdfx-footer-right{text-align:right;font-size:10px;color:var(--muted);}
@@ -8668,7 +8674,7 @@ async function initSns() {
       const pctUnitsAdsPrev = unitsPrev > 0 ? Math.round((adUnitsPrev / unitsPrev) * 100) : null;
 
       const fmt  = n => (n ?? 0).toLocaleString();
-      const fmtK = n => n >= 1000000 ? (n / 1000000).toFixed(2) + 'M' : n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n ?? 0);
+      const fmtK = n => n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n ?? 0);
 
       if (clicksCurr != null) setKpiVal('kpi-ad-clicks', fmt(clicksCurr));
       setKpiMom('kpi-ad-clicks', pct(clicksCurr, clicksPrev));
@@ -11750,7 +11756,7 @@ async function initSns() {
       const pctUnitsAdsPrev = unitsPrev > 0 ? Math.round((adUnitsPrev / unitsPrev) * 100) : null;
 
       const fmt  = n => (n ?? 0).toLocaleString();
-      const fmtK = n => n >= 1000000 ? (n / 1000000).toFixed(2) + 'M' : n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n ?? 0);
+      const fmtK = n => n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n ?? 0);
 
       if (clicksCurr != null) setKpiVal('mx-kpi-ad-clicks', fmt(clicksCurr));
       setKpiMom('mx-kpi-ad-clicks', pct(clicksCurr, clicksPrev));
@@ -21871,19 +21877,28 @@ async function loadAuditResultsFromSheet() {
     // note is empty/hidden, so this renders nothing for a period with no
     // unattributed rows -- same as the live page.
     const adsGapText = pdfxText('#tp-ads-gap-note');
+    // FIXED 2026-09-10 -- this page's real content (5 KPI cards w/
+    // marketplace-split rows + chart + table + insight) was measuring
+    // ~11.9in against an 11in PDF page, which the export's addImage step
+    // was compensating for by shrinking the WHOLE page narrower than the
+    // rest of the report -- reported as "a weird gap... not filling the
+    // full width of the page." Trimming vertical spacing/padding here
+    // (inline overrides, not the shared .pdfx-inner/.pdfx-kpis/.pdfx-card
+    // rules other pages also use) rather than cutting any real content,
+    // same approach already used on Opportunities.
     return '' +
       '<div class="pdfx-page">' +
-        '<div class="pdfx-inner">' +
+        '<div class="pdfx-inner" style="padding-top:18px;padding-bottom:20px;">' +
           pdfxHeaderBand(monthYear, 'Sales') +
           '<div class="pdfx-chlabel">Channel Performance</div>' +
-          '<div class="pdfx-chrow"><span class="pdfx-chname">Amazon</span><span class="pdfx-chdate">' + pdfxEscape(dateRange) + '</span></div>' +
-          '<div class="pdfx-kpis">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
-          '<div class="pdfx-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div class="pdfx-card-title" style="margin-bottom:0;">Sales Revenue by Month</div><div>' + pdfxLegendHtml('legend-amazon') + '</div></div>' + pdfxChartBlock('_amazonChart') + '</div>' +
-          '<div class="pdfx-card"><div class="pdfx-card-title">Top Selling Products <span style="font-weight:400;color:var(--muted);">(by Units)</span></div>' +
+          '<div class="pdfx-chrow" style="margin-bottom:8px;"><span class="pdfx-chname">Amazon</span><span class="pdfx-chdate">' + pdfxEscape(dateRange) + '</span></div>' +
+          '<div class="pdfx-kpis" style="margin-bottom:8px;">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
+          '<div class="pdfx-card" style="padding:10px 18px;margin-bottom:8px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div class="pdfx-card-title" style="margin-bottom:0;">Sales Revenue by Month</div><div>' + pdfxLegendHtml('legend-amazon') + '</div></div>' + pdfxChartBlock('_amazonChart') + '</div>' +
+          '<div class="pdfx-card" style="padding:10px 18px;margin-bottom:8px;"><div class="pdfx-card-title">Top Selling Products <span style="font-weight:400;color:var(--muted);">(by Units)</span></div>' +
             pdfxTableHtml(['#', 'Product', 'US', 'CA', 'UK', 'Units (Ads)', 'Units (Organic)'], rows, 4, 6, true) +
             (adsGapText ? '<div style="font-size:9px;color:var(--muted);margin-top:4px;line-height:1.4;">' + pdfxEscape(adsGapText) + '</div>' : '') +
           '</div>' +
-          (insight ? '<div class="pdfx-insight"><strong>Key Insight:</strong> ' + pdfxEscape(insight) + '</div>' : '') +
+          (insight ? '<div class="pdfx-insight" style="padding:8px 14px;"><strong>Key Insight:</strong> ' + pdfxEscape(insight) + '</div>' : '') +
         '</div>' +
       '</div>';
   }
@@ -21893,18 +21908,22 @@ async function loadAuditResultsFromSheet() {
     const kpis = ['web-kpi-total-units', 'web-kpi-total-orders', 'web-kpi-avg-order', 'web-kpi-units-ads', 'web-kpi-units-organic'].map(pdfxKpi);
     const rows = pdfxTableRows('web-tp-tbody');
     const insight = pdfxText('#web-insight-text');
+    // FIXED 2026-09-10 -- same page-height overflow issue as Amazon's page
+    // above (see the FIXED comment there) -- this page's table wasn't even
+    // using the existing "compact" row-spacing option (Amazon's table
+    // already did), on top of the same general spacing trims.
     return '' +
       '<div class="pdfx-page">' +
-        '<div class="pdfx-inner">' +
+        '<div class="pdfx-inner" style="padding-top:18px;padding-bottom:20px;">' +
           pdfxHeaderBand(monthYear, 'Sales') +
           '<div class="pdfx-chlabel">Channel Performance</div>' +
-          '<div class="pdfx-chrow"><span class="pdfx-chname">Web — skinuva.com</span><span class="pdfx-chdate">' + pdfxEscape(dateRange) + '</span></div>' +
-          '<div class="pdfx-kpis">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
-          '<div class="pdfx-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div class="pdfx-card-title" style="margin-bottom:0;">Sales by Month</div><div>' + pdfxLegendHtml('legend-web') + '</div></div>' + pdfxChartBlock('_webChart') + '</div>' +
-          '<div class="pdfx-card"><div class="pdfx-card-title">Top Selling Products <span style="font-weight:400;color:var(--muted);">(by Units)</span></div>' +
-            pdfxTableHtml(['#', 'Product', 'Units', 'Units (Ads)', 'Units (Organic)'], rows) +
+          '<div class="pdfx-chrow" style="margin-bottom:8px;"><span class="pdfx-chname">Web — skinuva.com</span><span class="pdfx-chdate">' + pdfxEscape(dateRange) + '</span></div>' +
+          '<div class="pdfx-kpis" style="margin-bottom:8px;">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
+          '<div class="pdfx-card" style="padding:10px 18px;margin-bottom:8px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div class="pdfx-card-title" style="margin-bottom:0;">Sales by Month</div><div>' + pdfxLegendHtml('legend-web') + '</div></div>' + pdfxChartBlock('_webChart') + '</div>' +
+          '<div class="pdfx-card" style="padding:10px 18px;margin-bottom:8px;"><div class="pdfx-card-title">Top Selling Products <span style="font-weight:400;color:var(--muted);">(by Units)</span></div>' +
+            pdfxTableHtml(['#', 'Product', 'Units', 'Units (Ads)', 'Units (Organic)'], rows, null, 7, true) +
           '</div>' +
-          (insight ? '<div class="pdfx-insight"><strong>Key Insight:</strong> ' + pdfxEscape(insight) + '</div>' : '') +
+          (insight ? '<div class="pdfx-insight" style="padding:8px 14px;"><strong>Key Insight:</strong> ' + pdfxEscape(insight) + '</div>' : '') +
         '</div>' +
       '</div>';
   }
@@ -21914,18 +21933,20 @@ async function loadAuditResultsFromSheet() {
     const kpis = ['wkpi-total-units', 'wkpi-total-orders', 'wkpi-avg-order'].map(pdfxKpi);
     const rows = pdfxTableRows('wtp-tbody');
     const insight = pdfxText('#wtp-insight-text');
+    // FIXED 2026-09-10 -- same page-height overflow issue as Amazon/Website
+    // above (see the FIXED comment on buildAmazonPage).
     return '' +
       '<div class="pdfx-page">' +
-        '<div class="pdfx-inner">' +
+        '<div class="pdfx-inner" style="padding-top:18px;padding-bottom:20px;">' +
           pdfxHeaderBand(monthYear, 'Sales') +
           '<div class="pdfx-chlabel">Channel Performance</div>' +
-          '<div class="pdfx-chrow"><span class="pdfx-chname">Walmart</span><span class="pdfx-chdate">' + pdfxEscape(dateRange) + '</span></div>' +
-          '<div class="pdfx-kpis n3">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
-          '<div class="pdfx-card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div class="pdfx-card-title" style="margin-bottom:0;">Sales by Month</div><div>' + pdfxLegendHtml('legend-walmart') + '</div></div>' + pdfxChartBlock('_walmartChart') + '</div>' +
-          '<div class="pdfx-card"><div class="pdfx-card-title">Top Selling Products <span style="font-weight:400;color:var(--muted);">(by Units)</span></div>' +
-            pdfxTableHtml(['#', 'Product', 'Units'], rows.map(function (r) { return r.slice(0, 3); })) +
+          '<div class="pdfx-chrow" style="margin-bottom:8px;"><span class="pdfx-chname">Walmart</span><span class="pdfx-chdate">' + pdfxEscape(dateRange) + '</span></div>' +
+          '<div class="pdfx-kpis n3" style="margin-bottom:8px;">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
+          '<div class="pdfx-card" style="padding:10px 18px;margin-bottom:8px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div class="pdfx-card-title" style="margin-bottom:0;">Sales by Month</div><div>' + pdfxLegendHtml('legend-walmart') + '</div></div>' + pdfxChartBlock('_walmartChart') + '</div>' +
+          '<div class="pdfx-card" style="padding:10px 18px;margin-bottom:8px;"><div class="pdfx-card-title">Top Selling Products <span style="font-weight:400;color:var(--muted);">(by Units)</span></div>' +
+            pdfxTableHtml(['#', 'Product', 'Units'], rows.map(function (r) { return r.slice(0, 3); }), null, 8, true) +
           '</div>' +
-          (insight ? '<div class="pdfx-insight"><strong>Key Insight:</strong> ' + pdfxEscape(insight) + '</div>' : '') +
+          (insight ? '<div class="pdfx-insight" style="padding:8px 14px;"><strong>Key Insight:</strong> ' + pdfxEscape(insight) + '</div>' : '') +
         '</div>' +
       '</div>';
   }
@@ -21943,15 +21964,24 @@ async function loadAuditResultsFromSheet() {
     const checksHtml = checkCards.map(function (c) {
       return '<div class="pdfx-check"><div class="pdfx-check-icon">✓</div><div><div class="pdfx-check-title">' + pdfxEscape(c.title) + '</div><div class="pdfx-check-status">' + pdfxEscape(c.status) + '</div></div></div>';
     }).join('');
+    // FIXED 2026-09-10 -- .pdfx-two-col was just reverted from 2 columns
+    // back to stacked/1 column (see the CSS rule's comment) because the
+    // 2-col layout was cutting Ad Impressions off at the page's right
+    // edge instead of flowing it below Investments, per Jaclyn. Stacking
+    // the two chart cards again reintroduces the page-height overflow the
+    // 2-col version was originally covering for (~12.09in measured
+    // against an 11in page back when that fix landed) -- addressed here
+    // instead with spacing/padding trims on this page's own markup, same
+    // pattern already used on Opportunities, rather than a layout change.
     return '' +
       '<div class="pdfx-page">' +
-        '<div class="pdfx-inner">' +
+        '<div class="pdfx-inner" style="padding-top:18px;padding-bottom:20px;">' +
           pdfxHeaderBand(monthYear, 'Brand Stewardship') +
           '<div class="pdfx-chlabel">Key Performance Metrics</div>' +
-          '<div class="pdfx-kpis" style="margin-top:6px;">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
+          '<div class="pdfx-kpis" style="margin-top:6px;margin-bottom:8px;">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
           '<div class="pdfx-two-col">' +
-            '<div class="pdfx-card" style="margin-bottom:0;">' +
-              '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+            '<div class="pdfx-card" style="margin-bottom:0;padding:10px 18px;">' +
+              '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">' +
                 '<div class="pdfx-card-title" style="margin-bottom:0;">Investments</div>' +
                 '<div style="display:flex;gap:18px;font-size:13px;color:var(--muted);">' +
                   '<span style="display:flex;align-items:center;gap:6px;"><span style="width:11px;height:11px;background:var(--navy);border-radius:2px;display:inline-block;"></span>Ads</span>' +
@@ -21960,10 +21990,10 @@ async function loadAuditResultsFromSheet() {
                 '</div>' +
               '</div>' +
               pdfxChartBlock('_investChart') +
-              '<div class="pdfx-ltd"><div class="pdfx-ltd-val">' + pdfxEscape(ltdVal || '—') + '</div><div class="pdfx-ltd-lbl">Launch to date · Total Investments</div></div>' +
+              '<div class="pdfx-ltd" style="margin-top:6px;"><div class="pdfx-ltd-val">' + pdfxEscape(ltdVal || '—') + '</div><div class="pdfx-ltd-lbl">Launch to date · Total Investments</div></div>' +
             '</div>' +
-            '<div class="pdfx-card" style="margin-bottom:0;">' +
-              '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+            '<div class="pdfx-card" style="margin-bottom:0;padding:10px 18px;">' +
+              '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">' +
                 '<div class="pdfx-card-title" style="margin-bottom:0;">Ad Impressions</div>' +
                 '<div style="display:flex;gap:18px;font-size:13px;color:var(--muted);">' +
                   '<span style="display:flex;align-items:center;gap:6px;"><span style="width:11px;height:11px;background:var(--green);border-radius:2px;display:inline-block;"></span>' + new Date().getFullYear() + '</span>' +
@@ -21971,10 +22001,10 @@ async function loadAuditResultsFromSheet() {
                 '</div>' +
               '</div>' +
               pdfxChartBlock('_impressChart') +
-              (adimpInsight ? '<div class="pdfx-insight" style="margin-top:10px;"><strong>Note:</strong> ' + pdfxEscape(adimpInsight) + '</div>' : '') +
+              (adimpInsight ? '<div class="pdfx-insight" style="margin-top:8px;padding:8px 14px;"><strong>Note:</strong> ' + pdfxEscape(adimpInsight) + '</div>' : '') +
             '</div>' +
           '</div>' +
-          '<div class="pdfx-chlabel" style="margin-top:16px;">Marketing Strategy</div>' +
+          '<div class="pdfx-chlabel" style="margin-top:10px;">Marketing Strategy</div>' +
           '<div class="pdfx-checks">' + checksHtml + '</div>' +
         '</div>' +
       '</div>';
@@ -21999,8 +22029,8 @@ async function loadAuditResultsFromSheet() {
     // Margin/padding trimmed 2026-08-28 -- see the page-height comment in
     // buildOpportunitiesPage above; this is the only caller of this
     // function, so these overrides are effectively scoped to this one page.
-    return '<div class="pdfx-card" style="margin-top:6px;padding:10px 18px;">' +
-      '<span class="pdfx-pill" style="margin-bottom:8px;">Future Opportunities</span>' +
+    return '<div class="pdfx-card" style="margin-top:4px;padding:8px 18px;">' +
+      '<span class="pdfx-pill" style="margin-bottom:6px;">Future Opportunities</span>' +
       '<div class="pdfx-cover-cols">' + cards + '</div>' +
       '</div>';
   }
@@ -22101,23 +22131,30 @@ async function loadAuditResultsFromSheet() {
 
   function buildOpportunitiesPage(monthYear) {
     const kpis = ['kpi-active-subs', 'kpi-retention'].map(pdfxKpi);
-    // FIXED 2026-08-28 -- this page's real content (KPIs + Active
-    // Subscriptions chart + up to 3 "Future Opportunities" cards + footer)
-    // measured ~11.79in tall against the PDF's 11in page height -- same
-    // downstream squash/distortion described above .pdfx-two-col, just
-    // from genuine content volume this time rather than a layout bug.
-    // Trimmed vertical spacing/padding SPECIFICALLY on this page's own
-    // markup (inline style overrides below, not the shared .pdfx-card/
-    // .pdfx-kpis/.pdfx-inner CSS rules other pages also use) rather than
-    // cutting any of Jaclyn's actual opportunity-card copy. Confirmed live
-    // this trims comfortably more than the ~0.79in needed.
+    // FIXED 2026-08-28, TRIMMED FURTHER 2026-09-10 -- this page's real
+    // content (KPIs + Active Subscriptions chart + up to 3 "Future
+    // Opportunities" cards + footer) measured ~11.79in tall against the
+    // PDF's 11in page height back on 2026-08-28, and the trims added then
+    // were confirmed live to comfortably clear that. By 2026-09-10 the
+    // page had drifted back over 11in with real, grown data (more
+    // subscription-history months in the chart, longer opportunity-card
+    // copy) -- reported as the "gap"/narrow-page bug on this page's slot
+    // in the export. Trimmed further here (chlabel/pill/title margins on
+    // top of the existing padding trims), plus 2 shared-but-effectively-
+    // scoped trims: .pdfx-header-divider (every page) and .pdfx-footer
+    // (only Opportunities/Strategy/Event pages use it). If real content
+    // keeps growing and outpaces spacing trims again in the future, the
+    // final pdf.addImage() step now crops any residual overflow off the
+    // bottom instead of shrinking the page narrower -- see that comment
+    // for why -- so this should degrade gracefully even if these numbers
+    // drift again.
     return '' +
       '<div class="pdfx-page">' +
-        '<div class="pdfx-inner" style="padding-top:18px;padding-bottom:18px;">' +
+        '<div class="pdfx-inner" style="padding-top:16px;padding-bottom:16px;">' +
           pdfxHeaderBand(monthYear, 'Opportunities') +
-          '<div class="pdfx-chlabel">Subscribe &amp; Save</div>' +
-          '<div class="pdfx-kpis n2" style="margin-top:6px;margin-bottom:8px;">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
-          '<div class="pdfx-card" style="margin-bottom:6px;padding:10px 18px;"><div class="pdfx-card-title">Active Subscriptions by Month</div>' + pdfxChartBlock('_snsChart') + '</div>' +
+          '<div class="pdfx-chlabel" style="margin-bottom:4px;">Subscribe &amp; Save</div>' +
+          '<div class="pdfx-kpis n2" style="margin-top:4px;margin-bottom:6px;">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
+          '<div class="pdfx-card" style="margin-bottom:6px;padding:8px 18px;"><div class="pdfx-card-title" style="margin-bottom:6px;">Active Subscriptions by Month</div>' + pdfxChartBlock('_snsChart') + '</div>' +
           pdfxFutureOpportunitiesBlock() +
           pdfxFooter(monthYear) +
         '</div>' +
@@ -22141,13 +22178,13 @@ async function loadAuditResultsFromSheet() {
     'lead-out': { title: 'var(--warn)', pillBg: 'rgba(200,125,47,.12)', pillColor: 'var(--warn)' },
   };
   function pdfxStrategyItem(title, text) {
-    return '<div style="margin-bottom:6px;"><div style="font-size:10.5px;font-weight:700;color:var(--navy);margin-bottom:1px;">' + pdfxEscape(title) + '</div>' +
+    return '<div style="margin-bottom:5px;"><div style="font-size:10.5px;font-weight:700;color:var(--navy);margin-bottom:1px;">' + pdfxEscape(title) + '</div>' +
       '<div style="font-size:9.5px;color:var(--muted);line-height:1.35;">' + text + '</div></div>';
   }
   function pdfxStrategyPhase(variant, numLabel, title, pillLabel, itemsHtml) {
     const c = EVS_PHASE_COLORS[variant];
-    return '<div class="pdfx-card" style="margin-bottom:8px;padding:12px 14px;">' +
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
+    return '<div class="pdfx-card" style="margin-bottom:6px;padding:10px 14px;">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">' +
         '<div><span style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;">' + pdfxEscape(numLabel) + '</span> ' +
         '<span style="font-family:var(--font-subheader);font-size:15px;font-weight:700;color:' + c.title + ';">' + pdfxEscape(title) + '</span></div>' +
         '<span style="font-size:9px;font-weight:700;text-transform:uppercase;color:' + c.pillColor + ';background:' + c.pillBg + ';border-radius:999px;padding:3px 10px;">' + pdfxEscape(pillLabel) + '</span>' +
@@ -22180,7 +22217,7 @@ async function loadAuditResultsFromSheet() {
     // orange/sand "key insight" treatment before. Those are two visually
     // distinct callout styles on the live dashboard; this one was always
     // meant to be green.
-    const outlook = '<div class="pdfx-card" style="background:rgba(36,233,163,.08);border:none;border-left:3px solid #1db88a;border-radius:6px;padding:10px 14px;margin-bottom:0;">' +
+    const outlook = '<div class="pdfx-card" style="background:rgba(36,233,163,.08);border:none;border-left:3px solid #1db88a;border-radius:6px;padding:8px 14px;margin-bottom:0;">' +
       '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#1db88a;margin-bottom:4px;">Strategic Outlook</div>' +
       '<div style="font-size:9.5px;color:var(--navy);line-height:1.4;">Promotional events are the highest-traffic sales windows of the year. The brands that win invest in the 2–3 weeks prior and capitalize in the week after. <strong>Preparation, real-time agility, and disciplined follow-through are the three variables we control.</strong></div>' +
       '</div>';
@@ -22188,12 +22225,14 @@ async function loadAuditResultsFromSheet() {
     // Combined onto ONE page — was 2 pages before. Fit is genuinely tight
     // with 16 total sub-items across 3 phases plus the outlook block;
     // spacing/font sizes above were tightened specifically to make this
-    // possible. Worth a real check on the actual render before trusting
-    // this looks clean rather than cramped — can't visually verify
-    // page-break behavior from here.
-    const page1 = '<div class="pdfx-page"><div class="pdfx-inner">' +
+    // possible. TRIMMED FURTHER 2026-09-10 -- this page measured ~0.75in
+    // over an 11in page in a real Skinuva export (reported as the same
+    // "gap" bug as Sales/Amazon, Website, Walmart, Opportunities — see
+    // buildAmazonPage's FIXED comment); tightened the phase cards/items
+    // above plus the inner padding and chlabel margin below to close it.
+    const page1 = '<div class="pdfx-page"><div class="pdfx-inner" style="padding-top:18px;padding-bottom:18px;">' +
       pdfxHeaderBand(monthYear, 'Events') +
-      '<div class="pdfx-chlabel">Event Strategy</div>' +
+      '<div class="pdfx-chlabel" style="margin-bottom:4px;">Event Strategy</div>' +
       leadUp + during + leadOut + outlook +
       pdfxFooter(monthYear) +
       '</div></div>';
@@ -22536,28 +22575,44 @@ async function loadAuditResultsFromSheet() {
         if (i > 0) pdf.addPage();
         // Scale the captured canvas to fill the page width, preserving aspect ratio
         const renderedHeightIn = pageWidthIn * (canvas.height / canvas.width);
-        // FIXED 2026-08-28 -- this used to be
-        // `pdf.addImage(imgData, 'JPEG', 0, 0, pageWidthIn, Math.min(renderedHeightIn, pageHeightIn))`,
-        // which clamped HEIGHT to the page while leaving WIDTH fixed at
-        // pageWidthIn. Whenever a page's real content rendered taller than
-        // one PDF page (exactly what happened to Brand Stewardship/
-        // Opportunities once their content grew past 11in), that silently
-        // squashed the whole page horizontally in the export -- not
-        // cropped, visibly distorted. Root-caused via Skinuva's Brand
-        // Stewardship/Opportunities pages measuring ~12.09in/~11.79in
-        // against an 11in page (fixed at the content level above/nearby),
-        // but this clamp itself is a latent bug for ANY page on ANY brand
-        // that runs long in the future. Scaling BOTH dimensions down
-        // together, by the same factor, keeps proportions intact -- a
-        // slightly smaller but fully undistorted page on the rare
-        // over-budget page, instead of a squashed one.
+        // FIXED 2026-09-10 -- the prior "FIXED 2026-08-28" version of this
+        // code shrank BOTH width and height together, by the same factor,
+        // whenever a page rendered taller than one PDF page. That avoided
+        // the old squash/distortion bug, but on Skinuva's real export it
+        // turned out to trigger on nearly every inner page (Sales/Amazon,
+        // Website, Walmart, Opportunities, Events), not the "rare
+        // over-budget page" it was designed for -- and shrinking width to
+        // match a height overflow reads as a wide, broken-looking blank
+        // gap down the right edge of the page, which is exactly what got
+        // reported ("sub pages... not fillign the full width"). The page
+        // builders now trim their own spacing so real content fits under
+        // 11in in the normal case (see the per-page FIXED comments), so
+        // this branch should be a rare last-resort now, not the everyday
+        // path -- but as a safety net, it CROPS the overflow off the
+        // bottom of the page instead of shrinking the width. Full page
+        // width, always; worst case a thin sliver of trailing content/
+        // whitespace gets cut off the bottom, which is far less
+        // noticeable than the entire page reading as narrower than the
+        // rest of the report.
         let drawWidthIn = pageWidthIn, drawHeightIn = renderedHeightIn;
+        let finalImgData = imgData;
         if (drawHeightIn > pageHeightIn) {
-          const shrink = pageHeightIn / drawHeightIn;
-          drawWidthIn *= shrink;
+          const ppi = canvas.width / pageWidthIn;
+          const cropHeightPx = Math.round(pageHeightIn * ppi);
+          if (cropHeightPx > 0 && cropHeightPx < canvas.height) {
+            const cropCanvas = document.createElement('canvas');
+            cropCanvas.width = canvas.width;
+            cropCanvas.height = cropHeightPx;
+            const cropCtx = cropCanvas.getContext('2d');
+            cropCtx.fillStyle = '#ffffff';
+            cropCtx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
+            cropCtx.drawImage(canvas, 0, 0);
+            finalImgData = cropCanvas.toDataURL('image/jpeg', 0.97);
+            console.warn('[pdf-export] page', i + 1, 'content ran', (drawHeightIn - pageHeightIn).toFixed(2) + 'in over one page — cropped the overflow instead of shrinking width. Consider trimming this page\'s spacing further if this recurs.');
+          }
           drawHeightIn = pageHeightIn;
         }
-        pdf.addImage(imgData, 'JPEG', 0, 0, drawWidthIn, drawHeightIn);
+        pdf.addImage(finalImgData, 'JPEG', 0, 0, drawWidthIn, drawHeightIn);
       }
 
       const filename = 'Skinuva_Partnership_Report_' + (monthYear ? monthYear.replace(' ', '_') : 'Report') + '.pdf';
