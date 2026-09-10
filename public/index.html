@@ -1389,9 +1389,9 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
          initOverviewLive() on every period-toggle click along with
          everything else on this page, from the same `cfg` object. -->
     <div style="margin-bottom:20px;">
-      <div class="card-title" style="margin-bottom:10px;">Goal Tracker</div>
+      <div class="card-title" style="margin-bottom:10px;font-size:20px;">Goal Tracker</div>
       <div class="card" id="ov-goal-tracker-card" style="background:var(--sand);border:none;border-top:3px solid var(--navy);margin-top:0;margin-bottom:0;">
-        <div class="card-title">Amazon</div>
+        <div class="card-title" style="font-size:17px;">Amazon</div>
         <div id="ov-goal-tracker-body" style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
           <div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1;">Loading…</div>
         </div>
@@ -22856,8 +22856,8 @@ async function loadAuditResultsFromSheet() {
   function buildGoalGaugeHtml(metricLabel, actual, goal, cfg, daysInMonth) {
     if (goal == null || goal <= 0) {
       return `<div style="text-align:center;">
-        <div style="width:140px;height:140px;margin:0 auto 10px;border-radius:50%;border:14px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;padding:20px;box-sizing:border-box;">No goal set</div>
-        <div style="font-size:12px;font-weight:600;color:var(--navy);margin-top:2px;">${metricLabel}</div>
+        <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:10px;">${metricLabel}</div>
+        <div style="width:140px;height:140px;margin:0 auto;border-radius:50%;border:14px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;padding:20px;box-sizing:border-box;">No goal set</div>
       </div>`;
     }
     // Fill + center number reflect ACTUAL progress so far -- honest, not
@@ -22879,12 +22879,12 @@ async function loadAuditResultsFromSheet() {
     const projectedPct = Math.round((projected / goal) * 100);
     const statusColor = projectedPct >= 100 ? 'var(--green)' : 'var(--danger)';
     return `<div style="text-align:center;position:relative;">
+      <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:10px;">${metricLabel}</div>
       <div style="position:relative;width:140px;height:140px;margin:0 auto;">
         ${buildGaugeSvg(actualPct, statusColor)}
         <div style="position:absolute;top:0;left:0;width:140px;height:140px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--navy);font-family:var(--font-subheader);">${actualPct}%</div>
       </div>
-      <div style="font-size:12px;font-weight:600;color:var(--navy);margin-top:10px;">${metricLabel}</div>
-      <div style="font-size:14px;font-weight:700;color:var(--navy);margin-top:4px;">${resultLine}</div>
+      <div style="font-size:14px;font-weight:700;color:var(--navy);margin-top:10px;">${resultLine}</div>
       <div style="font-size:14px;font-weight:700;color:var(--navy);">Goal $${Math.round(goal).toLocaleString()}</div>
     </div>`;
   }
