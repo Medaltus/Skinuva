@@ -2723,8 +2723,16 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
       <div class="evs-hero">
         <div>
           <div class="evs-eyebrow">Event Strategy</div>
-          <div class="evs-headline">Amazon Prime Day</div>
-          <div class="evs-dates">June 23 – 26, 2026</div>
+          <!-- FIXED 2026-09-10 per Jaclyn -- this used to be hardcoded to
+               "Amazon Prime Day" / a fixed date year-round. JS below
+               (search "EVENTS STRATEGY TAB") swaps this to whichever of
+               the 4 events is coming up next on the calendar, with real
+               dates once the Events tab has them or "Dates TBD" until
+               then. Static text below is just the correct fallback for
+               TODAY (2026-09-10 -- Prime Big Deal Days is next, dates not
+               yet announced) in case JS hasn't run yet or fails. -->
+          <div class="evs-headline" id="evs-event-headline">Amazon Prime Big Deal Days</div>
+          <div class="evs-dates" id="evs-event-dates">Dates TBD</div>
         </div>
         <div class="evs-badge">
           <div class="evs-badge-pct">20%<span>OFF</span></div>
@@ -2744,7 +2752,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
           <div class="evs-item"><span class="evs-item-num">03</span><div><div class="evs-item-title">Promotions &amp; Pricing</div><div class="evs-item-text">Finalize Prime Exclusive Discounts and <strong>confirm all deals are submitted, eligible, and approved</strong> with sufficient lead time.</div></div></div>
           <div class="evs-item"><span class="evs-item-num">04</span><div><div class="evs-item-title">Inventory &amp; Operations</div><div class="evs-item-text">Confirm FBA stock coverage, inbound timelines, and <strong>buffer inventory levels to prevent sell-outs</strong> during peak demand.</div></div></div>
           <div class="evs-item"><span class="evs-item-num">05</span><div><div class="evs-item-title">Creative &amp; Storefront</div><div class="evs-item-text">Upload refreshed imagery and <strong>add promotional banners and curated storefront landing pages</strong> optimized for high-traffic event conditions.</div></div></div>
-          <div class="evs-item"><span class="evs-item-num">06</span><div><div class="evs-item-title">Content Health Check</div><div class="evs-item-text">Resolve any listing suppressions, Q&amp;A gaps, and negative review flags <strong>before traffic surges</strong> — a suppressed listing during Prime Day is a direct missed opportunity.</div></div></div>
+          <div class="evs-item"><span class="evs-item-num">06</span><div><div class="evs-item-title">Content Health Check</div><div class="evs-item-text" id="evs-contenthealth-text">Resolve any listing suppressions, Q&amp;A gaps, and negative review flags <strong>before traffic surges</strong> — a suppressed listing during Prime Big Deal Days is a direct missed opportunity.</div></div></div>
         </div>
       </div>
 
@@ -2778,7 +2786,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 
       <div class="evs-outlook">
         <div class="evs-outlook-lbl">Strategic Outlook</div>
-        <div class="evs-outlook-text">Prime Day is the highest-traffic sales event of the year on Amazon. The brands that win invest in the 2–3 weeks prior and capitalize in the week after. <strong>Preparation, real-time agility, and disciplined follow-through are the three variables we control.</strong></div>
+        <div class="evs-outlook-text" id="evs-outlook-body">Prime Big Deal Days is one of the highest-traffic sales events of the year on Amazon. The brands that win invest in the 2–3 weeks prior and capitalize in the week after. <strong>Preparation, real-time agility, and disciplined follow-through are the three variables we control.</strong></div>
       </div>
     </div>
 
@@ -5054,6 +5062,35 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <div class="kpi-card" id="ppc-kpi-cpc"><div class="kpi-label">CPC</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
         <div class="kpi-card" id="ppc-kpi-orders"><div class="kpi-label">Units (Ads)</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
         <div class="kpi-card" id="ppc-kpi-aov"><div class="kpi-label">Avg. Sale per Unit</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
+      </div>
+
+      <!-- Ad Type Snapshot — added 2026-09-04 per Jaclyn, one row per
+           Amazon ad product type (Sponsored Products/Brands/Display) so
+           it's clear at a glance which type is driving spend/sales vs.
+           just burning budget, and that these are AD orders specifically
+           (not the same "orders" as Channel Breakdown below, which is
+           whole-channel). Sourced from a NEW sheet
+           (window.SHEET_CFG.SHEET_PPC_ADTYPE_SNAPSHOT) fed by a
+           sync-ppc-adtype-snapshot.js cron that doesn't exist yet as of
+           this write — see the handoff doc for the spec. Until that cron
+           is deployed and the sheet ID is wired into /api/sheet-config,
+           this renders "Not connected yet" rather than crashing the
+           page, same graceful-degrade pattern as WFS on the Inventory
+           page below. Reuses the same MTD/Last Month period toggle as
+           Blended Performance/Channel Breakdown above (window.
+           _ppcBlendedPeriod) so all three stay in sync. -->
+      <div class="ppc-card" style="margin-bottom:24px;">
+        <div class="ppc-card-title">Ad Type Snapshot <span style="font-weight:400;color:var(--muted);">(Amazon — Sponsored Products / Brands / Display)</span></div>
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="ppc-adtype-snapshot-table">
+            <thead><tr>
+              <th>Ad Type</th><th>Spend</th><th>Sales</th><th>Units</th><th>ACOS</th><th>Campaigns Running</th>
+            </tr></thead>
+            <tbody id="ppc-adtype-snapshot-tbody">
+              <tr><td colspan="6" style="text-align:center;color:var(--muted);">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- Channel Breakdown table — added 2026-08-19 per Jaclyn, for QA
@@ -14254,6 +14291,135 @@ async function initSnsExternal() {
   };
 })();
 
+// ═══════════════════════════════════════════════════════════════════
+// EVENTS STRATEGY TAB — dynamic "what's coming up next" — added
+// 2026-09-10 per Jaclyn: this tab used to be hardcoded to always show
+// "Amazon Prime Day" with a fixed date, year-round, regardless of what
+// was actually next on the calendar. Now picks whichever of the 4
+// events (Big Spring Sale / Prime Day / Prime Big Deal Days / BFCM) is
+// chronologically next from today, so the tab stays current without
+// another manual edit each quarter.
+//
+// "Next" is judged by typical season (month/day), NOT an exact date —
+// Amazon doesn't announce most events' real dates until 4-6 weeks out,
+// so there's nothing exact to compute from. The anchor month/day below
+// is each event's most recent confirmed real start date from the
+// Events tab (see the dated comment on the Big Spring Sale/PBDD/BFCM
+// report IIFE right below this one for the source dates). An event
+// stays "current" (rather than flipping to the next one) for 14 days
+// past its anchor date, so this doesn't jump to the next event mid-way
+// through the live event or its Lead Out phase.
+//
+// Real current-year dates are only shown once the Events tab actually
+// has a row for the upcoming occurrence's year (i.e. once Amazon
+// announces it and Jaclyn's team adds the row) — otherwise this shows
+// "Dates TBD" rather than a stale or made-up date, per Jaclyn's
+// explicit ask (2026-09-10: "we know Prime Big Deal Days is coming up
+// but not sure when").
+//
+// NOT dynamic: the promotional badge ("20% OFF / Prime Exclusive
+// Discount") and the "Promotional Strategy" framing. Prime Exclusive
+// Discount happens to be correct for BOTH Prime Day and Prime Big Deal
+// Days (both are Prime-member-exclusive Amazon events), but this file
+// has no confirmed source for what Big Spring Sale's or BFCM's actual
+// promo mechanics/percentage are — flag to Jaclyn if that badge should
+// also switch per event once those details are confirmed.
+// ═══════════════════════════════════════════════════════════════════
+(function () {
+  const EVENTS_SHEET_ID = '1NNRTRQxQl2r4XivAvH700CC39p49GD2xfZlyRNqahGA';
+  const EVENTS_GID = '347530381';
+  const BUFFER_DAYS = 14; // keep showing an event as "current" this long past its anchor date
+
+  const EVENT_CALENDAR = [
+    { eventName: 'Big Spring Sale',             displayName: 'Amazon Big Spring Sale',            shortName: 'Big Spring Sale',             anchorMonth: 3,  anchorDay: 25 },
+    { eventName: 'Prime Day',                   displayName: 'Amazon Prime Day',                  shortName: 'Prime Day',                   anchorMonth: 6,  anchorDay: 23 },
+    { eventName: 'Prime Big Deal Days',         displayName: 'Amazon Prime Big Deal Days',         shortName: 'Prime Big Deal Days',         anchorMonth: 10, anchorDay: 7  },
+    { eventName: 'Black Friday & Cyber Monday', displayName: 'Amazon Black Friday & Cyber Monday', shortName: 'Black Friday & Cyber Monday', anchorMonth: 11, anchorDay: 28 },
+  ];
+
+  function relevantOccurrence(anchorMonth, anchorDay, today) {
+    const year = today.getFullYear();
+    let start = new Date(year, anchorMonth - 1, anchorDay);
+    const cutoff = new Date(start);
+    cutoff.setDate(cutoff.getDate() + BUFFER_DAYS);
+    if (cutoff < today) start = new Date(year + 1, anchorMonth - 1, anchorDay);
+    return start;
+  }
+
+  function pickUpcomingEvent(today) {
+    let best = null;
+    EVENT_CALENDAR.forEach(ev => {
+      const occ = relevantOccurrence(ev.anchorMonth, ev.anchorDay, today);
+      if (!best || occ < best.occ) best = Object.assign({ occ }, ev);
+    });
+    return best;
+  }
+
+  function isCsv(text) { return !!text && text.trim().length > 0 && !text.trim().startsWith('<'); }
+  function parseCsvLine(line) {
+    const out = []; let cur = ''; let inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (inQ) { if (c === '"') { if (line[i+1] === '"') { cur += '"'; i++; } else inQ = false; } else cur += c; }
+      else { if (c === '"') inQ = true; else if (c === ',') { out.push(cur); cur = ''; } else cur += c; }
+    }
+    out.push(cur);
+    return out;
+  }
+  function parseCsv(text) {
+    const lines = text.trim().split('\n');
+    const headers = parseCsvLine(lines[0]).map(h => h.replace(/^"|"$/g,'').trim());
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i].trim()) continue;
+      const cols = parseCsvLine(lines[i]);
+      const row = {};
+      headers.forEach((h, idx) => { row[h] = (cols[idx] || '').replace(/^"|"$/g,'').trim(); });
+      rows.push(row);
+    }
+    return rows;
+  }
+  function fmtDate(iso) {
+    if (!iso) return '';
+    const [y,m,d] = iso.split('-').map(Number);
+    const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${names[m-1]} ${d}, ${y}`;
+  }
+
+  async function renderEventsStrategyTab() {
+    const today = new Date();
+    const upcoming = pickUpcomingEvent(today);
+    const occYear = upcoming.occ.getFullYear();
+
+    const headlineEl = document.getElementById('evs-event-headline');
+    const datesEl = document.getElementById('evs-event-dates');
+    const contentHealthEl = document.getElementById('evs-contenthealth-text');
+    const outlookEl = document.getElementById('evs-outlook-body');
+
+    if (headlineEl) headlineEl.textContent = upcoming.displayName;
+    if (contentHealthEl) {
+      contentHealthEl.innerHTML = `Resolve any listing suppressions, Q&amp;A gaps, and negative review flags <strong>before traffic surges</strong> — a suppressed listing during ${upcoming.shortName} is a direct missed opportunity.`;
+    }
+    if (outlookEl) {
+      outlookEl.innerHTML = `${upcoming.shortName} is one of the highest-traffic sales events of the year on Amazon. The brands that win invest in the 2–3 weeks prior and capitalize in the week after. <strong>Preparation, real-time agility, and disciplined follow-through are the three variables we control.</strong>`;
+    }
+
+    let datesText = 'Dates TBD';
+    try {
+      const csv = await fetch(`https://docs.google.com/spreadsheets/d/${EVENTS_SHEET_ID}/export?format=csv&gid=${EVENTS_GID}&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => '');
+      if (isCsv(csv)) {
+        const row = parseCsv(csv).find(r => (r['Event Name'] || '').trim() === upcoming.eventName && String(r.year).trim() === String(occYear));
+        if (row && row.start_date && row.end_date) datesText = `${fmtDate(row.start_date)} – ${fmtDate(row.end_date)}`;
+      }
+    } catch (e) {
+      console.warn('[EventsStrategy] date lookup failed:', e.message);
+    }
+    if (datesEl) datesEl.textContent = datesText;
+  }
+
+  document.addEventListener('DOMContentLoaded', renderEventsStrategyTab);
+})();
+
 // ── Big Spring Sale / Prime Big Deal Days / BFCM event reports ─────────────
 // 2026-07-20, per Jaclyn: same report as Prime Day (exec summary already
 // scaffolded per-event, KPI row, Top Sellers YOY chart), replicated for the
@@ -17696,6 +17862,7 @@ async function ppcLoadBlendedKpis() {
       amzOrdersCsv, wmtOrdersCsv, webOrdersCsv,
       amzAdCsv, wmtAdCsv, webAdCsv,
       amzReturnsCsv, wmtReturnsCsv, webReturnsCsv,
+      adTypeSnapshotCsv,
     ] = await Promise.all([
       fetchCsvWithRetry(ovCsvUrl(window.SHEET_CFG.SHEET_ORDERS.fileId, window.SHEET_CFG.SHEET_ORDERS.gid) + `&_cb=${Date.now()}`),
       fetchCsvWithRetry(ovCsvUrl(window.SHEET_CFG.SHEET_WALMART_ORDERS.fileId, window.SHEET_CFG.SHEET_WALMART_ORDERS.gid) + `&_cb=${Date.now()}`),
@@ -17712,6 +17879,15 @@ async function ppcLoadBlendedKpis() {
       fetchCsvWithRetry(ovCsvUrl(OV_RETURNS_SHEET_ID, OV_RETURNS_EVOLIS_GID) + `&_cb=${Date.now()}`),
       fetchCsvWithRetry(ovCsvUrl(OV_WMT_RETURNS_SHEET_ID, OV_WMT_RETURNS_GID) + `&_cb=${Date.now()}`),
       fetchCsvWithRetry(ovCsvUrl(OV_WEB_ORDERS_SHEET_ID, OV_WEB_RETURNS_GID) + `&_cb=${Date.now()}`),
+      // ADDED 2026-09-04 per Jaclyn -- Ad Type Snapshot row. Sheet doesn't
+      // exist yet (cron not built as of this write — see handoff doc), so
+      // guarded the same way WFS is on the Inventory page: only fetch if
+      // /api/sheet-config actually has this key, so a not-yet-configured
+      // sheet degrades to "Not connected yet" instead of throwing
+      // synchronously and taking down the whole PPC page's Promise.all.
+      (window.SHEET_CFG && window.SHEET_CFG.SHEET_PPC_ADTYPE_SNAPSHOT
+        ? fetchCsvWithRetry(ovCsvUrl(window.SHEET_CFG.SHEET_PPC_ADTYPE_SNAPSHOT.fileId, window.SHEET_CFG.SHEET_PPC_ADTYPE_SNAPSHOT.gid) + `&_cb=${Date.now()}`)
+        : Promise.resolve('')),
     ]);
 
 
@@ -17721,6 +17897,12 @@ async function ppcLoadBlendedKpis() {
     const amzAdRows = parseCsvToRows(amzAdCsv);
     const wmtAdRows = parseCsvToRows(wmtAdCsv);
     const webAdRows = parseCsvToRows(webAdCsv);
+    // Expected columns (see handoff doc): year, month, campaign_type
+    // (SPONSORED_PRODUCTS/SPONSORED_BRANDS/SPONSORED_DISPLAY), spend,
+    // sales, sale_units, campaigns_running, last_updated. ACOS is computed
+    // client-side from spend/sales below, same convention as every other
+    // ACOS on this page, rather than trusting a stored column.
+    const adTypeRows = parseCsvToRows(adTypeSnapshotCsv);
 
     // ── Returns netting (ADDED 2026-08-28 per Jaclyn) ──────────────────
     // Amazon's returns report has no dollar column at all (units only) --
@@ -18010,6 +18192,34 @@ async function ppcLoadBlendedKpis() {
     let lastFullPrevYear = lastFullYear, lastFullPrevMonth = lastFullMonth - 1;
     if (lastFullPrevMonth < 1) { lastFullPrevMonth = 12; lastFullPrevYear -= 1; }
 
+    // Ad Type Snapshot — one row per campaign_type for the requested
+    // period. Bucketed by whole month only (same granularity as the
+    // Amazon/Walmart advertising cache sheets elsewhere on this page,
+    // per the handoff doc), so "MTD" here really means "current partial
+    // month's row(s), if the cron has written one yet" rather than a
+    // true day-level MTD slice — there's no daily breakdown to prorate
+    // from, same limitation Ad Spend/ACOS/etc. already have under MTD.
+    function computeAdTypeSnapshot(year, month) {
+      const rows = adTypeRows.filter(r => parseInt(r.year, 10) === year && parseInt(r.month, 10) === month);
+      const num = v => parseFloat(String(v || '').replace(/[$,%]/g, '')) || 0;
+      return ['SPONSORED_PRODUCTS', 'SPONSORED_BRANDS', 'SPONSORED_DISPLAY'].map(type => {
+        const r = rows.find(x => (x.campaign_type || '').trim().toUpperCase() === type) || {};
+        const spend = num(r.spend), sales = num(r.sales);
+        return {
+          type,
+          spend, sales,
+          units: num(r.sale_units),
+          acos: sales > 0 ? (spend / sales) * 100 : null,
+          campaignsRunning: num(r.campaigns_running),
+          hasRow: !!rows.find(x => (x.campaign_type || '').trim().toUpperCase() === type),
+        };
+      });
+    }
+    window._ppcAdTypeSnapshot = {
+      mtd: computeAdTypeSnapshot(mtdYear, mtdMonth),
+      lastFull: computeAdTypeSnapshot(lastFullYear, lastFullMonth),
+    };
+
     window._ppcChannelBreakdown = {
       mtd: computeChannelBreakdown(mtdYear, mtdMonth),
       lastFull: computeChannelBreakdown(lastFullYear, lastFullMonth),
@@ -18026,6 +18236,7 @@ async function ppcLoadBlendedKpis() {
     console.log('[PPCBlended][qa] computed:', window._ppcBlendedData);
 
     renderPpcBlendedKpis();
+    renderPpcAdTypeSnapshot();
     renderPpcChannelBreakdown();
   } catch (e) {
     console.warn('[PPCBlended] load failed:', e.message);
@@ -18044,6 +18255,7 @@ window.__ppcBlendedSelectPeriod = function(key) {
   window._ppcBlendedPeriod = key;
   renderPpcBlendedPeriodPills();
   renderPpcBlendedKpis();
+  renderPpcAdTypeSnapshot();
   renderPpcChannelBreakdown();
 };
 
@@ -18117,6 +18329,33 @@ function renderPpcBlendedKpis() {
   ppcBlendedSetMom('ppc-kpi-cpc', prev ? ppcBlendedPct(d.cpc, prev.cpc) : null, estSuffix);
   ppcBlendedSetMom('ppc-kpi-orders', prev ? ppcBlendedPct(d.adUnits, prev.adUnits) : null, estSuffix);
   ppcBlendedSetMom('ppc-kpi-aov', prev ? ppcBlendedPct(d.avgSalePerUnit, prev.avgSalePerUnit) : null, estSuffix);
+}
+
+const PPC_ADTYPE_LABEL = { SPONSORED_PRODUCTS: 'Sponsored Products', SPONSORED_BRANDS: 'Sponsored Brands', SPONSORED_DISPLAY: 'Sponsored Display' };
+
+function renderPpcAdTypeSnapshot() {
+  const tbody = document.getElementById('ppc-adtype-snapshot-tbody');
+  if (!tbody) return;
+  if (!window.SHEET_CFG || !window.SHEET_CFG.SHEET_PPC_ADTYPE_SNAPSHOT) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);">Not connected yet — sync-ppc-adtype-snapshot.js hasn\'t been deployed (see handoff doc).</td></tr>';
+    return;
+  }
+  const rows = window._ppcAdTypeSnapshot ? window._ppcAdTypeSnapshot[window._ppcBlendedPeriod] : null;
+  if (!rows || !rows.some(r => r.hasRow)) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);">No data for this period yet</td></tr>';
+    return;
+  }
+  const money = v => `$${v.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  const pct = v => v == null ? '—' : `${v.toFixed(2)}%`;
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${PPC_ADTYPE_LABEL[r.type] || r.type}</td>
+      <td>${money(r.spend)}</td>
+      <td>${money(r.sales)}</td>
+      <td>${r.units.toLocaleString()}</td>
+      <td>${pct(r.acos)}</td>
+      <td>${r.campaignsRunning.toLocaleString()}</td>
+    </tr>`).join('');
 }
 
 function renderPpcChannelBreakdown() {
