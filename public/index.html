@@ -6144,7 +6144,7 @@ function renderStewardshipCharts(investData, impressData) {
         { label: impressData.prevYearLabel, data: impressData.prev, borderColor:'#f4dfd0', backgroundColor:'transparent', borderWidth:2, pointRadius:2, tension:0.3, spanGaps:true },
       ]
     },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:'rgba(0,0,0,0.04)' } }, y:{ grid:{ color:'rgba(0,0,0,0.04)' }, ticks:{ callback:v=>v===0?'0':(v/1000).toFixed(v%1000===0?0:1)+'K' } } } }
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:'rgba(0,0,0,0.04)' } }, y:{ grid:{ color:'rgba(0,0,0,0.04)' }, ticks:{ maxTicksLimit:5, callback:v=>v===0?'0':(Math.abs(v)>=1000000?(v/1000000).toFixed(v%1000000===0?0:1)+'M':(v/1000).toFixed(v%1000===0?0:1)+'K') } } } }
   });
 }
 // Subscribe & Save — was fully hardcoded mock data (chart + both KPIs).
@@ -11474,7 +11474,7 @@ async function initSns() {
             { label: impressData.prevYearLabel, data: impressData.prev, borderColor:'#f4dfd0', backgroundColor:'transparent', borderWidth:2, pointRadius:2, tension:0.3, spanGaps:true },
           ]
         },
-        options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:'rgba(0,0,0,0.04)' } }, y:{ grid:{ color:'rgba(0,0,0,0.04)' }, ticks:{ callback:v=>v===0?'0':(v/1000).toFixed(v%1000===0?0:1)+'K' } } } }
+        options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:'rgba(0,0,0,0.04)' } }, y:{ grid:{ color:'rgba(0,0,0,0.04)' }, ticks:{ maxTicksLimit:5, callback:v=>v===0?'0':(Math.abs(v)>=1000000?(v/1000000).toFixed(v%1000000===0?0:1)+'M':(v/1000).toFixed(v%1000===0?0:1)+'K') } } } }
       });
     }
   }
