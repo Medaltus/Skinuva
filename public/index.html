@@ -1380,6 +1380,24 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
       <div class="period-pills" id="ov-period-pills" style="display:flex;background:var(--white);border:1px solid var(--border);border-radius:999px;padding:4px;gap:2px;"></div>
     </div>
 
+    <!-- ADDED 2026-09-10 per Jaclyn -- Goal Tracker, ported from évolis's
+         Overview page (which has 2 cards -- "Amazon + Walmart" and
+         "Website" -- positioned lower on the page, above the Revenue by
+         Channel chart). Skinuva only needs ONE card (Amazon), and Jaclyn
+         wants it right below the period toggle instead, since it's meant
+         to be the first thing seen after picking a period. Re-rendered by
+         initOverviewLive() on every period-toggle click along with
+         everything else on this page, from the same `cfg` object. -->
+    <div style="margin-bottom:20px;">
+      <div class="card-title" style="margin-bottom:10px;">Goal Tracker</div>
+      <div class="card" id="ov-goal-tracker-card" style="background:var(--sand);border:none;border-top:3px solid var(--navy);margin-top:0;margin-bottom:0;">
+        <div class="card-title">Amazon</div>
+        <div id="ov-goal-tracker-body" style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+          <div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1;">Loading…</div>
+        </div>
+      </div>
+    </div>
+
     <div class="kpi-row">
       <div class="kpi-card" id="ov-kpi-total-sales"><div class="kpi-label">Total Sales</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
       <div class="kpi-card" id="ov-kpi-units"><div class="kpi-label">Total Units Sold</div><div class="kpi-value">—</div><div class="kpi-mom flat">Loading…</div></div>
@@ -22765,6 +22783,112 @@ async function loadAuditResultsFromSheet() {
     return status !== 'cancelled' && status !== 'canceled';
   }
 
+  // \u2500\u2500 Goal Tracker (ported from \u00e9volis's Overview page, 2026-09-10) \u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  // See the \u00e9volis build-summary notes for the full story; kept the same
+  // function names/shapes so future ports stay recognizable. Skinuva only
+  // needs one card (Amazon) -- Website/Walmart aren't wired up here.
+
+  // Pending orders ARE counted toward a goal (they haven't been returned,
+  // just not yet settled) -- unlike isValidAmazonRow() above, which this
+  // page's other KPIs/tables intentionally use to EXCLUDE pending. Confirmed
+  // by reading isValidAmazonRow() directly rather than assuming a variant
+  // was needed (per the \u00e9volis notes' own warning): Skinuva's does exclude
+  // pending, so this separate function is required here.
+  function goalsIsValidAmazonRow(r) {
+    const status = (r.status || '').toLowerCase().trim();
+    if (status === 'cancelled') return false; // pending IS kept, deliberately
+    if ((r.promotion_ids || '').toLowerCase().includes('vine')) return false;
+    return true;
+  }
+
+  // Small positional CSV parser, kept separate from parseCsv() above (which
+  // keys by header name) because the Goals sheet's header row can't be
+  // trusted for every column -- confirmed live: column S's header row cell
+  // reads "Actual vs Goal - Sales" (leftover from an old use of that
+  // column), but the real "Organic Sales" goal label was instead typed
+  // directly onto the Jun-26 DATA row in that same column, with real
+  // dollar values starting the month after. Reading by fixed column index
+  // sidesteps that entirely. Proper quote-handling for embedded commas
+  // (sheet has values like " $ 74,267 ").
+  function parseCsv2D(text) {
+    const lines = text.replace(/\r/g, '').split('\n').filter(l => l.length > 0);
+    return lines.map(parseCsvLine);
+  }
+  function findGoalsRow(rows, year, month) {
+    const monthAbbr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][month - 1];
+    const target = `${monthAbbr}-${String(year).slice(2)}`;
+    return rows.find(r => (r[0] || '').trim() === target) || null;
+  }
+  // Real column positions on Skinuva's own Goals sheet, confirmed by
+  // fetching and parsing the actual CSV rather than assumed from \u00e9volis's
+  // layout (which uses different columns entirely -- O/T/AD there vs
+  // N/S/AA here). Re-verify before ever reusing this on another brand.
+  const GOALS_COL_TOTAL   = 13; // N -- "Dollar Sales Goal"
+  const GOALS_COL_ORGANIC = 18; // S -- header cell is stale ("Actual vs Goal - Sales");
+                                //      real "Organic Sales" goal values only reliable Jul-26 onward
+  const GOALS_COL_ADS     = 26; // AA -- "Ads Sales Goal"
+  function parseGoalAmt(v) {
+    if (!v) return null;
+    const n = parseFloat(String(v).replace(/[^0-9.\-]/g, ''));
+    return isNaN(n) || n === 0 ? null : n; // null (not 0) means "no goal set" -- see buildGoalGaugeHtml
+  }
+
+  // Plain SVG progress ring -- deliberately not Chart.js. A single-value
+  // gauge doesn't need a charting library, and this page's init function
+  // can run repeatedly (every period-toggle click); SVG just re-renders as
+  // a fresh string each time with nothing to destroy/recreate first.
+  function buildGaugeSvg(pct, colorHex) {
+    const size = 140, stroke = 14, r = (size - stroke) / 2, c = size / 2;
+    const circumference = 2 * Math.PI * r;
+    const clamped = Math.max(0, Math.min(100, pct));
+    const dashOffset = circumference * (1 - clamped / 100);
+    return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg);display:block;">
+      <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="var(--border)" stroke-width="${stroke}"/>
+      <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${colorHex}" stroke-width="${stroke}"
+        stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}" stroke-linecap="butt"/>
+    </svg>`;
+  }
+
+  // One gauge column: ring + center %, metric sublabel, projection/result
+  // line, goal line. `actual` is real dollars so far this period (never
+  // projected -- see the fill-vs-color note below); `goal` is this
+  // period's target from the Goals sheet, or null if none is set.
+  function buildGoalGaugeHtml(metricLabel, actual, goal, cfg, daysInMonth) {
+    if (goal == null || goal <= 0) {
+      return `<div style="text-align:center;">
+        <div style="width:140px;height:140px;margin:0 auto 10px;border-radius:50%;border:14px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;padding:20px;box-sizing:border-box;">No goal set</div>
+        <div style="font-size:12px;font-weight:600;color:var(--navy);margin-top:2px;">${metricLabel}</div>
+      </div>`;
+    }
+    // Fill + center number reflect ACTUAL progress so far -- honest, not
+    // projected. A ring filled to a >100% pace-based projection renders as
+    // a complete circle, which hides that real dollars collected so far
+    // might only be ~40% of the way there. The projection is used ONLY to
+    // pick the ring's color, computed completely separately below.
+    const actualPct = Math.round((actual / goal) * 100);
+    let projected = actual, resultLine;
+    if (cfg.isPartial) {
+      const projectedRatio = cfg.day > 0 ? daysInMonth / cfg.day : 1;
+      projected = actual * projectedRatio;
+      resultLine = 'Projecting $' + Math.round(projected).toLocaleString();
+    } else {
+      // Last Full Month -- the month is over, actual is already final, no
+      // separate projection needed.
+      resultLine = actualPct >= 100 ? 'Hit goal' : 'Missed goal';
+    }
+    const projectedPct = Math.round((projected / goal) * 100);
+    const statusColor = projectedPct >= 100 ? 'var(--green)' : 'var(--danger)';
+    return `<div style="text-align:center;position:relative;">
+      <div style="position:relative;width:140px;height:140px;margin:0 auto;">
+        ${buildGaugeSvg(actualPct, statusColor)}
+        <div style="position:absolute;top:0;left:0;width:140px;height:140px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--navy);font-family:var(--font-subheader);">${actualPct}%</div>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--navy);margin-top:10px;">${metricLabel}</div>
+      <div style="font-size:14px;font-weight:700;color:var(--navy);margin-top:4px;">${resultLine}</div>
+      <div style="font-size:14px;font-weight:700;color:var(--navy);">Goal $${Math.round(goal).toLocaleString()}</div>
+    </div>`;
+  }
+
   // Aggregates rows whose (normalized) date falls within an inclusive
   // [startStr, endStr] range \u2014 this is the piece that lets us do true
   // month-to-date instead of only ever whole calendar months.
@@ -23743,6 +23867,61 @@ async function loadAuditResultsFromSheet() {
       const organicSalesPrev = Math.max(0, prev.revenue - blendedSalesPrev);
       setKpi('ov-kpi-ad-sales', '$' + blendedSales.toLocaleString(undefined, { maximumFractionDigits: 0 }), pctChange(blendedSales, blendedSalesPrev), ovMomSuffix);
       setKpi('ov-kpi-organic-sales', '$' + organicSales.toLocaleString(undefined, { maximumFractionDigits: 0 }), pctChange(organicSales, organicSalesPrev), ovMomSuffix);
+
+      // ── Goal Tracker (Amazon) ────────────────────────────────────────────
+      // ADDED 2026-09-10 per Jaclyn. Goal side comes from a separate, hand-
+      // maintained Google Sheet (one row per month) -- NOT this function's
+      // usual live order/ad sheets. Actual side reuses this same period's
+      // already-fetched Amazon data (amzRows/amzReturnsMtd/proratedSales
+      // above), but with its OWN pending-inclusive validity rule
+      // (goalsIsValidAmazonRow) instead of isValidAmazonRow, since a goal
+      // should count pending orders as progress -- they haven't been
+      // returned, just not yet settled -- while every other KPI on this
+      // page deliberately excludes them. Wrapped in try/catch, same as the
+      // other optional per-channel fetches above: a bad month lookup or a
+      // sheet hiccup here shouldn't take down the rest of the page.
+      try {
+        const goalsBody = document.getElementById('ov-goal-tracker-body');
+        if (goalsBody) {
+          const GOALS_SHEET_ID = '1trsHDgVSLprsOOjOuFWGZRDqVOV-eII3';
+          const GOALS_GID = '196666138';
+          const goalsCsv = await fetch(sheetCsvUrl(GOALS_SHEET_ID, GOALS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => '');
+          if (isCsv(goalsCsv)) {
+            const goalsRows = parseCsv2D(goalsCsv);
+            const goalsRow = findGoalsRow(goalsRows, cfg.year, cfg.month);
+            if (goalsRow) {
+              const totalGoal   = parseGoalAmt(goalsRow[GOALS_COL_TOTAL]);
+              const organicGoal = parseGoalAmt(goalsRow[GOALS_COL_ORGANIC]);
+              const adsGoal     = parseGoalAmt(goalsRow[GOALS_COL_ADS]);
+
+              // Amazon-only actuals, pending included, netted against
+              // returns the same way amzMtdNetRevenue is above.
+              const goalsAmzAgg = aggregateRange(amzRows, mtdStartStr, mtdEndStr, goalsIsValidAmazonRow);
+              const goalsTotalActual = Math.max(0, goalsAmzAgg.totalRevenue - amzReturnsMtd.totalAmt);
+              // Amazon's own ad-attributed sales for this period -- already
+              // computed above (real day-level data for Last Full Month;
+              // this page's existing pace-based estimate for MTD, same as
+              // the MTD Ad Sales KPI card already shows).
+              const goalsAdsActual = proratedSales;
+              const goalsOrganicActual = Math.max(0, goalsTotalActual - goalsAdsActual);
+
+              const daysInMonth = new Date(cfg.year, cfg.month, 0).getDate();
+              goalsBody.innerHTML =
+                buildGoalGaugeHtml('Total Sales', goalsTotalActual, totalGoal, cfg, daysInMonth) +
+                buildGoalGaugeHtml('Organic Sales', goalsOrganicActual, organicGoal, cfg, daysInMonth) +
+                buildGoalGaugeHtml('Ads Sales', goalsAdsActual, adsGoal, cfg, daysInMonth);
+            } else {
+              goalsBody.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1;">No goals row found for ${monthNames[cfg.month - 1]} ${cfg.year}.</div>`;
+            }
+          } else {
+            goalsBody.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1;">Goals sheet unavailable.</div>`;
+          }
+        }
+      } catch (e) {
+        console.warn('[Skinuva][overview] Goal Tracker failed:', e.message);
+        const goalsBody = document.getElementById('ov-goal-tracker-body');
+        if (goalsBody) goalsBody.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1;">Goal Tracker failed to load.</div>`;
+      }
 
       // -- Trend: trailing 6 COMPLETED months, blended revenue across channels --
       // ROOT CAUSE of the blank chart: these revenue-history sheets use
