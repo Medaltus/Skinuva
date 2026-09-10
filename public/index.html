@@ -8668,7 +8668,7 @@ async function initSns() {
       const pctUnitsAdsPrev = unitsPrev > 0 ? Math.round((adUnitsPrev / unitsPrev) * 100) : null;
 
       const fmt  = n => (n ?? 0).toLocaleString();
-      const fmtK = n => n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n ?? 0);
+      const fmtK = n => n >= 1000000 ? (n / 1000000).toFixed(2) + 'M' : n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n ?? 0);
 
       if (clicksCurr != null) setKpiVal('kpi-ad-clicks', fmt(clicksCurr));
       setKpiMom('kpi-ad-clicks', pct(clicksCurr, clicksPrev));
@@ -11750,7 +11750,7 @@ async function initSns() {
       const pctUnitsAdsPrev = unitsPrev > 0 ? Math.round((adUnitsPrev / unitsPrev) * 100) : null;
 
       const fmt  = n => (n ?? 0).toLocaleString();
-      const fmtK = n => n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n ?? 0);
+      const fmtK = n => n >= 1000000 ? (n / 1000000).toFixed(2) + 'M' : n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n ?? 0);
 
       if (clicksCurr != null) setKpiVal('mx-kpi-ad-clicks', fmt(clicksCurr));
       setKpiMom('mx-kpi-ad-clicks', pct(clicksCurr, clicksPrev));
