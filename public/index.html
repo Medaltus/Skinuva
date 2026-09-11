@@ -1428,13 +1428,25 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
          Advertising Cache sheet, same layout), unique
          window._ovAdTypeChart var and its own local-scoped fetch (this
          page never fetches window.SHEET_CFG.SHEET_ADVERTISING otherwise —
-         see initOverviewLive). -->
+         see initOverviewLive). UPDATED 2026-09-11 per Jaclyn -- a single
+         Ad Spend circle was "only half the story," so a second Ad Sales
+         circle sits next to it (window._ovAdTypeSalesChart), same colors/
+         legend, built from the same rows' .sales instead of .spend. -->
     <div class="card" style="margin-bottom:20px;">
       <div class="card-title">Ad Spend by Type <span style="font-weight:400;color:var(--muted);">(Amazon — Sponsored Products / Brands / Display)</span></div>
       <div id="ov-adtype-note" style="display:none;margin-bottom:12px;font-size:13px;color:var(--muted);"></div>
       <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center;">
-        <div style="flex:0 0 280px;width:280px;height:280px;position:relative;">
-          <canvas id="chart-ov-adtype"></canvas>
+        <div style="flex:0 0 220px;width:220px;">
+          <div style="text-align:center;font-size:12px;font-weight:700;color:var(--navy);margin-bottom:6px;">Ad Spend</div>
+          <div style="width:220px;height:220px;position:relative;">
+            <canvas id="chart-ov-adtype"></canvas>
+          </div>
+        </div>
+        <div style="flex:0 0 220px;width:220px;">
+          <div style="text-align:center;font-size:12px;font-weight:700;color:var(--navy);margin-bottom:6px;">Ad Sales</div>
+          <div style="width:220px;height:220px;position:relative;">
+            <canvas id="chart-ov-adtype-sales"></canvas>
+          </div>
         </div>
         <div style="flex:1 1 320px;min-width:280px;overflow-x:auto;">
           <table class="data-table" id="ov-adtype-table">
@@ -24127,10 +24139,12 @@ async function loadAuditResultsFromSheet() {
           });
 
           if (window._ovAdTypeChart) { window._ovAdTypeChart.destroy(); window._ovAdTypeChart = null; }
+          if (window._ovAdTypeSalesChart) { window._ovAdTypeSalesChart.destroy(); window._ovAdTypeSalesChart = null; }
 
           const moneyAdType = v => `$${v.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
           const pctAdType = v => v == null ? '<span class="tp-dash">—</span>' : `${v.toFixed(2)}%`;
           const totalAdTypeSpend = adTypeRowsForChart.reduce((s, r) => s + r.spend, 0);
+          const totalAdTypeSales = adTypeRowsForChart.reduce((s, r) => s + r.sales, 0);
 
           // Same two genuinely-separate honest-note messages as the PPC
           // page's copy of this card — see that render function's comment
@@ -24161,18 +24175,38 @@ async function loadAuditResultsFromSheet() {
               <td>${r.campaigns ? r.campaigns.toLocaleString() : '<span class="tp-dash">—</span>'}</td>
             </tr>`).join('');
 
+          const ovAdTypeChartOpts = {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 10, font: { size: 11 } } } }
+          };
+          const ovAdTypeColors = ['#001f60', '#6b7ba2', '#c9a15a'];
+
           const ovAdTypeCanvas = document.getElementById('chart-ov-adtype');
           if (ovAdTypeCanvas && totalAdTypeSpend > 0) {
             window._ovAdTypeChart = new Chart(ovAdTypeCanvas, {
               type: 'doughnut',
               data: {
                 labels: adTypeRowsForChart.map(r => r.label),
-                datasets: [{ data: adTypeRowsForChart.map(r => r.spend), backgroundColor: ['#001f60', '#6b7ba2', '#c9a15a'], borderWidth: 0 }]
+                datasets: [{ data: adTypeRowsForChart.map(r => r.spend), backgroundColor: ovAdTypeColors, borderWidth: 0 }]
               },
-              options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 10, font: { size: 11 } } } }
-              }
+              options: ovAdTypeChartOpts
+            });
+          }
+
+          // Ad Sales circle — added 2026-09-11 per Jaclyn: a single Ad
+          // Spend circle was "only half the story." Same rows, same
+          // colors/legend, just .sales instead of .spend, so the two
+          // circles read as a matched pair rather than two different
+          // visual languages.
+          const ovAdTypeSalesCanvas = document.getElementById('chart-ov-adtype-sales');
+          if (ovAdTypeSalesCanvas && totalAdTypeSales > 0) {
+            window._ovAdTypeSalesChart = new Chart(ovAdTypeSalesCanvas, {
+              type: 'doughnut',
+              data: {
+                labels: adTypeRowsForChart.map(r => r.label),
+                datasets: [{ data: adTypeRowsForChart.map(r => r.sales), backgroundColor: ovAdTypeColors, borderWidth: 0 }]
+              },
+              options: ovAdTypeChartOpts
             });
           }
         }
