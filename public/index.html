@@ -24078,11 +24078,35 @@ async function loadAuditResultsFromSheet() {
               // returns the same way amzMtdNetRevenue is above.
               const goalsAmzAgg = aggregateRange(amzRows, mtdStartStr, mtdEndStr, goalsIsValidAmazonRow);
               const goalsTotalActual = Math.max(0, goalsAmzAgg.totalRevenue - amzReturnsMtd.totalAmt);
-              // Amazon's own ad-attributed sales for this period -- already
-              // computed above (real day-level data for Last Full Month;
-              // this page's existing pace-based estimate for MTD, same as
-              // the MTD Ad Sales KPI card already shows).
-              const goalsAdsActual = proratedSales;
+              // FIXED 2026-09-14 per Jaclyn -- "MTD field is broken." This
+              // used to reuse `proratedSales` directly, but that variable
+              // means two different things depending on the period (see
+              // its own comment above): for Last Full Month it's the real,
+              // final total for that completed month (fine to reuse as-is
+              // -- no proration actually happens in that branch despite
+              // the name); for MTD it's ALREADY a pace-based projection
+              // built from LAST MONTH's total (lastMonthSales * dayFrac),
+              // because Amazon's ad sheets have no day-level breakdown to
+              // read a true "this month so far" figure from directly.
+              // Feeding that pre-projected number into buildGoalGaugeHtml
+              // as `actual` double-projects it -- that function applies
+              // its OWN day-elapsed projection on top (see its `projected
+              // = actual * daysInMonth/cfg.day` below), which had been
+              // inflating both the ring fill and the "Projecting $X" line,
+              // and by extension goalsOrganicActual too (Total - Ads).
+              // Fixed by reading THIS month's own (partial, still-in-
+              // progress) row from the ad orders cache directly under MTD
+              // -- same real-row lookup the Last Full Month branch above
+              // already does for its own reference month -- so
+              // buildGoalGaugeHtml's single day-elapsed projection is the
+              // only projection applied, matching how the goal ring is
+              // supposed to work (actual = genuine so-far progress,
+              // projection computed once, in one place).
+              const goalsAdsActual = cfg.isPartial
+                ? adOrdersRowsMerged
+                    .filter(r => parseInt(r.year, 10) === cfg.year && parseInt(r.month, 10) === cfg.month)
+                    .reduce((s, r) => s + parseAmt(r.sales), 0)
+                : proratedSales;
               const goalsOrganicActual = Math.max(0, goalsTotalActual - goalsAdsActual);
 
               const daysInMonth = new Date(cfg.year, cfg.month, 0).getDate();
