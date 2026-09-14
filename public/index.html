@@ -23899,6 +23899,24 @@ async function loadAuditResultsFromSheet() {
       // Switched to the net figures 2026-08-03 — using gross here while the
       // hero KPI above uses net would make the donut's total silently not
       // match the hero number, which is worse than either being wrong alone.
+      // FIXED 2026-09-14 per Jaclyn -- "Last Month toggle not changing the
+      // Goal Tracker card." Root cause: this chart was the only one on
+      // this page created without a destroy-before-recreate guard. On the
+      // FIRST call (initial page load) the canvas is empty, so `new
+      // Chart(...)` succeeds. On every call after that (any period
+      // toggle, either direction), the chart from the previous call is
+      // still attached to this same canvas -- Chart.js throws "Canvas is
+      // already in use" here, which is an UNCAUGHT exception inside this
+      // function's outer try block. That aborts everything from this
+      // point through the end of initOverviewLive for that call --
+      // Ad Spend/ACOS, Channel Breakdown, Ad Sales/Organic Sales KPIs,
+      // the Goal Tracker, Ad Spend by Type, and the Trend chart below --
+      // while only logging to console.error (no visible error), which is
+      // exactly why the page looked "frozen" on toggle instead of erroring
+      // outright. Same destroy-before-recreate pattern already used
+      // everywhere else in this file (e.g. window._impressChart,
+      // window._ppcAdTypeChart) fixes it here too.
+      if (window._ovDonutChart) { window._ovDonutChart.destroy(); window._ovDonutChart = null; }
       const donutTotal = amzMtdNetRevenue + wmtMtdNetRevenue;
       if (donutTotal > 0) {
         window._ovDonutChart = new Chart(document.getElementById('chart-ov-donut'), {
@@ -24299,6 +24317,12 @@ async function loadAuditResultsFromSheet() {
         amzTrend.unshift(monthlyRevenue(amzRevRows, ty, tm));
         wmtTrend.unshift(monthlyRevenue(wmtRevRows, ty, tm));
       }
+      // FIXED 2026-09-14 per Jaclyn, same root cause and fix as the donut
+      // chart above (destroy-before-recreate) -- this one just never got
+      // far enough to actually throw yet, since the donut crash aborted
+      // the function before execution ever reached here on any call after
+      // the first.
+      if (window._ovTrendChart) { window._ovTrendChart.destroy(); window._ovTrendChart = null; }
       if ([...amzTrend, ...wmtTrend].some(v => v > 0)) {
         window._ovTrendChart = new Chart(document.getElementById('chart-ov-trend'), {
           type: 'line',
