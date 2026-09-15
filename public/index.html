@@ -2771,16 +2771,17 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
       <div class="evs-hero">
         <div>
           <div class="evs-eyebrow">Event Strategy</div>
-          <!-- FIXED 2026-09-10 per Jaclyn -- this used to be hardcoded to
-               "Amazon Prime Day" / a fixed date year-round. JS below
-               (search "EVENTS STRATEGY TAB") swaps this to whichever of
-               the 4 events is coming up next on the calendar, with real
-               dates once the Events tab has them or "Dates TBD" until
-               then. Static text below is just the correct fallback for
-               TODAY (2026-09-10 -- Prime Big Deal Days is next, dates not
-               yet announced) in case JS hasn't run yet or fails. -->
+          <!-- FIXED 2026-09-14 per Jaclyn -- this now pulls both the title
+               AND the dates straight from the LAST row of the Events tab
+               (whichever event was most recently added there), instead of
+               guessing "what's next" from a hardcoded calendar. JS below
+               (search "EVENTS STRATEGY TAB") does the fetch/render on
+               every page load. Static text below is just the correct
+               fallback for TODAY (2026-09-14 -- Prime Big Deal Days is the
+               latest row, Oct 6-7 2026) in case JS hasn't run yet or
+               fails. -->
           <div class="evs-headline" id="evs-event-headline">Amazon Prime Big Deal Days</div>
-          <div class="evs-dates" id="evs-event-dates">Dates TBD</div>
+          <div class="evs-dates" id="evs-event-dates">Oct 6, 2026 &ndash; Oct 7, 2026</div>
         </div>
         <div class="evs-badge">
           <div class="evs-badge-pct">20%<span>OFF</span></div>
@@ -14369,68 +14370,42 @@ async function initSnsExternal() {
 })();
 
 // ═══════════════════════════════════════════════════════════════════
-// EVENTS STRATEGY TAB — dynamic "what's coming up next" — added
-// 2026-09-10 per Jaclyn: this tab used to be hardcoded to always show
-// "Amazon Prime Day" with a fixed date, year-round, regardless of what
-// was actually next on the calendar. Now picks whichever of the 4
-// events (Big Spring Sale / Prime Day / Prime Big Deal Days / BFCM) is
-// chronologically next from today, so the tab stays current without
-// another manual edit each quarter.
+// EVENTS STRATEGY TAB — dynamic "most recently added event" — REWRITTEN
+// 2026-09-14 per Jaclyn. The previous version (added 2026-09-10) guessed
+// "what's next" from a hardcoded per-event calendar of typical month/day
+// anchors, then looked up that guessed event+year in the Events tab for
+// real dates -- but the Events tab has no "year" column at all (confirmed
+// live: headers are just Event Name / start_date / end_date), so that
+// lookup's `String(row.year) === String(occYear)` check could never
+// actually match anything, and the real Prime Big Deal Days 2026 dates
+// already sitting in the sheet (2026-10-06 to 2026-10-07) never made it
+// to the page -- it silently fell back to "Dates TBD" every time.
 //
-// "Next" is judged by typical season (month/day), NOT an exact date —
-// Amazon doesn't announce most events' real dates until 4-6 weeks out,
-// so there's nothing exact to compute from. The anchor month/day below
-// is each event's most recent confirmed real start date from the
-// Events tab (see the dated comment on the Big Spring Sale/PBDD/BFCM
-// report IIFE right below this one for the source dates). An event
-// stays "current" (rather than flipping to the next one) for 14 days
-// past its anchor date, so this doesn't jump to the next event mid-way
-// through the live event or its Lead Out phase.
+// Per Jaclyn's own simpler idea: skip the calendar-guessing entirely.
+// This just reads the Events tab and uses whichever row is LAST (i.e.
+// most recently added -- Jaclyn's team adds each new event as a new row
+// at the bottom when they're ready to plan for it), and shows that row's
+// Event Name as the headline and its start_date/end_date as the dates.
+// One sheet edit now drives both the title and the dates with no code
+// change needed for future events.
 //
-// Real current-year dates are only shown once the Events tab actually
-// has a row for the upcoming occurrence's year (i.e. once Amazon
-// announces it and Jaclyn's team adds the row) — otherwise this shows
-// "Dates TBD" rather than a stale or made-up date, per Jaclyn's
-// explicit ask (2026-09-10: "we know Prime Big Deal Days is coming up
-// but not sure when").
+// "Dates TBD" handling (Jaclyn's explicit ask): before real dates are
+// confirmed, she sends this strategy out with "Dates TBD" typed directly
+// into BOTH the start_date and end_date cells -- isTbd() below treats
+// that (case-insensitively, "TBD" alone also works) or a blank cell the
+// same way, showing "Dates TBD" rather than attempting to parse it as a
+// date. Once she overwrites those two cells with real ISO dates
+// (YYYY-MM-DD, matching every other date column in this file), the real
+// formatted range shows automatically on the next page load.
 //
 // NOT dynamic: the promotional badge ("20% OFF / Prime Exclusive
-// Discount") and the "Promotional Strategy" framing. Prime Exclusive
-// Discount happens to be correct for BOTH Prime Day and Prime Big Deal
-// Days (both are Prime-member-exclusive Amazon events), but this file
-// has no confirmed source for what Big Spring Sale's or BFCM's actual
-// promo mechanics/percentage are — flag to Jaclyn if that badge should
-// also switch per event once those details are confirmed.
+// Discount") and the "Promotional Strategy" framing -- see prior comment
+// history on this section; still no confirmed source for other events'
+// actual promo mechanics, flag to Jaclyn if that should change too.
 // ═══════════════════════════════════════════════════════════════════
 (function () {
   const EVENTS_SHEET_ID = '1NNRTRQxQl2r4XivAvH700CC39p49GD2xfZlyRNqahGA';
   const EVENTS_GID = '347530381';
-  const BUFFER_DAYS = 14; // keep showing an event as "current" this long past its anchor date
-
-  const EVENT_CALENDAR = [
-    { eventName: 'Big Spring Sale',             displayName: 'Amazon Big Spring Sale',            shortName: 'Big Spring Sale',             anchorMonth: 3,  anchorDay: 25 },
-    { eventName: 'Prime Day',                   displayName: 'Amazon Prime Day',                  shortName: 'Prime Day',                   anchorMonth: 6,  anchorDay: 23 },
-    { eventName: 'Prime Big Deal Days',         displayName: 'Amazon Prime Big Deal Days',         shortName: 'Prime Big Deal Days',         anchorMonth: 10, anchorDay: 7  },
-    { eventName: 'Black Friday & Cyber Monday', displayName: 'Amazon Black Friday & Cyber Monday', shortName: 'Black Friday & Cyber Monday', anchorMonth: 11, anchorDay: 28 },
-  ];
-
-  function relevantOccurrence(anchorMonth, anchorDay, today) {
-    const year = today.getFullYear();
-    let start = new Date(year, anchorMonth - 1, anchorDay);
-    const cutoff = new Date(start);
-    cutoff.setDate(cutoff.getDate() + BUFFER_DAYS);
-    if (cutoff < today) start = new Date(year + 1, anchorMonth - 1, anchorDay);
-    return start;
-  }
-
-  function pickUpcomingEvent(today) {
-    let best = null;
-    EVENT_CALENDAR.forEach(ev => {
-      const occ = relevantOccurrence(ev.anchorMonth, ev.anchorDay, today);
-      if (!best || occ < best.occ) best = Object.assign({ occ }, ev);
-    });
-    return best;
-  }
 
   function isCsv(text) { return !!text && text.trim().length > 0 && !text.trim().startsWith('<'); }
   function parseCsvLine(line) {
@@ -14456,42 +14431,61 @@ async function initSnsExternal() {
     }
     return rows;
   }
+  // Matches a blank cell OR any case/spacing variant of "TBD" / "Dates TBD"
+  // -- Jaclyn's literal instruction, plus blank treated the same way (the
+  // pre-rewrite version's own fallback for "no date yet").
+  function isTbd(v) {
+    const t = (v || '').trim();
+    return !t || /^(dates?\s*)?tbd$/i.test(t);
+  }
+  // Strict YYYY-MM-DD only -- anything else (including "Dates TBD" itself,
+  // if isTbd() weren't checked first) returns null so the caller falls
+  // back to "Dates TBD" instead of rendering "undefined NaN, NaN".
   function fmtDate(iso) {
-    if (!iso) return '';
-    const [y,m,d] = iso.split('-').map(Number);
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((iso || '').trim());
+    if (!m) return null;
     const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return `${names[m-1]} ${d}, ${y}`;
+    return `${names[Number(m[2]) - 1]} ${Number(m[3])}, ${m[1]}`;
   }
 
   async function renderEventsStrategyTab() {
-    const today = new Date();
-    const upcoming = pickUpcomingEvent(today);
-    const occYear = upcoming.occ.getFullYear();
-
     const headlineEl = document.getElementById('evs-event-headline');
     const datesEl = document.getElementById('evs-event-dates');
     const contentHealthEl = document.getElementById('evs-contenthealth-text');
     const outlookEl = document.getElementById('evs-outlook-body');
 
-    if (headlineEl) headlineEl.textContent = upcoming.displayName;
-    if (contentHealthEl) {
-      contentHealthEl.innerHTML = `Resolve any listing suppressions, Q&amp;A gaps, and negative review flags <strong>before traffic surges</strong> — a suppressed listing during ${upcoming.shortName} is a direct missed opportunity.`;
-    }
-    if (outlookEl) {
-      outlookEl.innerHTML = `${upcoming.shortName} is one of the highest-traffic sales events of the year on Amazon. The brands that win invest in the 2–3 weeks prior and capitalize in the week after. <strong>Preparation, real-time agility, and disciplined follow-through are the three variables we control.</strong>`;
-    }
-
-    let datesText = 'Dates TBD';
     try {
       const csv = await fetch(`https://docs.google.com/spreadsheets/d/${EVENTS_SHEET_ID}/export?format=csv&gid=${EVENTS_GID}&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => '');
-      if (isCsv(csv)) {
-        const row = parseCsv(csv).find(r => (r['Event Name'] || '').trim() === upcoming.eventName && String(r.year).trim() === String(occYear));
-        if (row && row.start_date && row.end_date) datesText = `${fmtDate(row.start_date)} – ${fmtDate(row.end_date)}`;
+      if (!isCsv(csv)) return; // leave the static HTML fallback in place
+      const rows = parseCsv(csv).filter(r => (r['Event Name'] || '').trim());
+      if (!rows.length) return;
+
+      // Most recently ADDED event = the last non-empty row in the sheet.
+      const latest = rows[rows.length - 1];
+      const eventName = latest['Event Name'].trim();
+      // "Amazon " prefix added automatically to match this section's
+      // existing branding convention (Amazon Prime Day, Amazon Big Spring
+      // Sale, etc.) -- skipped if Jaclyn ever types the full "Amazon ..."
+      // name into the sheet herself, so it can't double up.
+      const displayName = /^amazon\b/i.test(eventName) ? eventName : `Amazon ${eventName}`;
+
+      if (headlineEl) headlineEl.textContent = displayName;
+      if (contentHealthEl) {
+        contentHealthEl.innerHTML = `Resolve any listing suppressions, Q&amp;A gaps, and negative review flags <strong>before traffic surges</strong> — a suppressed listing during ${eventName} is a direct missed opportunity.`;
       }
+      if (outlookEl) {
+        outlookEl.innerHTML = `${eventName} is one of the highest-traffic sales events of the year on Amazon. The brands that win invest in the 2–3 weeks prior and capitalize in the week after. <strong>Preparation, real-time agility, and disciplined follow-through are the three variables we control.</strong>`;
+      }
+
+      let datesText = 'Dates TBD';
+      if (!isTbd(latest.start_date) && !isTbd(latest.end_date)) {
+        const start = fmtDate(latest.start_date), end = fmtDate(latest.end_date);
+        if (start && end) datesText = `${start} – ${end}`;
+      }
+      if (datesEl) datesEl.textContent = datesText;
     } catch (e) {
-      console.warn('[EventsStrategy] date lookup failed:', e.message);
+      console.warn('[EventsStrategy] event lookup failed:', e.message);
     }
-    if (datesEl) datesEl.textContent = datesText;
   }
 
   document.addEventListener('DOMContentLoaded', renderEventsStrategyTab);
