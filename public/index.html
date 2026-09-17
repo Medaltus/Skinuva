@@ -22968,6 +22968,57 @@ async function loadAuditResultsFromSheet() {
     return true;
   }
 
+  // ── Cancellation-Rate-Adjusted Projections (ported from MiGuard's Goal
+  // Tracker spec, 2026-09-17 per Jaclyn) ──────────────────────────────────
+  // A run-rate projection (actual-so-far ÷ days elapsed × days in month)
+  // silently assumes zero future cancellations on the pending orders it
+  // counts. This discounts the projection by the brand's own real
+  // historical cancellation rate instead. Only touches the PROJECTION used
+  // for the ring's color and the "Projecting $X" line -- never the ring's
+  // fill % or the "actual" dollar figure, both of which stay real revenue
+  // to date, untouched.
+  //
+  // rows: full-history amzRows (already brand-filtered, US+CA merged, same
+  // rows the rest of the Goal Tracker reads -- fetched fresh every load,
+  // so this needs no separate fetch or caching of its own).
+  // excludeYear/excludeMonth: the in-progress month the projection is FOR
+  // -- excluded from the pool since a partial month's orders haven't had
+  // time to actually cancel yet, which would understate the true rate.
+  //
+  // Order-level, not line-item-level: an order with ANY cancelled line
+  // item counts as a cancelled order. Vine orders (promotion_ids contains
+  // "vine") are excluded entirely -- promotional units aren't
+  // representative of real customer cancellation behavior. Pooled across
+  // ALL other qualifying history in the sheet (one all-time rate, not a
+  // per-month or rolling-window rate -- see the file-level note on that
+  // tradeoff if this ever needs to become a trailing window instead).
+  // Returns null (never a fabricated 0%) when there's no historical data
+  // to compute a rate from.
+  function computeAmazonCancelRate(rows, excludeYear, excludeMonth) {
+    const orders = {};
+    rows.forEach(r => {
+      const orderId = r.order_id;
+      if (!orderId) return;
+      const d = normalizeDate(r.date);
+      if (!d) return;
+      const y = parseInt(d.slice(0, 4), 10);
+      const m = parseInt(d.slice(5, 7), 10);
+      if (y === excludeYear && m === excludeMonth) return;
+      if (!orders[orderId]) orders[orderId] = { cancelled: false, vine: false };
+      const status = (r.status || '').toLowerCase().trim();
+      if (status === 'cancelled') orders[orderId].cancelled = true;
+      if ((r.promotion_ids || '').toLowerCase().includes('vine')) orders[orderId].vine = true;
+    });
+    let total = 0, cancelled = 0;
+    Object.keys(orders).forEach(id => {
+      const o = orders[id];
+      if (o.vine) return;
+      total++;
+      if (o.cancelled) cancelled++;
+    });
+    return total > 0 ? cancelled / total : null;
+  }
+
   // Small positional CSV parser, kept separate from parseCsv() above (which
   // keys by header name) because the Goals sheet's header row can't be
   // trusted for every column -- confirmed live: column S's header row cell
@@ -23020,7 +23071,13 @@ async function loadAuditResultsFromSheet() {
   // line, goal line. `actual` is real dollars so far this period (never
   // projected -- see the fill-vs-color note below); `goal` is this
   // period's target from the Goals sheet, or null if none is set.
-  function buildGoalGaugeHtml(metricLabel, actual, goal, cfg, daysInMonth) {
+  // cancelRate: this brand's pooled historical Amazon order-cancellation
+  // rate (0-1), or null when there's no history to compute one from yet --
+  // see computeAmazonCancelRate above. Only used under cfg.isPartial, to
+  // discount the run-rate projection down from its naive zero-future-
+  // cancellations assumption. Never touches actualPct (the ring fill) or
+  // `actual` itself -- both stay real, unadjusted revenue to date.
+  function buildGoalGaugeHtml(metricLabel, actual, goal, cfg, daysInMonth, cancelRate) {
     if (goal == null || goal <= 0) {
       return `<div style="text-align:center;">
         <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:10px;">${metricLabel}</div>
@@ -23033,11 +23090,19 @@ async function loadAuditResultsFromSheet() {
     // might only be ~40% of the way there. The projection is used ONLY to
     // pick the ring's color, computed completely separately below.
     const actualPct = Math.round((actual / goal) * 100);
-    let projected = actual, resultLine;
+    let projected = actual, resultLine, cancelLine = '';
     if (cfg.isPartial) {
       const projectedRatio = cfg.day > 0 ? daysInMonth / cfg.day : 1;
-      projected = actual * projectedRatio;
+      const rawProjected = actual * projectedRatio;
+      // ADDED 2026-09-17 per Jaclyn, ported from MiGuard's Goal Tracker --
+      // discount the naive run-rate projection by this brand's own real
+      // historical cancellation rate, instead of silently assuming zero
+      // future cancellations on the pending orders it's counting.
+      projected = cancelRate != null ? rawProjected * (1 - cancelRate) : rawProjected;
       resultLine = 'Projecting $' + Math.round(projected).toLocaleString();
+      cancelLine = cancelRate != null
+        ? `adj. for ${Math.round(cancelRate * 100)}% avg. cancel rate`
+        : 'no cancel-rate history yet';
     } else {
       // Last Full Month -- the month is over, actual is already final, no
       // separate projection needed.
@@ -23052,7 +23117,8 @@ async function loadAuditResultsFromSheet() {
         <div style="position:absolute;top:0;left:0;width:140px;height:140px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--navy);font-family:var(--font-subheader);">${actualPct}%</div>
       </div>
       <div style="font-size:14px;font-weight:700;color:var(--navy);margin-top:10px;">${resultLine}</div>
-      <div style="font-size:14px;font-weight:700;color:var(--navy);">Goal $${Math.round(goal).toLocaleString()}</div>
+      ${cfg.isPartial ? `<div style="font-size:10px;color:var(--muted);margin-top:1px;">${cancelLine}</div>` : ''}
+      <div style="font-size:14px;font-weight:700;color:var(--navy);margin-top:${cfg.isPartial ? '4px' : '0'};">Goal $${Math.round(goal).toLocaleString()}</div>
     </div>`;
   }
 
@@ -24126,10 +24192,19 @@ async function loadAuditResultsFromSheet() {
               const goalsOrganicActual = Math.max(0, goalsTotalActual - goalsAdsActual);
 
               const daysInMonth = new Date(cfg.year, cfg.month, 0).getDate();
+              // ADDED 2026-09-17 per Jaclyn, ported from MiGuard's Goal
+              // Tracker spec -- pooled all-time Amazon order-cancellation
+              // rate (excluding the in-progress month itself and Vine
+              // orders), used to discount each gauge's run-rate projection
+              // below. Computed only under cfg.isPartial since a completed
+              // month's actual is already final and gets no projection at
+              // all (see buildGoalGaugeHtml). Same amzRows already fetched
+              // fresh above for the rest of this page -- no extra fetch.
+              const goalsCancelRate = cfg.isPartial ? computeAmazonCancelRate(amzRows, cfg.year, cfg.month) : null;
               goalsBody.innerHTML =
-                buildGoalGaugeHtml('Total Sales', goalsTotalActual, totalGoal, cfg, daysInMonth) +
-                buildGoalGaugeHtml('Organic Sales', goalsOrganicActual, organicGoal, cfg, daysInMonth) +
-                buildGoalGaugeHtml('Ads Sales', goalsAdsActual, adsGoal, cfg, daysInMonth);
+                buildGoalGaugeHtml('Total Sales', goalsTotalActual, totalGoal, cfg, daysInMonth, goalsCancelRate) +
+                buildGoalGaugeHtml('Organic Sales', goalsOrganicActual, organicGoal, cfg, daysInMonth, goalsCancelRate) +
+                buildGoalGaugeHtml('Ads Sales', goalsAdsActual, adsGoal, cfg, daysInMonth, goalsCancelRate);
             } else {
               goalsBody.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1;">No goals row found for ${monthNames[cfg.month - 1]} ${cfg.year}.</div>`;
             }
