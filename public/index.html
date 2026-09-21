@@ -2228,7 +2228,18 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 
       <div class="ppc-card">
         <div class="ppc-card-title" id="mfc-lbl-chart">Website Orders Shipped by Date</div>
-        <div style="position:relative;height:170px;"><canvas id="mfc-shipped-chart"></canvas></div>
+        <!-- FIXED 2026-09-21 per Jaclyn -- "Orders Shipped by Date" rendering
+             tiny/squished on the Fulfillment & Customer Service PDF export.
+             Root cause: this wrapper was 170px tall (a stray outlier —
+             ff-shipped-chart's own equivalent card uses 320px), and the PDF
+             export deliberately mirrors each chart's live-dashboard height
+             exactly (see pdfxCaptureOneChart's captureHeightPx math and its
+             2026-07-15 "no dynamic measurement, no growth math" note) rather
+             than forcing its own independent PDF height. That's by design,
+             so the real fix belongs here on the live wrapper, not as a new
+             PDF-only patch -- correcting it here fixes the export
+             automatically with no export-code changes needed. -->
+        <div style="position:relative;height:320px;"><canvas id="mfc-shipped-chart"></canvas></div>
         <div class="ppc-note" id="mfc-chart-footer">Loading…</div>
       </div>
 
@@ -21937,7 +21948,7 @@ async function loadAuditResultsFromSheet() {
       : '<span style="font-family:Georgia,\'Times New Roman\',serif;font-style:italic;">Skinuva</span>';
   }
 
-  function pdfxChartBlock(varName, fallbackLabel, heightScale) {
+  function pdfxChartBlock(varName, fallbackLabel, heightScale, heightReducePx) {
     const img = pdfxChartImg(varName);
     if (img) {
       // Height computed from the chart's OWN real captured aspect ratio at
@@ -21965,6 +21976,13 @@ async function loadAuditResultsFromSheet() {
       // pdfxChartBlock() caller omits this argument and keeps the chart's
       // true captured proportions exactly as before.
       if (heightScale) heightPx = Math.round(heightPx * heightScale);
+      // ADDED 2026-09-21 per Jaclyn -- a straight pixel reduction, separate
+      // from heightScale above. heightScale is a proportional shrink (good
+      // when a chart is pushing content off the bottom of the page and the
+      // fix scales with the chart's own size); this is for "make this one
+      // chart N px shorter" asks, which are about absolute px, not a %.
+      // Floors at 80px so a bad value can't collapse/invert the image.
+      if (heightReducePx) heightPx = Math.max(80, heightPx - heightReducePx);
       // Explicit pixel WIDTH too, not just height — the img was relying on
       // an external width:100% CSS rule for its width, and html2canvas has
       // already proven unreliable resolving percentage-based sizing on
@@ -22353,7 +22371,7 @@ async function loadAuditResultsFromSheet() {
           pdfxHeaderBand(monthYear, 'Opportunities') +
           '<div class="pdfx-chlabel" style="margin-bottom:4px;">Subscribe &amp; Save</div>' +
           '<div class="pdfx-kpis n2" style="margin-top:4px;margin-bottom:6px;">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
-          '<div class="pdfx-card" style="margin-bottom:6px;padding:8px 18px;"><div class="pdfx-card-title" style="margin-bottom:6px;">Active Subscriptions by Month</div>' + pdfxChartBlock('_snsChart') + '</div>' +
+          '<div class="pdfx-card" style="margin-bottom:6px;padding:8px 18px;"><div class="pdfx-card-title" style="margin-bottom:6px;">Active Subscriptions by Month</div>' + pdfxChartBlock('_snsChart', undefined, undefined, 50) + '</div>' +
           pdfxFutureOpportunitiesBlock() +
           pdfxFooter(monthYear) +
         '</div>' +
