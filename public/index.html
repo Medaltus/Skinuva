@@ -2230,16 +2230,18 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <div class="ppc-card-title" id="mfc-lbl-chart">Website Orders Shipped by Date</div>
         <!-- FIXED 2026-09-21 per Jaclyn -- "Orders Shipped by Date" rendering
              tiny/squished on the Fulfillment & Customer Service PDF export.
-             Root cause: this wrapper was 170px tall (a stray outlier —
-             ff-shipped-chart's own equivalent card uses 320px), and the PDF
-             export deliberately mirrors each chart's live-dashboard height
-             exactly (see pdfxCaptureOneChart's captureHeightPx math and its
+             Root cause: this wrapper was too short, and the PDF export
+             deliberately mirrors each chart's live-dashboard height exactly
+             (see pdfxCaptureOneChart's captureHeightPx math and its
              2026-07-15 "no dynamic measurement, no growth math" note) rather
              than forcing its own independent PDF height. That's by design,
              so the real fix belongs here on the live wrapper, not as a new
              PDF-only patch -- correcting it here fixes the export
-             automatically with no export-code changes needed. -->
-        <div style="position:relative;height:320px;"><canvas id="mfc-shipped-chart"></canvas></div>
+             automatically with no export-code changes needed. First pass
+             (320px, matching ff-shipped-chart's own wrapper) overcorrected —
+             too tall in the export. Settled at 160px per Jaclyn's "about
+             half as tall" feedback on that 320px version. -->
+        <div style="position:relative;height:160px;"><canvas id="mfc-shipped-chart"></canvas></div>
         <div class="ppc-note" id="mfc-chart-footer">Loading…</div>
       </div>
 
