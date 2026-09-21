@@ -2237,11 +2237,18 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
              than forcing its own independent PDF height. That's by design,
              so the real fix belongs here on the live wrapper, not as a new
              PDF-only patch -- correcting it here fixes the export
-             automatically with no export-code changes needed. First pass
-             (320px, matching ff-shipped-chart's own wrapper) overcorrected —
-             too tall in the export. Settled at 160px per Jaclyn's "about
-             half as tall" feedback on that 320px version. -->
-        <div style="position:relative;height:160px;"><canvas id="mfc-shipped-chart"></canvas></div>
+             automatically with no export-code changes needed.
+             Iterated: 320px (matching ff-shipped-chart) was too tall in the
+             export. 160px (literal half, per Jaclyn's next ask) reproduced
+             the ORIGINAL squished/tiny look -- not the historical resize-
+             race bug (that was separately fixed 2026-07-21, see below),
+             just this line chart's real y-axis amplitude getting visually
+             flattened once the box is this short at a fixed 686px PDF card
+             width -- shorter box, same data range, flatter-looking peaks.
+             Settled at 230px: a real ~30% shorter than 320px (meaningfully
+             less page space) while staying tall enough that the peaks/
+             valleys still read clearly instead of flattening out again. -->
+        <div style="position:relative;height:230px;"><canvas id="mfc-shipped-chart"></canvas></div>
         <div class="ppc-note" id="mfc-chart-footer">Loading…</div>
       </div>
 
