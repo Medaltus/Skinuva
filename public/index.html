@@ -1262,15 +1262,14 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-amazon" checked style="margin:0;"> Amazon</label>
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-website" checked style="margin:0;"> Website (Customer)</label>
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-walmart" checked style="margin:0;"> Walmart</label>
-        <!-- Marketing pages — same default-checked reasoning as Sales above. -->
+        <!-- Marketing pages — same default-checked reasoning as Sales above.
+             Order matches the Marketing tab order (reordered 2026-09-29 per Jaclyn):
+             Brand Momentum, Insights, Fulfillment & CS, Stewardship, Opportunities. -->
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-momentum" checked style="margin:0;"> Brand Momentum</label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-insights" checked style="margin:0;"> Insights</label>
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-fulfillment" checked style="margin:0;"> Fulfillment &amp; CS</label>
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-stewardship" checked style="margin:0;"> Stewardship</label>
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-opportunities" checked style="margin:0;"> Opportunities</label>
-        <!-- Insights + Brand Momentum — added 2026-09-29 per Jaclyn, same
-             build-notes pipeline as the rest of this picker. Default
-             CHECKED, same reasoning as the other Sales/Marketing pages. -->
-        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-insights" checked style="margin:0;"> Insights</label>
-        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-momentum" checked style="margin:0;"> Brand Momentum</label>
         <!-- Events pages — existing checkboxes, unchanged; default UNCHECKED
              as before. -->
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-strategy" style="margin:0;"> Strategy</label>
@@ -2248,14 +2247,14 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
       <div><div class="page-title">Marketing</div><div class="page-sub">Brand stewardship · Growth opportunities</div></div>
     </div>
     <div class="channel-tabs">
-      <button class="ch-tab active" onclick="showChannel('marketing','m-fulfillment-cs',this)">Fulfillment & Customer Service</button>
+      <button class="ch-tab active" onclick="showChannel('marketing','m-momentum',this)">Brand Momentum</button>
+      <button class="ch-tab" onclick="showChannel('marketing','m-insights',this)">Insights</button>
+      <button class="ch-tab" onclick="showChannel('marketing','m-fulfillment-cs',this)">Fulfillment & Customer Service</button>
       <button class="ch-tab" onclick="showChannel('marketing','m-stewardship',this)">Brand Stewardship</button>
       <button class="ch-tab" onclick="showChannel('marketing','m-opportunities',this)">Opportunities</button>
-      <button class="ch-tab" onclick="showChannel('marketing','m-insights',this)">Insights</button>
-      <button class="ch-tab" onclick="showChannel('marketing','m-momentum',this)">Brand Momentum</button>
     </div>
 
-    <div class="channel-page active" id="m-fulfillment-cs">
+    <div class="channel-page" id="m-fulfillment-cs">
 
       <div class="page-sub" id="mfc-page-sub" style="margin-bottom:14px;">Loading…</div>
 
@@ -2421,19 +2420,6 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     </div>
     <div class="channel-page" id="m-opportunities">
 
-      <div class="section-label">Subscribe &amp; Save</div>
-      <div class="kpi-row" style="margin-bottom:20px;">
-        <div class="kpi-card" id="kpi-active-subs"><div class="kpi-label">Active Subscriptions</div><div class="kpi-value" style="font-size:36px;">123</div><div class="kpi-mom flat">Loading…</div></div>
-        <div class="kpi-card" id="kpi-retention"><div class="kpi-label">Subscribe &amp; Save Retention (90 Days)</div><div class="kpi-value" style="font-size:36px;">70%</div><div class="kpi-mom flat">Loading…</div></div>
-      </div>
-      <div class="card" style="margin-bottom:20px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <div class="card-title" style="margin-bottom:0;">Active Subscriptions by Month</div>
-          <div id="legend-sns" style="display:flex;align-items:center;"></div>
-        </div>
-        <div style="position:relative;height:320px;"><canvas id="chart-sns"></canvas></div>
-      </div>
-
       <!-- What's Been Accomplished — added 2026-09-29 per Jaclyn, ported
            from the VBC/DD Opportunities-page pattern. Saved on the SAME
            monthly SHEET_REPORT_INSIGHTS row as everything else on this
@@ -2445,7 +2431,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
            accomplishments tend to have photos worth attaching). -->
       <div class="card" style="margin-bottom:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <div style="display:inline-block;background:rgba(36,233,163,.12);border:1px solid rgba(36,233,163,.3);border-radius:4px;padding:3px 10px;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--green);">What's Been Accomplished</div>
+          <div style="display:inline-block;background:#f4dfd0;border:1px solid rgba(138,96,16,.35);border-radius:4px;padding:3px 10px;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--warn);">What's Been Accomplished</div>
           <button class="btn-edit" id="acc-edit-btn">✏️ Edit</button>
         </div>
         <div class="opp-grid" id="acc-grid">
@@ -2570,12 +2556,11 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
          Bundle/kit SKUs excluded, same convention as everywhere else this
          sheet is read. -->
     <div class="channel-page" id="m-insights">
-      <div class="section-label">Category Performance</div>
       <div class="card" style="margin-bottom:20px;">
         <div class="card-title">Unit Sales by Product Category</div>
         <div style="position:relative;height:340px;"><canvas id="chart-category"></canvas></div>
       </div>
-      <div class="insight-bar">
+      <div class="insight-bar" style="margin-top:0;margin-bottom:6px;">
         <strong>Key Insight:</strong>
         <span class="insight-text" id="cat-insight-text">Loading…</span>
         <div class="insight-actions">
@@ -2590,6 +2575,36 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
           <button class="btn-save-stage" id="cat-insight-save">Save</button>
         </div>
       </div>
+
+      <!-- Subscriptions — moved here from the Opportunities tab 2026-09-29
+           per Jaclyn (Opportunities now only carries What's Been
+           Accomplished + Future Opportunities). Element ids unchanged
+           (kpi-active-subs, kpi-retention, chart-sns) so initSns() and
+           the PDF export keep working as-is. -->
+      <div class="card" style="margin-top:20px;margin-bottom:6px;">
+        <div class="card-title">Subscriptions</div>
+        <div class="kpi-row" style="grid-template-columns:repeat(2,1fr);margin-bottom:18px;">
+          <div class="kpi-card" id="kpi-active-subs"><div class="kpi-label">Total Active Subscriptions</div><div class="kpi-value" style="font-size:36px;">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="kpi-retention"><div class="kpi-label">Subscribe &amp; Save Retention 90 Days</div><div class="kpi-value" style="font-size:36px;">—</div><div class="kpi-mom flat">Loading…</div></div>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:var(--slate);margin-bottom:4px;">Active Subscriptions by Month <span style="font-weight:400;">(Year over Year)</span></div>
+        <div style="position:relative;height:300px;"><canvas id="chart-sns"></canvas></div>
+      </div>
+      <div class="insight-bar" style="margin-top:14px;">
+        <strong>Key Insight:</strong>
+        <span class="insight-text" id="sns-insight-text">Loading…</span>
+        <div class="insight-actions">
+          <button class="btn-edit" id="sns-insight-edit-btn">✏️ Edit</button>
+        </div>
+      </div>
+      <div class="insight-editor" id="sns-insight-editor">
+        <textarea id="sns-insight-textarea" placeholder="What's driving Subscribe &amp; Save this month?"></textarea>
+        <div class="editor-footer">
+          <span class="editor-note">Saves directly to the report sheet as a draft.</span>
+          <button class="btn-cancel" id="sns-insight-cancel">Cancel</button>
+          <button class="btn-save-stage" id="sns-insight-save">Save</button>
+        </div>
+      </div>
     </div>
 
     <!-- ══ Brand Momentum — added 2026-09-29 per Jaclyn, full parity with
@@ -2599,7 +2614,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
          "summary" tab), and review velocity (Amazon Reviews sheet). Data
          loaded/rendered by loadSkinuvaMomentum() below; this is just the
          empty shell it fills in. ══ -->
-    <div class="channel-page" id="m-momentum">
+    <div class="channel-page active" id="m-momentum">
       <div id="momentum-container"><div class="evo-pending">Loading momentum data…</div></div>
     </div>
   </div>
@@ -6129,8 +6144,7 @@ function showPage(id, btn) {
     if (cid && cid.indexOf('ix-') === 0) window.initInventoryExternalPage();
     if (cid==='m-stewardship')   window.initStewardshipLive();
     if (cid==='m-fulfillment-cs') window.initMarketingFulfillmentCS();
-    if (cid==='m-opportunities' && !window._snsChart) initSns();
-    if (cid==='m-insights' && !window._catChart) window.loadSkinuvaCategoryChart();
+    if (cid==='m-insights') { if (!window._snsChart) initSns(); if (!window._catChart) window.loadSkinuvaCategoryChart(); }
     if (cid==='m-momentum') window.loadSkinuvaMomentum();
   }
 }
@@ -6172,8 +6186,7 @@ function showChannel(page, channelId, btn) {
     if (channelId.indexOf('mx-') === 0)  window.initMarketingExternalPage();
     if (channelId.indexOf('ix-') === 0)  window.initInventoryExternalPage();
     if (channelId === 'm-stewardship')   window.initStewardshipLive();
-    if (channelId === 'm-opportunities' && !window._snsChart) initSns();
-    if (channelId === 'm-insights' && !window._catChart) window.loadSkinuvaCategoryChart();
+    if (channelId === 'm-insights') { if (!window._snsChart) initSns(); if (!window._catChart) window.loadSkinuvaCategoryChart(); }
     if (channelId === 'm-momentum') window.loadSkinuvaMomentum();
     if (channelId === 'ev-primeday')     window.initPrimeDayReport();
     if (channelId === 'ev-spring')       window.initBigSpringSaleReport();
@@ -6494,8 +6507,7 @@ async function initSns() {
   const RETENTION_SHEET_ID = window.SHEET_CFG.SHEET_SUBSCRIPTIONS.fileId;  // Subscriptions cache — confirmed correct directly from Jaclyn's own URL text 2026-07-28 (my prior 'KR' correction was wrong — misread a screenshot; P and R look nearly identical in that font). The real bug was ONLY the gid below, which pointed at a tab with pbj's data instead of évolis's.
   const RETENTION_GID      = window.SHEET_CFG.SHEET_SUBSCRIPTIONS.gid;                                   // 'evolis' tab, confirmed directly from Jaclyn's screenshot 2026-07-28 (previous gid 1742224413 was also wrong — different tab in the wrong file entirely)
 
-  const kpiValues = document.querySelectorAll('#m-opportunities .kpi-value');
-  const subsKpiEl = kpiValues[0] || null;
+  const subsKpiEl = document.querySelector('#kpi-active-subs .kpi-value') || null;
   const retentionKpiEl = document.querySelector('#kpi-retention .kpi-value') || null;
 
   try {
@@ -6555,24 +6567,40 @@ async function initSns() {
       console.log('[Skinuva][subscriptions] months actually plotted on the chart (trailing', TRAILING_MONTHS, 'of', labels.length, 'available):', trimmedLabels.join(', '));
 
       if (values.length) {
-        // Color by calendar year: 2024 sand, 2025 slate, 2026 navy. Falls
-        // back gracefully for any other year (older -> sand-ish, newer ->
-        // navy) so this doesn't quietly break once 2027 data shows up.
-        const YEAR_COLORS = { 2024: '#f4dfd0', 2025: '#6b7ba2', 2026: '#001f60' };
-        const distinctYears = [...new Set(trimmedYears)].sort((a, b) => a - b);
-        const bg = trimmedYears.map(y => {
-          if (YEAR_COLORS[y]) return YEAR_COLORS[y];
-          const idx = distinctYears.indexOf(y);
-          return idx <= 0 ? '#f4dfd0' : (idx === distinctYears.length - 1 ? '#001f60' : '#6b7ba2');
+        // Year-over-year line chart, restyled 2026-09-29 per Jaclyn (moved
+        // to the Insights tab): current year in brand green with a soft
+        // area fill, prior year in navy, Jan-Dec on the x axis. Months with
+        // no usable value are left as gaps (null), not plotted as zero.
+        const byYearMonth = {};
+        withDate.forEach(x => {
+          const t = num(x.row.active_subscriptions ?? x.row.total_subscriptions ?? x.row.total_subs ?? x.row.subscriptions);
+          if (t === null || t === 0 || isNaN(x.y) || isNaN(x.m)) return;
+          (byYearMonth[x.y] = byYearMonth[x.y] || {})[x.m] = t;
         });
+        const yrNow = Math.max.apply(null, Object.keys(byYearMonth).map(Number));
+        const yrPrev = yrNow - 1;
+        const seriesFor = y => monthAbbr.map((_, i) => (byYearMonth[y] && byYearMonth[y][i + 1] !== undefined) ? byYearMonth[y][i + 1] : null);
+        const snsTick = { font: { family: 'DM Sans, sans-serif', size: 10 }, color: '#6B7BA2' };
         window._snsChart = new Chart(canvas, {
-          type: 'bar',
-          data: { labels: trimmedLabels, datasets: [{ label: 'Active Subscriptions', data: trimmedValues, backgroundColor: bg }] },
+          type: 'line',
+          data: {
+            labels: monthAbbr,
+            datasets: [
+              { label: String(yrNow), data: seriesFor(yrNow), borderColor: '#24E9A3', backgroundColor: 'rgba(36,233,163,0.08)', fill: true, tension: 0.35, borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#24E9A3', pointBorderColor: '#24E9A3', spanGaps: false, order: 1 },
+              { label: String(yrPrev), data: seriesFor(yrPrev), borderColor: '#001F60', backgroundColor: 'transparent', fill: false, tension: 0.35, borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#001F60', pointBorderColor: '#001F60', spanGaps: false, order: 2 },
+            ],
+          },
           options: {
             responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { x: { grid: { display: false } }, y: { grid: { color: 'rgba(0,0,0,0.04)' }, beginAtZero: true } }
-          }
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { position: 'top', align: 'end', labels: { usePointStyle: true, pointStyle: 'line', boxWidth: 16, font: { family: 'DM Sans, sans-serif', size: 11, weight: '600' }, color: '#001F60' } },
+            },
+            scales: {
+              x: { grid: { display: false }, border: { display: false }, ticks: snsTick },
+              y: { beginAtZero: true, grid: { color: 'rgba(0,31,96,0.05)' }, border: { display: false }, ticks: Object.assign({}, snsTick, { callback: v => Number(v).toLocaleString() }) },
+            },
+          },
         });
         if (subsKpiEl) subsKpiEl.textContent = Math.round(values[values.length - 1]).toLocaleString();
         const subsMomEl = subsKpiEl ? subsKpiEl.nextElementSibling : null;
@@ -15161,6 +15189,12 @@ document.addEventListener('DOMContentLoaded', function() {
     editBtnId: 'cat-insight-edit-btn', saveBtnId: 'cat-insight-save', cancelBtnId: 'cat-insight-cancel', editorId: 'cat-insight-editor',
   });
 
+  window.wireInsightBlock({
+    scope: 'monthly',
+    fields: [{ key: 'subscriptions_key_insight', displayId: 'sns-insight-text', textareaId: 'sns-insight-textarea', placeholder: 'No insight added yet — click Edit to add one.' }],
+    editBtnId: 'sns-insight-edit-btn', saveBtnId: 'sns-insight-save', cancelBtnId: 'sns-insight-cancel', editorId: 'sns-insight-editor',
+  });
+
   // Events — one summary block per event tab. No per-block Approve anymore.
   [
     { eventName: 'Prime Day',                     prefix: 'pd' },
@@ -15499,15 +15533,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (!periods.length) { console.warn('[Insights][CategoryChart] no matched category/date rows found'); return; }
 
-      const CAT_COLORS = ['#001F60', '#24E9A3', '#C87D2F', '#6B7BA2', '#F4DFD0', '#CCD3D5', '#8A6010', '#1DB88A', '#DB372D', '#48557A', '#B08D57', '#7D93C2'];
-      const categories = Array.from(categoriesSeen).sort();
+      // Grouped bars, brand palette first (green, sand, slate, silver, navy...),
+      // styled to match the approved reference: rounded bars, small square
+      // legend keys top-right, K-formatted y axis, no axis lines.
+      // Restyled 2026-09-29 per Jaclyn (was stacked). Categories are ordered
+      // by total units so the biggest sellers get the lead brand colors.
+      const CAT_COLORS = ['#24E9A3', '#F4DFD0', '#6B7BA2', '#CCD3D5', '#001F60', '#1DB88A', '#48557A', '#C87D2F', '#7D93C2', '#B08D57', '#8A6010', '#DB372D'];
+      const totalsByCat = {};
+      periods.forEach(p => Object.keys(byPeriod[p.key]).forEach(c => { totalsByCat[c] = (totalsByCat[c] || 0) + byPeriod[p.key][c]; }));
+      const categories = Array.from(categoriesSeen).sort((x, y) => (totalsByCat[y] || 0) - (totalsByCat[x] || 0));
       const labels = periods.map(p => (OV_MONTH_ABBR[p.month - 1] || p.month));
       const datasets = categories.map((cat, i) => ({
         label: cat,
         data: periods.map(p => (byPeriod[p.key][cat] || 0)),
         backgroundColor: CAT_COLORS[i % CAT_COLORS.length],
-        borderRadius: 2,
+        borderRadius: 4,
+        borderSkipped: false,
+        barPercentage: 0.92,
+        categoryPercentage: 0.82,
       }));
+      const catTick = { font: { family: 'DM Sans, sans-serif', size: 10 }, color: '#6B7BA2' };
 
       window._catChart = new Chart(canvas, {
         type: 'bar',
@@ -15516,17 +15561,18 @@ document.addEventListener('DOMContentLoaded', function() {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            x: { stacked: true, border: { display: false }, grid: { display: false }, ticks: { font: { family: 'DM Sans, sans-serif', size: 10 }, color: '#6B7BA2' } },
-            y: { stacked: true, border: { display: false }, grid: { color: 'rgba(0,31,96,0.05)' }, ticks: { font: { family: 'DM Sans, sans-serif', size: 10 }, color: '#6B7BA2' } },
+            x: { border: { display: false }, grid: { display: false }, ticks: catTick },
+            y: { beginAtZero: true, border: { display: false }, grid: { color: 'rgba(0,31,96,0.06)' }, ticks: Object.assign({}, catTick, { callback: v => v >= 1000 ? (v / 1000) + 'K' : v }) },
           },
           plugins: {
-            legend: { position: 'top', align: 'end', labels: { boxWidth: 12, boxHeight: 12, font: { family: 'DM Sans, sans-serif', size: 10 }, color: '#001F60' } },
+            legend: { position: 'top', align: 'end', labels: { usePointStyle: true, pointStyle: 'rectRounded', boxWidth: 9, boxHeight: 9, padding: 12, font: { family: 'DM Sans, sans-serif', size: 10 }, color: '#001F60' } },
             tooltip: {
               backgroundColor: '#fff', borderColor: 'rgba(0,31,96,0.1)', borderWidth: 1,
               titleColor: '#001F60', bodyColor: '#6B7BA2',
               titleFont: { family: 'DM Sans, sans-serif', size: 11, weight: '600' },
               bodyFont: { family: 'DM Sans, sans-serif', size: 11 },
               padding: 12,
+              callbacks: { label: c => ' ' + c.dataset.label + ': ' + Number(c.parsed.y).toLocaleString() },
             },
           },
         },
@@ -15552,7 +15598,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const {
       asinMap, skuSessions, latestMoName, totalLatest, momPct,
       rankedKws, kwColsFound, kwFetchError, bsrData,
-      revProducts, totalReviews, avgRating,
+      revByAsin, totalReviews, avgRating,
     } = d;
 
     const momStr = momPct !== null ? `${momPct > 0 ? '+' : ''}${momPct}%` : '—';
@@ -15578,8 +15624,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const top3 = `<div class="kpi-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
       <div class="kpi-card">
         <div class="kpi-label">Reviews collected</div>
-        <div class="kpi-value">${totalReviews}</div>
-        <div class="kpi-mom up">${avgRating.toFixed(1)}★ avg across ${productCount} SKUs</div>
+        <div class="kpi-value">${totalReviews.toLocaleString()}</div>
+        <div class="kpi-mom up">${avgRating.toFixed(1)}★ avg · all time · ${productCount} SKUs</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Keywords with organic rank</div>
@@ -15595,8 +15641,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const kwCountByProduct = {};
     rankedKws.forEach(k => { if (k.prod) kwCountByProduct[k.prod] = (kwCountByProduct[k.prod] || 0) + 1; });
-    const revByName = {};
-    revProducts.forEach(p => { revByName[p.name] = p; });
 
     const productCards = Object.keys(asinMap).map(asin => {
       const name = asinMap[asin];
@@ -15622,7 +15666,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (bsr.subcat) bsrSubcatHtml = `<div class="momentum-pcard-subcategory">${escapeHtmlOrg(bsr.subcat)}</div>`;
       }
 
-      const rev = revByName[name];
+      const rev = revByAsin[asin];
       const reviewsCount = rev ? rev.count : 0;
       const ratingBadgeHtml = rev
         ? `<div class="momentum-pcard-rating"><span class="momentum-pcard-rating-stars">${skinuvaReviewStars(rev.avg)}</span><span class="momentum-pcard-rating-num">${rev.avg.toFixed(1)}</span></div>`
@@ -15637,7 +15681,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="momentum-pcard-row"><span class="momentum-pcard-label">Sessions</span><span class="momentum-pcard-value">${sessValue !== null ? sessValue : '—'}</span>${sessPillHtml}</div>
           <div class="momentum-pcard-row"><span class="momentum-pcard-label">Organic Keywords</span><span class="momentum-pcard-value">${kwCountForProduct || '—'}</span></div>
           <div class="momentum-pcard-row"${bsrRowAttr}><span class="momentum-pcard-label">BSR</span><span class="momentum-pcard-value">${bsrValueHtml}</span>${bsrPillHtml}${bsrSubcatHtml}</div>
-          <div class="momentum-pcard-row"><span class="momentum-pcard-label">Reviews</span><span class="momentum-pcard-value">${reviewsCount || '—'}</span></div>
+          <div class="momentum-pcard-row"><span class="momentum-pcard-label">Reviews</span><span class="momentum-pcard-value">${reviewsCount ? reviewsCount.toLocaleString() : '—'}</span></div>
         </div>
       </div>`;
     }).join('');
@@ -15708,23 +15752,51 @@ document.addEventListener('DOMContentLoaded', function() {
     return checkboxRow + top3 + productCardsSection + kwSection + nextSection;
   }
 
+  // Momentum roster — built straight from the Product Short Name sheet with
+  // Jaclyn's exact filters (2026-09-29): col D Brand = Skinuva only, col H
+  // Status = LIVE only, col J SKU Type = CATALOG only, one entry per SKU
+  // (the same SKU can appear once per channel on that sheet). Product names
+  // are the sheet's own "Product Short Name" values — never invented.
+  // Returns { ASIN: shortName } in sheet order. Columns are found by header
+  // name first, falling back to the column letters Jaclyn gave.
+  async function getSkinuvaMomentumRoster() {
+    const csv = await fetch(ovCsvUrl('1NNRTRQxQl2r4XivAvH700CC39p49GD2xfZlyRNqahGA', '164358627') + `&_cb=${Date.now()}`)
+      .then(r => r.ok ? r.text() : '').catch(() => '');
+    const all = parseCsvFull(csv);
+    const out = {};
+    if (all.length < 2) return out;
+    const hdr = all[0].map(h => String(h || '').trim().toLowerCase());
+    const col = (names, fallback) => { for (const n of names) { const i = hdr.indexOf(n); if (i >= 0) return i; } return fallback; };
+    const cBrand = col(['brand'], 3), cStatus = col(['status'], 7), cType = col(['sku type', 'sku_type'], 9);
+    const cAsin = col(['asin'], -1), cSku = col(['sku'], -1), cName = col(['product short name', 'name'], -1);
+    console.log('[Momentum][roster] columns used — brand:', hdr[cBrand], '| status:', hdr[cStatus], '| type:', hdr[cType], '| name:', hdr[cName]);
+    const seenSku = new Set(), seenAsin = new Set();
+    all.slice(1).forEach(r => {
+      const brand = String(r[cBrand] || '').trim().toLowerCase();
+      const status = String(r[cStatus] || '').trim().toUpperCase();
+      const type = String(r[cType] || '').trim().toUpperCase();
+      if (brand !== 'skinuva' || status !== 'LIVE' || type !== 'CATALOG') return;
+      const asin = cAsin >= 0 ? String(r[cAsin] || '').trim().toUpperCase() : '';
+      const sku = cSku >= 0 ? String(r[cSku] || '').trim().toUpperCase().replace(/-SF$/i, '') : '';
+      const name = cName >= 0 ? String(r[cName] || '').trim() : '';
+      if (!asin || !name) return; // sessions / BSR / keywords are all keyed by ASIN
+      if ((sku && seenSku.has(sku)) || seenAsin.has(asin)) return;
+      if (sku) seenSku.add(sku);
+      seenAsin.add(asin);
+      out[asin] = name;
+    });
+    console.log('[Momentum][roster]', Object.keys(out).length, 'Skinuva LIVE CATALOG SKUs:', Object.values(out).join(' | '));
+    return out;
+  }
+
   window.loadSkinuvaMomentum = async function () {
     if (window._skinuvaMomentumLoaded) return;
     window._skinuvaMomentumLoaded = true;
     const container = document.getElementById('momentum-container');
     try {
-      const master = await getProductMaster();
-      const asinMap = {};
-      Object.entries(master.byAsin).forEach(([asin, e]) => {
-        if (!asin) return;
-        const type = (e.skuType || '').toUpperCase();
-        if (type.includes('BUNDLE') || type.includes('KIT')) return;
-        const channels = e.allChannels || (e.channel ? [e.channel] : []);
-        if (!channels.some(c => (c || '').toLowerCase().includes('amazon'))) return;
-        asinMap[asin] = e.name || e.sku || asin;
-      });
+      const asinMap = await getSkinuvaMomentumRoster();
       const asinSet = new Set(Object.keys(asinMap));
-      if (!asinSet.size) throw new Error('No live Amazon catalog SKUs found on the Product Short Name sheet');
+      if (!asinSet.size) throw new Error('No Skinuva LIVE / CATALOG SKUs found on the Product Short Name sheet');
 
       const [bizResult, kwResult, summaryResult] = await Promise.allSettled([
         fetch(ovCsvUrl(OV_BUSINESS_REPORT_SHEET_ID, OV_BUSINESS_REPORT_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
@@ -15806,9 +15878,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // ── BSR (Keyword Tracker "summary" tab) ───────────────────────────────
       const bsrByAsin = {};
+      const revSumByAsin = {}; // latest Amazon-reported review_count / rating per ASIN
       summaryRows.forEach(r => {
         const asin = (r.asin || '').trim().toUpperCase();
         if (!asin || !asinSet.has(asin)) return;
+        const rc = parseInt(String(r.review_count || '').replace(/,/g, ''), 10);
+        const rt = parseFloat(r.rating);
+        if (!isNaN(rc) && rc >= 0) {
+          const dStr = r.date || '';
+          if (!revSumByAsin[asin] || dStr >= revSumByAsin[asin].date) revSumByAsin[asin] = { date: dStr, count: rc, avg: isNaN(rt) ? 0 : rt };
+        }
         const bsr = parseInt((r.bsr || '').replace(/,/g, ''), 10);
         if (isNaN(bsr) || bsr <= 0) return;
         const dateStr = r.date || '';
@@ -15832,16 +15911,23 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!revByP[name]) revByP[name] = { count: 0, sum: 0 };
         revByP[name].count++; revByP[name].sum += rat;
       });
-      const revProducts = Object.entries(revByP)
-        .map(([name, { count, sum }]) => ({ name, count, avg: count ? sum / count : 0 }))
-        .sort((a, b) => b.count - a.count);
+      // Reviews Collected = total reviews for the brand, ALL TIME: the sum of
+      // each roster ASIN's latest Amazon-reported review_count (Keyword
+      // Tracker summary tab). Falls back to counting rows on the Reviews
+      // sheet only when the summary tab has no review counts at all.
+      const revByAsin = {};
+      Object.keys(revSumByAsin).forEach(asin => { revByAsin[asin] = { count: revSumByAsin[asin].count, avg: revSumByAsin[asin].avg }; });
+      if (!Object.keys(revByAsin).length) {
+        Object.keys(asinMap).forEach(asin => { const v = revByP[asinMap[asin]]; if (v) revByAsin[asin] = { count: v.count, avg: v.count ? v.sum / v.count : 0 }; });
+      }
+      const revProducts = Object.keys(revByAsin).map(asin => ({ asin, name: asinMap[asin], count: revByAsin[asin].count, avg: revByAsin[asin].avg }));
       const totalReviews = revProducts.reduce((s, p) => s + p.count, 0);
       const avgRating = totalReviews ? revProducts.reduce((s, p) => s + p.avg * p.count, 0) / totalReviews : 0;
 
       window._skinuvaMomentumData = {
         asinMap, skuSessions, latestMoName, totalLatest, momPct,
         rankedKws, kwColsFound: kwRows[0] ? Object.keys(kwRows[0]) : [], kwFetchError,
-        bsrData, revProducts, totalReviews, avgRating,
+        bsrData, revProducts, revByAsin, totalReviews, avgRating,
       };
 
       if (container) container.innerHTML = buildSkinuvaMomentumHTML(window._skinuvaMomentumData);
@@ -22276,6 +22362,7 @@ async function loadAuditResultsFromSheet() {
     _investChart: 'chart-invest',
     _impressChart: 'chart-impressions',
     _snsChart: 'chart-sns',
+    _catChart: 'chart-category', // Insights tab, added 2026-09-29
     // Added 2026-07-21 — was never registered here at all, so it fell
     // through to the naive pdfxRawChartImg fallback (no force-visible
     // ancestors, no correct-size capture), which is exactly why it showed
@@ -22348,6 +22435,7 @@ async function loadAuditResultsFromSheet() {
     _investChart:            200,
     _impressChart:           180,
     _snsChart:               200,
+    _catChart:               220,
     mfcShippedChartInstance: 230,
   };
 
@@ -22679,6 +22767,7 @@ async function loadAuditResultsFromSheet() {
     { id: 'pdfx-invest-chart-img',       varName: '_investChart',            defaultHeightPx: 200, minHeightPx: 130 },
     { id: 'pdfx-impress-chart-img',      varName: '_impressChart',           defaultHeightPx: 180, minHeightPx: 110 },
     { id: 'pdfx-sns-chart-img',          varName: '_snsChart',               defaultHeightPx: 200, minHeightPx: 120 },
+    { id: 'pdfx-category-chart-img',     varName: '_catChart',               defaultHeightPx: 220, minHeightPx: 140 },
     { id: 'pdfx-mfc-shipped-chart-img',  varName: 'mfcShippedChartInstance', defaultHeightPx: 230, minHeightPx: 130 },
   ];
   const PDFX_BLANK_IMG = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
@@ -22975,7 +23064,7 @@ async function loadAuditResultsFromSheet() {
   // so this surfaces them in the header instead (Strategy page only --
   // every other page still just passes monthYear through as before).
   function pdfxHeaderBand(monthYear, activeTab, eventInfo) {
-    const tabs = ['Sales', 'Fulfillment & Customer Service', 'Brand Stewardship', 'Opportunities', 'Insights', 'Momentum', 'Events'];
+    const tabs = ['Sales', 'Momentum', 'Insights', 'Fulfillment & Customer Service', 'Brand Stewardship', 'Opportunities', 'Events'];
     const tabsHtml = tabs.map(function (t) {
       return '<span class="pdfx-tab' + (t === activeTab ? ' on' : '') + '">' + t + '</span>';
     }).join('');
@@ -23356,36 +23445,133 @@ async function loadAuditResultsFromSheet() {
   }
 
   function buildOpportunitiesPage(monthYear) {
-    const kpis = ['kpi-active-subs', 'kpi-retention'].map(pdfxKpi);
-    // FIXED 2026-08-28, TRIMMED FURTHER 2026-09-10 -- this page's real
-    // content (KPIs + Active Subscriptions chart + up to 3 "Future
-    // Opportunities" cards + footer) measured ~11.79in tall against the
-    // PDF's 11in page height back on 2026-08-28, and the trims added then
-    // were confirmed live to comfortably clear that. By 2026-09-10 the
-    // page had drifted back over 11in with real, grown data (more
-    // subscription-history months in the chart, longer opportunity-card
-    // copy) -- reported as the "gap"/narrow-page bug on this page's slot
-    // in the export. Trimmed further here (chlabel/pill/title margins on
-    // top of the existing padding trims), plus 2 shared-but-effectively-
-    // scoped trims: .pdfx-header-divider (every page) and .pdfx-footer
-    // (only Opportunities/Strategy/Event pages use it). If real content
-    // keeps growing and outpaces spacing trims again in the future, the
-    // final pdf.addImage() step now crops any residual overflow off the
-    // bottom instead of shrinking the page narrower -- see that comment
-    // for why -- so this should degrade gracefully even if these numbers
-    // drift again.
+    // 2026-09-29 per Jaclyn: Subscribe & Save (KPIs + chart) moved to the
+    // Insights page; this page now carries What's Been Accomplished (sand
+    // pill) and Future Opportunities only. Same overflow safety as before:
+    // the final pdf.addImage() step crops residual overflow rather than
+    // shrinking the page.
     return '' +
       '<div class="pdfx-page">' +
         '<div class="pdfx-inner" style="padding-top:16px;padding-bottom:16px;">' +
           pdfxHeaderBand(monthYear, 'Opportunities') +
-          '<div class="pdfx-chlabel" style="margin-bottom:4px;">Subscribe &amp; Save</div>' +
-          '<div class="pdfx-kpis n2" style="margin-top:4px;margin-bottom:6px;">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
-          '<div class="pdfx-card" style="margin-bottom:6px;padding:8px 18px;"><div class="pdfx-card-title" style="margin-bottom:6px;">Active Subscriptions by Month</div>' + pdfxChartBlock('_snsChart', undefined, undefined, 'pdfx-sns-chart-img') + '</div>' +
           pdfxAccomplishedBlock() +
           pdfxFutureOpportunitiesBlock() +
           pdfxFooter(monthYear) +
         '</div>' +
       '</div>';
+  }
+
+  // Insights page — Unit Sales by Product Category + Subscriptions (moved
+  // here from Opportunities 2026-09-29 per Jaclyn), each with its own Key
+  // Insight. Both charts are fit-charts (see PDFX_SKINUVA_FIT_CHARTS).
+  function buildInsightsPage(monthYear) {
+    const snsKpis = ['kpi-active-subs', 'kpi-retention'].map(pdfxKpi);
+    const catInsight = pdfxText('#cat-insight-text');
+    const snsInsight = pdfxText('#sns-insight-text');
+    const insightHtml = function (t) { return t ? '<div class="pdfx-insight" style="padding:8px 14px;margin-bottom:6px;"><strong>Key Insight:</strong> ' + pdfxEscape(t) + '</div>' : ''; };
+    return '' +
+      '<div class="pdfx-page">' +
+        '<div class="pdfx-inner" style="padding-top:16px;padding-bottom:16px;">' +
+          pdfxHeaderBand(monthYear, 'Insights') +
+          '<div class="pdfx-card" style="margin-bottom:6px;padding:8px 18px;"><div class="pdfx-card-title" style="margin-bottom:6px;">Unit Sales by Product Category</div>' + pdfxChartBlock('_catChart', undefined, undefined, 'pdfx-category-chart-img') + '</div>' +
+          insightHtml(catInsight) +
+          '<div class="pdfx-chlabel" style="margin-top:8px;margin-bottom:4px;">Subscriptions</div>' +
+          '<div class="pdfx-kpis n2" style="margin-top:4px;margin-bottom:6px;">' + snsKpis.map(pdfxKpiCardHtml).join('') + '</div>' +
+          '<div class="pdfx-card" style="margin-bottom:6px;padding:8px 18px;"><div class="pdfx-card-title" style="margin-bottom:6px;">Active Subscriptions by Month <span style="font-weight:400;color:var(--muted);">(Year over Year)</span></div>' + pdfxChartBlock('_snsChart', undefined, undefined, 'pdfx-sns-chart-img') + '</div>' +
+          insightHtml(snsInsight) +
+          pdfxFooter(monthYear) +
+        '</div>' +
+      '</div>';
+  }
+
+  // Brand Momentum pages — reuses the live .momentum-pcard elements via
+  // outerHTML (same approach as the VVS/DD reference) rather than
+  // re-deriving them, so the PDF always matches what's on screen. The live
+  // "Show sections" checkboxes and the "Hide negative BSR changes" toggle
+  // both carry into the export. First page fits 3 product cards under the
+  // top KPIs, later pages 5.
+  function buildMomentumPages(monthYear) {
+    const d = window._skinuvaMomentumData;
+    if (!d) return '';
+    const secOn = function (id) { const cb = pdfxById(id); return !cb || cb.checked; };
+    const showCards = secOn('mo-cb-sessions'), showKw = secOn('mo-cb-keywords'), showNext = secOn('mo-cb-next');
+    const hideNegBsr = !!(pdfxById('mo-bsr-hide-neg') && pdfxById('mo-bsr-hide-neg').checked);
+    const FIRST_PAGE_MAX = 3, OTHER_PAGE_MAX = 5;
+
+    const momStr = d.momPct !== null ? (d.momPct > 0 ? '+' : '') + d.momPct + '% MoM' : '';
+    const kwCount = d.rankedKws.length;
+    const kpis = [
+      { label: 'Reviews Collected', value: d.totalReviews.toLocaleString(), mom: d.avgRating.toFixed(1) + '★ avg · all time', momClass: 'up' },
+      { label: 'Keywords With Organic Rank', value: kwCount ? String(kwCount) : '—', mom: kwCount ? d.rankedKws.filter(function (k) { return k.change > 0; }).length + ' improving rank' : '', momClass: kwCount ? 'up' : 'flat' },
+      { label: 'Sessions (' + d.latestMoName + ')', value: d.totalLatest.toLocaleString(), mom: momStr, momClass: d.momPct > 0 ? 'up' : d.momPct < 0 ? 'dn' : 'flat' },
+    ];
+
+    // Live cards -> HTML strings, honoring the Hide-negative-BSR toggle.
+    const cardEls = Array.prototype.slice.call(document.querySelectorAll('#skinuva-momentum-cards-grid .momentum-pcard'));
+    const cards = cardEls.map(function (el) {
+      const c = el.cloneNode(true);
+      if (hideNegBsr) {
+        Array.prototype.forEach.call(c.querySelectorAll('[data-bsr-neg] [data-bsr-chng]'), function (n) { n.parentNode.removeChild(n); });
+      } else {
+        Array.prototype.forEach.call(c.querySelectorAll('[data-bsr-chng]'), function (n) { n.style.display = ''; });
+      }
+      return c.outerHTML;
+    });
+
+    const chunks = [];
+    if (showCards && cards.length) {
+      chunks.push(cards.slice(0, FIRST_PAGE_MAX));
+      for (let i = FIRST_PAGE_MAX; i < cards.length; i += OTHER_PAGE_MAX) chunks.push(cards.slice(i, i + OTHER_PAGE_MAX));
+    }
+    const cardsBlock = function (arr, first) {
+      return '<div class="pdfx-momentum-tight">' +
+        (first ? '<div class="pdfx-card-title" style="margin-top:10px;margin-bottom:2px;">Performance by Product</div><div style="font-size:9px;color:var(--muted);margin-bottom:8px;">Sessions measured month-over-month; BSR change reflects total movement since first recorded.</div>' : '') +
+        '<div class="momentum-cards-grid">' + arr.join('') + '</div></div>';
+    };
+
+    const pageWrap = function (inner) {
+      return '<div class="pdfx-page"><div class="pdfx-inner" style="padding-top:16px;padding-bottom:16px;">' +
+        pdfxHeaderBand(monthYear, 'Momentum') + inner + pdfxFooter(monthYear) + '</div></div>';
+    };
+
+    let out = pageWrap(
+      '<div class="pdfx-chlabel" style="margin-bottom:4px;">Brand Momentum</div>' +
+      '<div class="pdfx-kpis n3" style="margin-top:4px;margin-bottom:6px;">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
+      (chunks.length ? cardsBlock(chunks[0], true) : '')
+    );
+    for (let i = 1; i < chunks.length; i++) out += pageWrap(cardsBlock(chunks[i], false));
+
+    let tail = '';
+    if (showKw) {
+      let body;
+      if (!d.rankedKws.length) {
+        body = '<div style="font-size:11px;color:var(--muted);font-style:italic;padding:8px 0;">No ranked keyword data for this period.</div>';
+      } else {
+        const hasProd = d.rankedKws.some(function (k) { return k.prod; });
+        const hasVol = d.rankedKws.some(function (k) { return k.vol; });
+        const rows = d.rankedKws.slice(0, 15).map(function (k) {
+          const chStr = k.change !== null ? (k.change > 0 ? '▲ +' + k.change : k.change < 0 ? '▼ ' + Math.abs(k.change) : '') : '';
+          const chCol = k.change > 0 ? 'var(--green)' : 'var(--danger)';
+          return '<tr>' +
+            '<td style="padding:5px 6px;font-weight:600;">' + pdfxEscape(k.kw) + '</td>' +
+            (hasProd ? '<td style="padding:5px 6px;color:var(--muted);">' + pdfxEscape(k.prod) + '</td>' : '') +
+            '<td style="padding:5px 6px;font-weight:700;">' + (k.rank >= 306 ? '&gt;306' : '#' + k.rank) + (chStr ? ' <span style="color:' + chCol + ';font-size:9px;">' + chStr + '</span>' : '') + '</td>' +
+            (hasVol ? '<td style="padding:5px 6px;color:var(--muted);">' + (k.vol ? k.vol.toLocaleString() : '—') + '</td>' : '') +
+            '</tr>';
+        }).join('');
+        body = '<table style="width:100%;border-collapse:collapse;font-size:10px;color:var(--navy);"><thead><tr style="text-align:left;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);">' +
+          '<th style="padding:5px 6px;">Keyword</th>' + (hasProd ? '<th style="padding:5px 6px;">Product</th>' : '') + '<th style="padding:5px 6px;">Organic Rank</th>' + (hasVol ? '<th style="padding:5px 6px;">Search Volume</th>' : '') +
+          '</tr></thead><tbody>' + rows + '</tbody></table>';
+      }
+      tail += '<div class="pdfx-card" style="margin-bottom:10px;padding:10px 18px;"><div class="pdfx-card-title" style="margin-bottom:2px;">Targeted Keyword Indexing Progress</div>' +
+        '<div style="font-size:9px;color:var(--muted);margin-bottom:8px;">Organic rankings signal algorithm traction — new listings typically take 3–12 months to index.</div>' + body + '</div>';
+    }
+    if (showNext) {
+      const live = document.getElementById('mo-cb-next-section');
+      if (live) tail += live.outerHTML;
+    }
+    if (tail) out += pageWrap(tail);
+    return out;
   }
 
   // Static content — mirrors the Strategy tab's own text (#ev-strategy).
@@ -23520,6 +23706,35 @@ async function loadAuditResultsFromSheet() {
 
   // ---- main entry point ----------------------------------------------------
 
+  // Reports archive — ported 2026-09-29 from VBC/DD/VVS (archiveReportToDrive).
+  // Every APPROVED monthly export is also synced to the shared Drive reports
+  // folder via /api/upload-report, which overwrites a same-named file so a
+  // re-export updates in place. Never blocks or breaks the local download.
+  async function archiveReportToDrive(brand, filename, pdf) {
+    try {
+      let pdfBase64;
+      if (typeof Blob !== 'undefined' && pdf instanceof Blob) {
+        pdfBase64 = await new Promise(function (resolve, reject) {
+          const r = new FileReader();
+          r.onload = function () { resolve(String(r.result).split(',')[1]); };
+          r.onerror = function () { reject(r.error); };
+          r.readAsDataURL(pdf);
+        });
+      } else {
+        pdfBase64 = pdf.output('datauristring').split(',')[1];
+      }
+      const res = await fetch('/api/upload-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brand: brand, filename: filename, pdfBase64: pdfBase64 }),
+      });
+      const data = await res.json().catch(function () { return {}; });
+      if (!res.ok || data.error) console.error('[archiveReportToDrive]', data.error || res.status);
+    } catch (err) {
+      console.error('[archiveReportToDrive]', err);
+    }
+  }
+
   window.exportPartnerPDF = async function () {
     const btn = pdfxById('pdf-export-btn');
     if (btn) { btn.disabled = true; btn.classList.add('pdfx-loading'); }
@@ -23566,6 +23781,8 @@ async function loadAuditResultsFromSheet() {
         fulfillment:   !!document.getElementById('pdf-include-fulfillment')   && document.getElementById('pdf-include-fulfillment').checked,
         stewardship:   !!document.getElementById('pdf-include-stewardship')   && document.getElementById('pdf-include-stewardship').checked,
         opportunities: !!document.getElementById('pdf-include-opportunities') && document.getElementById('pdf-include-opportunities').checked,
+        insights:      !!document.getElementById('pdf-include-insights')      && document.getElementById('pdf-include-insights').checked,
+        momentum:      !!document.getElementById('pdf-include-momentum')      && document.getElementById('pdf-include-momentum').checked,
         strategy: !!document.getElementById('pdf-include-strategy') && document.getElementById('pdf-include-strategy').checked,
         bss:  !!document.getElementById('pdf-include-bss')  && document.getElementById('pdf-include-bss').checked,
         pd:   !!document.getElementById('pdf-include-pd')   && document.getElementById('pdf-include-pd').checked,
@@ -23582,7 +23799,9 @@ async function loadAuditResultsFromSheet() {
         (includeSections.walmart       && typeof window.initWalmartLive === 'function')            ? window.initWalmartLive()            : null,
         (includeSections.stewardship   && typeof window.initStewardshipLive === 'function')        ? window.initStewardshipLive()        : null,
         (includeSections.fulfillment   && typeof window.initMarketingFulfillmentCS === 'function')  ? window.initMarketingFulfillmentCS() : null,
-        (includeSections.opportunities && !window._snsChart && typeof initSns === 'function')       ? initSns()                           : null,
+        (includeSections.insights && !window._snsChart && typeof initSns === 'function')            ? initSns()                           : null,
+        (includeSections.insights && !window._catChart && typeof window.loadSkinuvaCategoryChart === 'function') ? window.loadSkinuvaCategoryChart() : null,
+        (includeSections.momentum && typeof window.loadSkinuvaMomentum === 'function')              ? window.loadSkinuvaMomentum()        : null,
         // Prime Day's KPIs/chart are lazy-loaded on tab click — if it's
         // checked for inclusion but the tab was never opened this session,
         // this is what actually builds the chart before capture below.
@@ -23633,7 +23852,7 @@ async function loadAuditResultsFromSheet() {
       // never going to render because its page got excluded.
       const chartsBySection = {
         amazon: ['_amazonChart'], website: ['_webChart'], walmart: ['_walmartChart'],
-        stewardship: ['_investChart', '_impressChart'], opportunities: ['_snsChart'],
+        stewardship: ['_investChart', '_impressChart'], insights: ['_snsChart', '_catChart'],
       };
       const expectedCharts = Object.keys(chartsBySection)
         .filter(sec => includeSections[sec])
@@ -23641,6 +23860,12 @@ async function loadAuditResultsFromSheet() {
       const pollStart = Date.now();
       while (Date.now() - pollStart < 12000 && expectedCharts.some(v => !window[v])) {
         await new Promise(r => setTimeout(r, 150));
+      }
+      // Momentum is HTML, not a chart — its loader can return early if a load
+      // is already in flight, so wait for the data itself.
+      if (includeSections.momentum) {
+        const moStart = Date.now();
+        while (Date.now() - moStart < 15000 && !window._skinuvaMomentumData) await new Promise(r => setTimeout(r, 150));
       }
       console.log('[pdf-export] chart variable presence after poll:', expectedCharts.map(v => v + '=' + !!window[v]).join(', '));
 
@@ -23662,6 +23887,7 @@ async function loadAuditResultsFromSheet() {
       // calls read from PDFX_CHART_CACHE synchronously.
       const pdfxChartHeights = await pdfxPlanChartHeights([
         includeSections.amazon        ? () => buildAmazonPage(monthYear)        : null,
+        includeSections.insights      ? () => buildInsightsPage(monthYear)      : null,
         includeSections.website       ? () => buildWebsitePage(monthYear)       : null,
         includeSections.walmart       ? () => buildWalmartPage(monthYear)       : null,
         includeSections.stewardship   ? () => buildStewardshipPage(monthYear)   : null,
@@ -23684,6 +23910,8 @@ async function loadAuditResultsFromSheet() {
         includeSections.amazon        ? buildAmazonPage(monthYear)        : '',
         includeSections.website       ? buildWebsitePage(monthYear)       : '',
         includeSections.walmart       ? buildWalmartPage(monthYear)       : '',
+        includeSections.momentum      ? buildMomentumPages(monthYear)     : '',
+        includeSections.insights      ? buildInsightsPage(monthYear)      : '',
         includeSections.fulfillment   ? buildFulfillmentCsPage(monthYear) : '',
         includeSections.stewardship   ? buildStewardshipPage(monthYear)   : '',
         includeSections.opportunities ? buildOpportunitiesPage(monthYear) : '',
@@ -23760,6 +23988,15 @@ async function loadAuditResultsFromSheet() {
 
       const filename = 'Skinuva_Partnership_Report_' + (monthYear ? monthYear.replace(' ', '_') : 'Report') + '.pdf';
       pdfxDownloadBlob(pdfResult.blob, filename);
+      // Only archive once the month is marked Approved (Jaclyn 2026-09-09 rule
+      // from VBC/DD): a draft must never land in the shared archive. The
+      // local download above always happens regardless of status.
+      const skApproved = /approved/i.test(pdfxText('#sales-report-status'));
+      if (skApproved) {
+        archiveReportToDrive('skinuva', filename, pdfResult.blob);
+      } else {
+        console.log('[pdf-export] month not Approved — skipped Drive archive (local download only)');
+      }
       console.log('[pdf-export] pdfxDownloadBlob() called — download should start now');
 
       root.style.display = 'none';
