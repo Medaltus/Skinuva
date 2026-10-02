@@ -26,7 +26,8 @@
  * in this file already do.
  *
  * Sheet: SHOPIFY_ORDERS_SHEET
- *   - Source: orders tab (reads revenue for ACOS)
+ *   - Source: Google Ads API only for the ads tab (revenue = conversions_value);
+ *     orders tab is read only by the shopping sync, for item_id -> sku
  *   - Destination: ads tab
  *
  * Headers: date | campaign_name | impressions | clicks | spend |
@@ -88,7 +89,12 @@ module.exports = async (req, res) => {
   }
 
   const mode = req.query.mode || 'yesterday';
-  const { startDate, endDate } = getDateRange(mode, req);
+  let startDate, endDate;
+  try {
+    ({ startDate, endDate } = getDateRange(mode, req));
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
   const nowEst = toEstIso(new Date());
 
   console.log(`[sync-google-ads] mode=${mode} start=${startDate} end=${endDate}`);
@@ -187,24 +193,32 @@ module.exports = async (req, res) => {
   // every run, so re-running a date always reflects the latest API read —
   // including Google Ads' own after-the-fact metric corrections, not just
   // one-off bad-data fixes.
-  const token         = await ensureTab(SHEET_ID, ADS_TAB, ADS_HEADERS);
-  const existingRows  = await readRows(SHEET_ID, ADS_TAB);
-  const existingByKey = new Map();
-  existingRows.forEach(r => {
-    const key = `${r.date}||${r.campaign_name}`;
-    if (key !== '||') existingByKey.set(key, r);
-  });
+  // Wrapped 2026-10-02: a Sheets failure here used to escape as an unhandled
+  // 500 with NO failure alert, so the cron could stop writing silently.
+  let updatedCount = 0, newCount = 0, rowsToWrite = [];
+  try {
+    const token         = await ensureTab(SHEET_ID, ADS_TAB, ADS_HEADERS);
+    const existingRows  = await readRows(SHEET_ID, ADS_TAB);
+    const existingByKey = new Map();
+    existingRows.forEach(r => {
+      const key = `${r.date}||${r.campaign_name}`;
+      if (key !== '||') existingByKey.set(key, r);
+    });
 
-  let updatedCount = 0, newCount = 0;
-  newLineItems.forEach(item => {
-    const key = `${item.date}||${item.campaign_name}`;
-    if (existingByKey.has(key)) updatedCount++; else newCount++;
-    existingByKey.set(key, item);
-  });
+    newLineItems.forEach(item => {
+      const key = `${item.date}||${item.campaign_name}`;
+      if (existingByKey.has(key)) updatedCount++; else newCount++;
+      existingByKey.set(key, item);
+    });
 
-  const rowsToWrite = Array.from(existingByKey.values()).map(r => ADS_HEADERS.map(h => r[h] ?? ''));
-  await replaceRows(SHEET_ID, ADS_TAB, ADS_HEADERS, rowsToWrite, token);
-  console.log(`[sync-google-ads] ads: ${newCount} new, ${updatedCount} refreshed, ${rowsToWrite.length} total`);
+    rowsToWrite = Array.from(existingByKey.values()).map(r => ADS_HEADERS.map(h => r[h] ?? ''));
+    await replaceRows(SHEET_ID, ADS_TAB, ADS_HEADERS, rowsToWrite, token);
+    console.log(`[sync-google-ads] ads: ${newCount} new, ${updatedCount} refreshed, ${rowsToWrite.length} total`);
+  } catch (err) {
+    console.error('[sync-google-ads] ads tab write failed:', err.message);
+    await sendCronFailureAlert('sync-google-ads', err.message, { Stage: 'ads tab write (Google Sheets)' });
+    return res.status(500).json({ error: 'ads tab write failed', detail: err.message, mode, startDate, endDate });
+  }
 
   // ── 6. Shopping performance (per-product) — new, best-effort ─────────────
   // Deliberately isolated in its own try/catch: campaign-level ads sync above
