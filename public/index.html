@@ -24309,8 +24309,10 @@ async function loadAuditResultsFromSheet() {
         : 'no cancel-rate history yet';
     } else {
       // Last Full Month -- the month is over, actual is already final, no
-      // separate projection needed.
-      resultLine = actualPct >= 100 ? 'Hit goal' : 'Missed goal';
+      // separate projection needed. Shows the month's actual revenue total
+      // (changed 2026-10-02 per Jaclyn, was "Hit goal" / "Missed goal") --
+      // the ring's green/red color already says whether the goal was hit.
+      resultLine = 'Revenue $' + Math.round(actual).toLocaleString();
     }
     const projectedPct = Math.round((projected / goal) * 100);
     const statusColor = projectedPct >= 100 ? 'var(--green)' : 'var(--danger)';
