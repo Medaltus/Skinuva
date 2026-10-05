@@ -1424,6 +1424,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     <div class="channel-tabs-row">
       <div class="channel-tabs">
         <button class="ch-tab active" onclick="showChannel('overview','ov-main',this)">Overview</button>
+        <button class="ch-tab" onclick="showChannel('overview','ov-projections',this)">Projections &amp; Goals</button>
         <button class="ch-tab" onclick="showChannel('overview','ov-bm-kpis',this)">Brand Manager KPIs</button>
       </div>
     </div>
@@ -1452,8 +1453,8 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
       <div class="card-title" style="margin-bottom:10px;font-size:20px;">Goal Tracker</div>
       <div class="card" id="ov-goal-tracker-card" style="background:var(--sand);border:none;border-top:3px solid var(--navy);margin-top:0;margin-bottom:0;">
         <div class="card-title" style="font-size:17px;">Amazon</div>
-        <div id="ov-goal-tracker-body" style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
-          <div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1;">Loading…</div>
+        <div id="ov-goal-tracker-body" style="display:flex;align-items:flex-start;justify-content:space-around;gap:24px;flex-wrap:wrap;">
+          <div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1;flex:1;">Loading…</div>
         </div>
       </div>
     </div>
@@ -1551,6 +1552,34 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     </div>
 
     </div><!-- /ov-main -->
+
+    <!-- Projections & Goals — ported 2026-10-05 per Jaclyn from MiGuard.
+         Rendered by window.initProjections(). -->
+    <div class="channel-page" id="ov-projections">
+      <div class="card">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;">
+          <div class="card-title" style="margin-bottom:0;">Share of Sales</div>
+          <div id="legend-proj-ads" style="display:flex;align-items:center;"></div>
+        </div>
+        <div style="height:10px;"></div>
+        <div style="position:relative;height:300px;"><canvas id="proj-ads-pct-chart"></canvas></div>
+        <div class="ppc-note" id="proj-ads-note"></div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+          <div class="card-title" style="margin-bottom:0;">Sales by Quarter <span style="font-weight:400;color:var(--muted);">(completed quarters)</span></div>
+          <div class="period-pills" id="proj-quarter-pills" style="display:flex;background:var(--white);border:1px solid var(--border);border-radius:999px;padding:4px;gap:2px;"></div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="proj-quarter-table">
+            <thead id="proj-quarter-thead"></thead>
+            <tbody id="proj-quarter-tbody"><tr><td style="color:var(--muted);">Loading…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="ppc-note">ℹ US Amazon orders, excluding cancelled, pending and Vine — same rules as the Sales &gt; Amazon tab. Products are the LIVE catalog SKUs on the Product Short Name sheet; bundles and retired ASINs are grouped into "Other" so the Total matches all Amazon sales. Inventory Available is today's figure (FBA + inbound receiving + seller-fulfilled − reserved). The quarter in progress appears once it ends.</div>
+      </div>
+    </div>
 
     <!-- Brand Manager KPIs — ported 2026-10-05 per Jaclyn from MiGuard's tab
          (5-category framework: Organic Performance, Conversion, SEO /
@@ -6229,6 +6258,7 @@ function showChannel(page, channelId, btn) {
     if (channelId === 'ev-bfcm')         window.initBFCMReport();
     if (channelId === 'inv-oos-log')     window.initOosLog();
     if (channelId === 'm-fulfillment-cs') window.initMarketingFulfillmentCS();
+    if (channelId === 'ov-projections') window.initProjections();
     if (channelId === 'ov-bm-kpis') window.initBmKpis();
 
     // Events page: track which event tab is active so the single
@@ -24295,72 +24325,72 @@ async function loadAuditResultsFromSheet() {
   // gauge doesn't need a charting library, and this page's init function
   // can run repeatedly (every period-toggle click); SVG just re-renders as
   // a fresh string each time with nothing to destroy/recreate first.
-  function buildGaugeSvg(pct, colorHex) {
-    const size = 140, stroke = 14, r = (size - stroke) / 2, c = size / 2;
+  // RESTYLED 2026-10-05 per Jaclyn, ported from MiGuard's Goal Tracker:
+  // every ring is the same large size, with a white track, rounded fill, and
+  // a center shaded light green (on pace / hit) or light red (projecting to
+  // miss / missed). Same math as before — ring fill = actual ÷ goal; color +
+  // center shade = projection (MTD) or final result (Last Full Month).
+  function buildGaugeSvg(pct, colorHex, trackColor, size, stroke, centerFill) {
+    size = size || 140; stroke = stroke || 14;
+    const r = (size - stroke) / 2, c = size / 2;
     const circumference = 2 * Math.PI * r;
     const clamped = Math.max(0, Math.min(100, pct));
     const dashOffset = circumference * (1 - clamped / 100);
     return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg);display:block;">
-      <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="var(--border)" stroke-width="${stroke}"/>
+      ${centerFill ? `<circle cx="${c}" cy="${c}" r="${r - stroke / 2}" fill="${centerFill}"/>` : ''}
+      <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${trackColor || 'var(--border)'}" stroke-width="${stroke}"/>
       <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${colorHex}" stroke-width="${stroke}"
-        stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}" stroke-linecap="butt"/>
+        stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}" stroke-linecap="round"/>
     </svg>`;
   }
 
-  // One gauge column: ring + center %, metric sublabel, projection/result
-  // line, goal line. `actual` is real dollars so far this period (never
-  // projected -- see the fill-vs-color note below); `goal` is this
-  // period's target from the Goals sheet, or null if none is set.
-  // cancelRate: this brand's pooled historical Amazon order-cancellation
-  // rate (0-1), or null when there's no history to compute one from yet --
-  // see computeAmazonCancelRate above. Only used under cfg.isPartial, to
-  // discount the run-rate projection down from its naive zero-future-
-  // cancellations assumption. Never touches actualPct (the ring fill) or
-  // `actual` itself -- both stay real, unadjusted revenue to date.
+  // One gauge column. `actual` is real dollars so far this period (never
+  // projected); `goal` is this period's target from the Goals sheet, or null
+  // if none is set. cancelRate (0-1, or null) only discounts the MTD run-rate
+  // projection — never the ring fill or `actual` itself.
   function buildGoalGaugeHtml(metricLabel, actual, goal, cfg, daysInMonth, cancelRate) {
-    if (goal == null || goal <= 0) {
-      return `<div style="text-align:center;">
-        <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:10px;">${metricLabel}</div>
-        <div style="width:140px;height:140px;margin:0 auto;border-radius:50%;border:14px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;padding:20px;box-sizing:border-box;">No goal set</div>
+    const GREEN = '#1db88a', RED = '#db372d';
+    const size = 170, stroke = 16;
+    const fmtD = n => '$' + Math.round(n).toLocaleString();
+    if (goal == null || goal <= 0 || actual == null) {
+      return `<div style="text-align:center;flex:0 0 auto;min-width:220px;">
+        <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:10px;">${metricLabel}</div>
+        <div style="position:relative;width:${size}px;height:${size}px;margin:0 auto;">
+          ${buildGaugeSvg(0, '#ffffff', '#ffffff', size, stroke, 'rgba(255,255,255,.55)')}
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted);font-weight:600;">${goal == null || goal <= 0 ? 'No goal set' : 'Not available yet'}</div>
+        </div>
+        <div style="font-size:14px;color:var(--navy);margin-top:12px;">Goal <strong>${goal == null || goal <= 0 ? '—' : fmtD(goal)}</strong></div>
       </div>`;
     }
-    // Fill + center number reflect ACTUAL progress so far -- honest, not
-    // projected. A ring filled to a >100% pace-based projection renders as
-    // a complete circle, which hides that real dollars collected so far
-    // might only be ~40% of the way there. The projection is used ONLY to
-    // pick the ring's color, computed completely separately below.
     const actualPct = Math.round((actual / goal) * 100);
-    let projected = actual, resultLine, cancelLine = '';
+    let onPace, statusText, cancelLine = '';
     if (cfg.isPartial) {
-      const projectedRatio = cfg.day > 0 ? daysInMonth / cfg.day : 1;
-      const rawProjected = actual * projectedRatio;
-      // ADDED 2026-09-17 per Jaclyn, ported from MiGuard's Goal Tracker --
-      // discount the naive run-rate projection by this brand's own real
-      // historical cancellation rate, instead of silently assuming zero
-      // future cancellations on the pending orders it's counting.
-      projected = cancelRate != null ? rawProjected * (1 - cancelRate) : rawProjected;
-      resultLine = 'Projecting $' + Math.round(projected).toLocaleString();
-      cancelLine = cancelRate != null
-        ? `adj. for ${Math.round(cancelRate * 100)}% avg. cancel rate`
-        : 'no cancel-rate history yet';
+      const rawProjected = cfg.day > 0 ? actual * (daysInMonth / cfg.day) : actual;
+      // ADDED 2026-09-17 per Jaclyn (from MiGuard) — discount the naive
+      // run-rate by this brand's historical cancellation rate.
+      const projected = cancelRate != null ? rawProjected * (1 - cancelRate) : rawProjected;
+      onPace = projected >= goal;
+      statusText = 'Projecting ' + fmtD(projected);
+      cancelLine = `<div style="font-size:10.5px;color:var(--muted);margin-top:3px;">${cancelRate != null ? `adj. ${Math.round(cancelRate * 100)}% cancel rate` : 'no cancel-rate history yet'}</div>`;
     } else {
-      // Last Full Month -- the month is over, actual is already final, no
-      // separate projection needed. Shows the month's actual revenue total
-      // (changed 2026-10-02 per Jaclyn, was "Hit goal" / "Missed goal") --
-      // the ring's green/red color already says whether the goal was hit.
-      resultLine = 'Revenue $' + Math.round(actual).toLocaleString();
+      // Last Full Month — final. Shows the month's revenue total (changed
+      // 2026-10-02 per Jaclyn, was "Hit goal" / "Missed goal"); the ring's
+      // green/red already says whether the goal was hit.
+      onPace = actualPct >= 100;
+      statusText = 'Revenue ' + fmtD(actual);
     }
-    const projectedPct = Math.round((projected / goal) * 100);
-    const statusColor = projectedPct >= 100 ? 'var(--green)' : 'var(--danger)';
-    return `<div style="text-align:center;position:relative;">
-      <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:10px;">${metricLabel}</div>
-      <div style="position:relative;width:140px;height:140px;margin:0 auto;">
-        ${buildGaugeSvg(actualPct, statusColor)}
-        <div style="position:absolute;top:0;left:0;width:140px;height:140px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--navy);font-family:var(--font-subheader);">${actualPct}%</div>
+    const color = onPace ? GREEN : RED;
+    // Opaque tints so they read clearly against the sand panel.
+    const fill = onPace ? '#c4f6e4' : '#f4c3c0';
+    return `<div style="text-align:center;flex:0 0 auto;min-width:220px;">
+      <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:10px;">${metricLabel}</div>
+      <div style="position:relative;width:${size}px;height:${size}px;margin:0 auto;">
+        ${buildGaugeSvg(actualPct, color, '#ffffff', size, stroke, fill)}
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:700;color:${color};">${actualPct}%</div>
       </div>
-      <div style="font-size:14px;font-weight:700;color:var(--navy);margin-top:10px;">${resultLine}</div>
-      ${cfg.isPartial ? `<div style="font-size:10px;color:var(--muted);margin-top:1px;">${cancelLine}</div>` : ''}
-      <div style="font-size:14px;font-weight:700;color:var(--navy);margin-top:${cfg.isPartial ? '4px' : '0'};">Goal $${Math.round(goal).toLocaleString()}</div>
+      <div style="font-size:15px;font-weight:600;color:${color};margin-top:12px;">${statusText}</div>
+      <div style="font-size:15px;color:var(--navy);margin-top:2px;">Goal <strong>${fmtD(goal)}</strong></div>
+      ${cancelLine}
     </div>`;
   }
 
@@ -25448,16 +25478,16 @@ async function loadAuditResultsFromSheet() {
                 buildGoalGaugeHtml('Organic Sales', goalsOrganicActual, organicGoal, cfg, daysInMonth, goalsCancelRate) +
                 buildGoalGaugeHtml('Ads Sales', goalsAdsActual, adsGoal, cfg, daysInMonth, goalsCancelRate);
             } else {
-              goalsBody.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1;">No goals row found for ${monthNames[cfg.month - 1]} ${cfg.year}.</div>`;
+              goalsBody.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1;flex:1;">No goals row found for ${monthNames[cfg.month - 1]} ${cfg.year}.</div>`;
             }
           } else {
-            goalsBody.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1;">Goals sheet unavailable.</div>`;
+            goalsBody.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1;flex:1;">Goals sheet unavailable.</div>`;
           }
         }
       } catch (e) {
         console.warn('[Skinuva][overview] Goal Tracker failed:', e.message);
         const goalsBody = document.getElementById('ov-goal-tracker-body');
-        if (goalsBody) goalsBody.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1;">Goal Tracker failed to load.</div>`;
+        if (goalsBody) goalsBody.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1;flex:1;">Goal Tracker failed to load.</div>`;
       }
 
       // ── Ad Spend by Type (SP/SB/SD) ──────────────────────────────────────
@@ -25813,12 +25843,243 @@ window.addEventListener('load', async () => {
 </script>
 <script>
 // ═══════════════════════════════════════════════════════════════════
+// Shared Amazon monthly sales — ported 2026-10-05 from MiGuard's
+// getAmazonMonthlySales. Used by Overview > Projections & Goals and
+// Overview > Brand Manager KPIs so the two tabs can never disagree.
+// Same rules as Sales > Amazon: excludes cancelled, pending and Vine;
+// brand = skinuva. Per month, the sync sheet (SHEET_ORDERS) is used if it
+// fully covers that month, otherwise the historical sheet — never both.
+// products = Skinuva · LIVE · CATALOG · Amazon roster from the Product
+// Short Name sheet, one per ASIN. Orders on any other ASIN (bundles,
+// retired SKUs) are kept in the totals and grouped under OTHER_KEY.
+// Returns { products, byAsinMonth:{ym:{asin|OTHER:{units,sales}}},
+//           monthTotal:{ym:$}, monthUnits:{ym:units}, syncStart, OTHER_KEY }.
+// ═══════════════════════════════════════════════════════════════════
+window.getAmazonMonthlySales = function () {
+  if (window._amzMonthlySalesPromise) return window._amzMonthlySalesPromise;
+  window._amzMonthlySalesPromise = (async function () {
+    const OTHER_KEY = '__OTHER__';
+    const amt = v => parseFloat(String(v == null ? '' : v).replace(/[$,]/g, '')) || 0;
+    const nd = v => {
+      v = String(v || '').trim();
+      if (/^\d{4}-\d{2}/.test(v)) return v.substring(0, 10);
+      const p = v.split('/');
+      if (p.length === 3) return `${p[2].length === 2 ? '20' + p[2] : p[2]}-${p[0].padStart(2, '0')}-${p[1].padStart(2, '0')}`;
+      return '';
+    };
+    const cfgOf = k => window.SHEET_CFG[k] || {};
+    const csvOf = k => fetch(ovCsvUrl(cfgOf(k).fileId || '', cfgOf(k).gid || '')).then(r => r.ok ? r.text() : '').catch(() => '');
+    const [masterCsv, syncCsv, histCsv] = await Promise.all([csvOf('SHEET_MASTER_SKU_LIST'), csvOf('SHEET_ORDERS'), csvOf('SHEET_ORDERS_HISTORICAL')]);
+    const products = [];
+    const g = parseCsvFull(masterCsv);
+    if (g.length >= 2) {
+      const hdr = g[0].map(h => String(h || '').trim().toLowerCase());
+      const col = (names, fb) => { for (const n of names) { const i = hdr.indexOf(n); if (i >= 0) return i; } return fb; };
+      const cB = col(['brand'], 3), cS = col(['status'], 7), cT = col(['sku type', 'sku_type'], 9);
+      const cA = col(['asin'], -1), cK = col(['sku'], -1), cN = col(['product short name', 'name'], -1), cC = col(['channel'], -1);
+      const seen = new Set();
+      g.slice(1).forEach(r => {
+        const v = i => i >= 0 ? String(r[i] || '').trim() : '';
+        if (v(cB).toLowerCase() !== 'skinuva' || v(cS).toUpperCase() !== 'LIVE' || v(cT).toUpperCase() !== 'CATALOG') return;
+        if (cC >= 0 && v(cC) && !v(cC).toLowerCase().includes('amazon')) return;
+        const asin = v(cA).toUpperCase();
+        if (!asin || seen.has(asin)) return;
+        seen.add(asin);
+        products.push({ asin, sku: v(cK), name: v(cN) });
+      });
+    }
+    const rosterAsins = new Set(products.map(p => p.asin));
+    const valid = r => {
+      const st = (r.status || '').trim().toLowerCase();
+      if (st === 'cancelled' || st === 'pending') return false;
+      if ((r.promotion_ids || '').toLowerCase().includes('vine')) return false;
+      const b = (r.brand || '').trim().toLowerCase();
+      return !b || b === 'skinuva';
+    };
+    const prep = csv => parseCsvToRows(csv).map(r => ({ r, d: nd(r.date) })).filter(x => x.d);
+    const sync = prep(syncCsv), hist = prep(histCsv);
+    const syncStart = sync.reduce((m, x) => (!m || x.d < m ? x.d : m), '');
+    const byAsinMonth = {}, monthTotal = {}, monthUnits = {};
+    const add = (list, useMonth) => list.forEach(({ r, d }) => {
+      const ym = d.substring(0, 7);
+      if (!useMonth(ym) || !valid(r)) return;
+      const asin = (r.asin || '').trim().toUpperCase();
+      const key = rosterAsins.has(asin) ? asin : OTHER_KEY;
+      const units = parseInt(r.unit_count, 10) || 0, sales = amt(r.item_price);
+      const m = byAsinMonth[ym] = byAsinMonth[ym] || {};
+      const e = m[key] = m[key] || { units: 0, sales: 0 };
+      e.units += units; e.sales += sales;
+      monthTotal[ym] = (monthTotal[ym] || 0) + sales;
+      monthUnits[ym] = (monthUnits[ym] || 0) + units;
+    });
+    const syncCovers = ym => !!syncStart && `${ym}-01` >= syncStart;
+    add(sync, ym => syncCovers(ym));
+    add(hist, ym => !syncCovers(ym));
+    return { products, byAsinMonth, monthTotal, monthUnits, syncStart, OTHER_KEY };
+  })().catch(err => { window._amzMonthlySalesPromise = null; throw err; });
+  return window._amzMonthlySalesPromise;
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// OVERVIEW > PROJECTIONS & GOALS — ported 2026-10-05 from MiGuard.
+//  1) Ad vs. Organic share of sales, last 12 full months (2-line chart).
+//     Ad sales = Stewardship Summary ad_sales. Total sales = Amazon order
+//     item_price, same rules as Sales > Amazon. Organic = total − ad.
+//  2) Sales by Quarter table: SKU | Product | Inventory Available | per-month
+//     Units + Sales $ | quarter totals, for completed quarters only. Skinuva
+//     has bundles/retired ASINs outside the LIVE catalog roster, so those
+//     get one "Other" row — that keeps the Total row equal to the chart's
+//     total sales.
+// ═══════════════════════════════════════════════════════════════════
+window.initProjections = function () {
+  if (window._projPromise) return window._projPromise;
+  window._projPromise = (async function () {
+    const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const amt = v => parseFloat(String(v == null ? '' : v).replace(/[$,]/g, '')) || 0;
+    const cfgOf = k => window.SHEET_CFG[k] || {};
+    const csvOf = k => fetch(ovCsvUrl(cfgOf(k).fileId || '', cfgOf(k).gid || '')).then(r => r.ok ? r.text() : '').catch(() => '');
+    const tbody = document.getElementById('proj-quarter-tbody');
+    try {
+      const [sales, adCsv, invCsv] = await Promise.all([
+        window.getAmazonMonthlySales(), csvOf('SHEET_STEWARDSHIP_SUMMARY'), csvOf('SHEET_PRODUCT_INVENTORY'),
+      ]);
+      const { products, byAsinMonth, monthTotal, syncStart, OTHER_KEY } = sales;
+      const now = new Date();
+      const lastFull = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const ymOf = dt => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+
+      // ── 1) Ad vs. Organic share of sales ──
+      // A month with a blank ad_sales cell is a gap on both lines, not 0%.
+      const adByMonth = {};
+      parseCsvToRows(adCsv).forEach(r => {
+        const y = parseInt(r.year, 10), m = parseInt(r.month, 10);
+        const raw = String(r.ad_sales == null ? '' : r.ad_sales).trim();
+        if (!y || !m || raw === '') return;
+        adByMonth[`${y}-${String(m).padStart(2, '0')}`] = amt(raw);
+      });
+      const months12 = [];
+      for (let i = 11; i >= 0; i--) months12.push(new Date(lastFull.getFullYear(), lastFull.getMonth() - i, 1));
+      const pts = months12.map(dt => {
+        const ym = ymOf(dt), total = monthTotal[ym] || 0;
+        const adSales = ym in adByMonth ? adByMonth[ym] : null;
+        let pct = null, orgPct = null;
+        if (adSales != null && total > 0) {
+          pct = Math.round((adSales / total) * 1000) / 10;
+          orgPct = Math.round((Math.max(0, total - adSales) / total) * 1000) / 10;
+        }
+        return { label: `${MONTHS[dt.getMonth()]} '${String(dt.getFullYear()).slice(2)}`, ym, pct, orgPct, adSales, total };
+      });
+      const canvas = document.getElementById('proj-ads-pct-chart');
+      if (canvas && typeof Chart === 'function') {
+        if (window._projAdsPctChart) window._projAdsPctChart.destroy();
+        const fmt$ = v => '$' + Math.round(v || 0).toLocaleString();
+        window._projAdsPctChart = new Chart(canvas, {
+          type: 'line',
+          data: { labels: pts.map(p => p.label), datasets: [
+            { label: 'Ad sales %', data: pts.map(p => p.pct), borderColor: '#24e9a3', backgroundColor: 'rgba(36,233,163,0.08)', fill: true, pointRadius: 3, tension: 0.3, borderWidth: 2.5, spanGaps: false },
+            { label: 'Organic sales %', data: pts.map(p => p.orgPct), borderColor: '#001f60', backgroundColor: 'transparent', fill: false, pointRadius: 3, tension: 0.3, borderWidth: 2.5, spanGaps: false },
+          ] },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { display: false }, // external legend in #legend-proj-ads
+              tooltip: { callbacks: { label: ctx => {
+                const p = pts[ctx.dataIndex];
+                if (ctx.datasetIndex === 0) return ` Ad: ${p.pct}% (${fmt$(p.adSales)})`;
+                return ` Organic: ${p.orgPct}% (${fmt$(Math.max(0, p.total - p.adSales))} of ${fmt$(p.total)})`;
+              } } },
+            },
+            scales: {
+              x: { grid: { color: 'rgba(0,0,0,0.04)' } },
+              y: { beginAtZero: true, max: 100, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { callback: v => v + '%' } },
+            },
+          },
+        });
+        if (typeof window.renderExternalLegend === 'function') window.renderExternalLegend(window._projAdsPctChart, 'legend-proj-ads');
+      }
+      const gaps = pts.filter(p => p.pct == null).map(p => p.label);
+      const noteEl = document.getElementById('proj-ads-note');
+      if (noteEl) noteEl.textContent = 'ℹ Ad sales from the Stewardship Summary sheet (ad_sales); total sales from Amazon orders, same as the table below.' + (gaps.length ? ' No ad_sales value yet for: ' + gaps.join(', ') + ' — those months are left blank.' : '');
+
+      // ── 2) Sales by Quarter ──
+      // Inventory Available = latest Products Cache snapshot (US rows, by
+      // ASIN): FBA fulfillable + inbound receiving + seller-fulfilled − reserved.
+      const invRows = parseCsvToRows(invCsv);
+      const latestInvDate = invRows.reduce((m, r) => ((r.date || '') > m ? r.date : m), '');
+      const availByAsin = {};
+      invRows.filter(r => r.date === latestInvDate).forEach(r => {
+        const sku = (r.sku || '').trim().toUpperCase(), asin = (r.asin || '').trim().toUpperCase();
+        if (!asin || /-CA$/.test(sku) || /^C-/.test(sku)) return;
+        const a = (parseInt(r.fulfillable_quantity, 10) || 0) + (parseInt(r.inbound_receiving_quantity || r.inbound_receiving, 10) || 0)
+                + (parseInt(r.seller_fulfilled_quantity, 10) || 0) - (parseInt(r.reserved_quantity, 10) || 0);
+        availByAsin[asin] = (availByAsin[asin] || 0) + a;
+      });
+
+      // Completed quarters fully covered by order data.
+      const dataMonths = Object.keys(byAsinMonth).sort();
+      const firstDataMonth = dataMonths[0];
+      const quarters = [];
+      const lastQ = Math.floor(lastFull.getMonth() / 3);
+      let qy = lastFull.getFullYear(), qi = (lastFull.getMonth() % 3 === 2) ? lastQ : lastQ - 1;
+      if (qi < 0) { qi = 3; qy--; }
+      for (let n = 0; n < 8; n++) {
+        const ms = [0, 1, 2].map(k => `${qy}-${String(qi * 3 + k + 1).padStart(2, '0')}`);
+        if (!firstDataMonth || ms[0] < firstDataMonth) break;
+        quarters.unshift({ label: `Q${qi + 1} ${qy}`, months: ms });
+        qi--; if (qi < 0) { qi = 3; qy--; }
+      }
+      const pills = document.getElementById('proj-quarter-pills');
+      const fmtMoney = v => '$' + (v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const rowsDef = products.map(p => ({ key: p.asin, sku: p.sku, name: p.name, avail: availByAsin[p.asin] }))
+        .concat([{ key: OTHER_KEY, sku: '—', name: 'Other (bundles, retired & non-catalog ASINs)', avail: null, other: true }]);
+      function renderQuarter(idx) {
+        const q = quarters[idx];
+        if (pills) pills.innerHTML = quarters.map((qq, i) => `<button class="period-pill${i === idx ? ' active' : ''}" onclick="window._projSelectQuarter(${i})">${esc(qq.label)}</button>`).join('');
+        const mLabel = ym => MONTHS[parseInt(ym.substring(5, 7), 10) - 1];
+        document.getElementById('proj-quarter-thead').innerHTML = '<tr><th>SKU</th><th>Product</th><th>Inventory Available</th>' +
+          q.months.map(ym => `<th>${mLabel(ym)} Units</th><th>${mLabel(ym)} Sales $</th>`).join('') +
+          `<th>Q${q.label.substring(1, 2)} Units</th><th>Q${q.label.substring(1, 2)} Sales $</th></tr>`;
+        const totals = { avail: 0, months: q.months.map(() => ({ units: 0, sales: 0 })), units: 0, sales: 0 };
+        const rowsHtml = rowsDef.map(p => {
+          if (p.avail != null) totals.avail += p.avail;
+          let qu = 0, qs = 0;
+          const cells = q.months.map((ym, i) => {
+            const v = (byAsinMonth[ym] && byAsinMonth[ym][p.key]) || { units: 0, sales: 0 };
+            qu += v.units; qs += v.sales;
+            totals.months[i].units += v.units; totals.months[i].sales += v.sales;
+            return `<td>${v.units.toLocaleString()}</td><td>${fmtMoney(v.sales)}</td>`;
+          }).join('');
+          totals.units += qu; totals.sales += qs;
+          if (p.other && !qu && !qs) return '';
+          return `<tr${p.other ? ' style="color:var(--muted);"' : ''}><td style="font-family:var(--mono);">${esc(p.sku)}</td><td>${esc((p.name || '').trim())}</td><td>${p.avail == null ? '—' : p.avail.toLocaleString()}</td>${cells}<td><strong>${qu.toLocaleString()}</strong></td><td><strong>${fmtMoney(qs)}</strong></td></tr>`;
+        }).join('');
+        const totalRow = `<tr style="background:var(--bg2);font-weight:700;"><td colspan="2">Total</td><td>${totals.avail.toLocaleString()}</td>${totals.months.map(m => `<td>${m.units.toLocaleString()}</td><td>${fmtMoney(m.sales)}</td>`).join('')}<td>${totals.units.toLocaleString()}</td><td>${fmtMoney(totals.sales)}</td></tr>`;
+        tbody.innerHTML = rowsHtml ? rowsHtml + totalRow : '<tr><td style="color:var(--muted);">No products found.</td></tr>';
+      }
+      window._projSelectQuarter = renderQuarter;
+      if (!quarters.length) {
+        tbody.innerHTML = '<tr><td style="color:var(--muted);">No completed quarter with order data yet.</td></tr>';
+      } else {
+        renderQuarter(quarters.length - 1);
+      }
+      console.log('[Projections][qa] sync covers from', syncStart, '| months w/ data:', dataMonths.join(', '), '| quarters:', quarters.map(q => q.label).join(', '), '| roster:', products.length, '| ad/organic % :', pts.map(p => p.label + '=' + p.pct + '/' + p.orgPct).join(', '));
+    } catch (err) {
+      console.error('[Projections]', err);
+      window._projPromise = null; // allow retry
+      if (tbody) tbody.innerHTML = '<tr><td style="color:var(--danger);">Could not load — ' + esc(err.message || '') + '</td></tr>';
+    }
+  })();
+  return window._projPromise;
+};
+
+// ═══════════════════════════════════════════════════════════════════
 // OVERVIEW > BRAND MANAGER KPIs — ported 2026-10-05 per Jaclyn from
 // MiGuard's tab of the same name (same scoring rules, same layout).
 // Skinuva-specific sources:
-//   Sales/units ......... Amazon orders (sync sheet for months it fully
-//                         covers, historical sheet otherwise — never both),
-//                         brand = skinuva, excluding cancelled/pending/Vine
+//   Sales/units ......... window.getAmazonMonthlySales() (orders sheets,
+//                         shared with Projections & Goals)
 //   Ad sales / ad units . Stewardship Summary: ad_sales, ad_units
 //                         (ad_units = 0 while ad_sales > 0 is treated as
 //                         "not tracked yet", not as zero ad units)
@@ -25864,63 +26125,17 @@ window.initBmKpis = function () {
         Promise.all(stratKeys.map(k => csvOf(STRATEGY_SHEETS[k].fileId, STRATEGY_SHEETS[k].gid))),
         Promise.all(compTabs.map(([, gid]) => csvOf(comp.fileId, gid))),
         Promise.all([
-          csvKey('SHEET_ORDERS'), csvKey('SHEET_ORDERS_HISTORICAL'), csvKey('SHEET_MASTER_SKU_LIST'),
+          window.getAmazonMonthlySales(),
           csvKey('SHEET_STEWARDSHIP_SUMMARY'), csvOf(GOALS_FILE, GOALS_TAB), csvKey('SHEET_BUSINESS_REPORT'),
           csvKey('SHEET_KEYWORD_TRACKER'), csvKey('SHEET_PRODUCT_INVENTORY'),
         ]),
       ]);
-      const [syncCsv, histCsv, masterCsv, stewCsv, goalsCsv, bizCsv, kwCsv, pcCsv] = base;
+      const [sales, stewCsv, goalsCsv, bizCsv, kwCsv, pcCsv] = base;
+      const { products, monthTotal, monthUnits } = sales;
       const ymKey = (y, m) => `${y}-${String(m).padStart(2, '0')}`;
 
-      // ── Amazon sales by month (same rules as Sales > Amazon) ──
-      const nd = v => {
-        v = String(v || '').trim();
-        if (/^\d{4}-\d{2}/.test(v)) return v.substring(0, 10);
-        const p = v.split('/');
-        if (p.length === 3) return `${p[2].length === 2 ? '20' + p[2] : p[2]}-${p[0].padStart(2, '0')}-${p[1].padStart(2, '0')}`;
-        return '';
-      };
-      const validOrder = r => {
-        const st = (r.status || '').trim().toLowerCase();
-        if (st === 'cancelled' || st === 'pending') return false;
-        if ((r.promotion_ids || '').toLowerCase().includes('vine')) return false;
-        const b = (r.brand || '').trim().toLowerCase();
-        return !b || b === 'skinuva';
-      };
-      const prep = csv => parseCsvToRows(csv).map(r => ({ r, d: nd(r.date) })).filter(x => x.d);
-      const sync = prep(syncCsv), hist = prep(histCsv);
-      const syncStart = sync.reduce((m, x) => (!m || x.d < m ? x.d : m), '');
-      const syncCovers = ym => !!syncStart && `${ym}-01` >= syncStart;
-      const monthTotal = {}, monthUnits = {};
-      const addOrders = (list, useMonth) => list.forEach(({ r, d }) => {
-        const ym = d.substring(0, 7);
-        if (!useMonth(ym) || !validOrder(r)) return;
-        monthTotal[ym] = (monthTotal[ym] || 0) + amt(r.item_price);
-        monthUnits[ym] = (monthUnits[ym] || 0) + (parseInt(r.unit_count, 10) || 0);
-      });
-      addOrders(sync, ym => syncCovers(ym));
-      addOrders(hist, ym => !syncCovers(ym));
-
-      // ── Product roster: Skinuva · LIVE · CATALOG · Amazon, one per ASIN ──
-      const products = [];
-      (function () {
-        const g = parseCsvFull(masterCsv);
-        if (g.length < 2) return;
-        const hdr = g[0].map(h => String(h || '').trim().toLowerCase());
-        const col = (names, fb) => { for (const n of names) { const i = hdr.indexOf(n); if (i >= 0) return i; } return fb; };
-        const cB = col(['brand'], 3), cS = col(['status'], 7), cT = col(['sku type', 'sku_type'], 9);
-        const cA = col(['asin'], -1), cK = col(['sku'], -1), cN = col(['product short name', 'name'], -1), cC = col(['channel'], -1);
-        const seen = new Set();
-        g.slice(1).forEach(r => {
-          const v = i => i >= 0 ? String(r[i] || '').trim() : '';
-          if (v(cB).toLowerCase() !== 'skinuva' || v(cS).toUpperCase() !== 'LIVE' || v(cT).toUpperCase() !== 'CATALOG') return;
-          if (cC >= 0 && v(cC) && !v(cC).toLowerCase().includes('amazon')) return;
-          const asin = v(cA).toUpperCase();
-          if (!asin || seen.has(asin)) return;
-          seen.add(asin);
-          products.push({ asin, sku: v(cK), name: v(cN) });
-        });
-      })();
+      // Sales/units + LIVE catalog roster come from window.getAmazonMonthlySales()
+      // (shared with Projections & Goals, so the two tabs always agree).
 
       // ── Stewardship: ad_sales + ad_units per month. Blank = unknown. ──
       const adSales = {}, adUnits = {};
