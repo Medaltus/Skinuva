@@ -1577,7 +1577,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
             <tbody id="proj-quarter-tbody"><tr><td style="color:var(--muted);">Loading…</td></tr></tbody>
           </table>
         </div>
-        <div class="ppc-note">ℹ US Amazon orders, excluding cancelled, pending and Vine — same rules as the Sales &gt; Amazon tab. Products are the LIVE catalog SKUs on the Product Short Name sheet; bundles and retired ASINs are grouped into "Other" so the Total matches all Amazon sales. Inventory Available is today's figure (FBA + inbound receiving + seller-fulfilled − reserved). The quarter in progress appears once it ends.</div>
+        <div class="ppc-note">ℹ US Amazon orders, excluding cancelled, pending and Vine — same rules as the Sales &gt; Amazon tab. Products are the LIVE catalog SKUs on the Product Short Name sheet; bundles and retired ASINs are grouped into "Other" so the Total matches all Amazon sales. Inventory Available is today's Amazon figure (FBA + inbound receiving + seller-fulfilled − reserved); Consignment is today's available consignment units (same as the Inventory page). The quarter in progress appears once it ends.</div>
       </div>
     </div>
 
@@ -24325,12 +24325,13 @@ async function loadAuditResultsFromSheet() {
   // gauge doesn't need a charting library, and this page's init function
   // can run repeatedly (every period-toggle click); SVG just re-renders as
   // a fresh string each time with nothing to destroy/recreate first.
-  // RESTYLED 2026-10-05 per Jaclyn, ported from MiGuard's Goal Tracker:
-  // every ring is the same large size, with a white track, rounded fill, and
+  // RESTYLED 2026-10-05 per Jaclyn, ported from MiGuard's Goal Tracker —
+  // TOTAL SALES ONLY (featured=true); Organic/Ads keep the original ring.
+  // The featured ring is larger, with a white track, rounded fill, and
   // a center shaded light green (on pace / hit) or light red (projecting to
   // miss / missed). Same math as before — ring fill = actual ÷ goal; color +
   // center shade = projection (MTD) or final result (Last Full Month).
-  function buildGaugeSvg(pct, colorHex, trackColor, size, stroke, centerFill) {
+  function buildGaugeSvg(pct, colorHex, trackColor, size, stroke, centerFill, linecap) {
     size = size || 140; stroke = stroke || 14;
     const r = (size - stroke) / 2, c = size / 2;
     const circumference = 2 * Math.PI * r;
@@ -24340,7 +24341,7 @@ async function loadAuditResultsFromSheet() {
       ${centerFill ? `<circle cx="${c}" cy="${c}" r="${r - stroke / 2}" fill="${centerFill}"/>` : ''}
       <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${trackColor || 'var(--border)'}" stroke-width="${stroke}"/>
       <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${colorHex}" stroke-width="${stroke}"
-        stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}" stroke-linecap="round"/>
+        stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}" stroke-linecap="${linecap || 'round'}"/>
     </svg>`;
   }
 
@@ -24348,10 +24349,16 @@ async function loadAuditResultsFromSheet() {
   // projected); `goal` is this period's target from the Goals sheet, or null
   // if none is set. cancelRate (0-1, or null) only discounts the MTD run-rate
   // projection — never the ring fill or `actual` itself.
-  function buildGoalGaugeHtml(metricLabel, actual, goal, cfg, daysInMonth, cancelRate) {
+  function buildGoalGaugeHtml(metricLabel, actual, goal, cfg, daysInMonth, cancelRate, featured) {
     const GREEN = '#1db88a', RED = '#db372d';
     const size = 170, stroke = 16;
     const fmtD = n => '$' + Math.round(n).toLocaleString();
+    if ((goal == null || goal <= 0) && !featured) {
+      return `<div style="text-align:center;flex:1;min-width:180px;">
+        <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:10px;">${metricLabel}</div>
+        <div style="width:140px;height:140px;margin:0 auto;border-radius:50%;border:14px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;padding:20px;box-sizing:border-box;">No goal set</div>
+      </div>`;
+    }
     if (goal == null || goal <= 0 || actual == null) {
       return `<div style="text-align:center;flex:0 0 auto;min-width:220px;">
         <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:10px;">${metricLabel}</div>
@@ -24378,6 +24385,22 @@ async function loadAuditResultsFromSheet() {
       // green/red already says whether the goal was hit.
       onPace = actualPct >= 100;
       statusText = 'Revenue ' + fmtD(actual);
+    }
+    if (!featured) {
+      // Organic / Ads keep the original Skinuva ring (per Jaclyn 2026-10-05:
+      // only Total Sales gets the MiGuard restyle) — grey track, flat ends,
+      // navy % in the center, green/red ring only.
+      const ringColor = onPace ? 'var(--green)' : 'var(--danger)';
+      return `<div style="text-align:center;flex:1;min-width:180px;">
+        <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:10px;">${metricLabel}</div>
+        <div style="position:relative;width:140px;height:140px;margin:0 auto;">
+          ${buildGaugeSvg(actualPct, ringColor, 'var(--border)', 140, 14, null, 'butt')}
+          <div style="position:absolute;top:0;left:0;width:140px;height:140px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--navy);font-family:var(--font-subheader);">${actualPct}%</div>
+        </div>
+        <div style="font-size:14px;font-weight:700;color:var(--navy);margin-top:10px;">${statusText}</div>
+        ${cfg.isPartial ? `<div style="font-size:10px;color:var(--muted);margin-top:1px;">${cancelRate != null ? `adj. for ${Math.round(cancelRate * 100)}% avg. cancel rate` : 'no cancel-rate history yet'}</div>` : ''}
+        <div style="font-size:14px;font-weight:700;color:var(--navy);margin-top:${cfg.isPartial ? '4px' : '0'};">Goal ${fmtD(goal)}</div>
+      </div>`;
     }
     const color = onPace ? GREEN : RED;
     // Opaque tints so they read clearly against the sand panel.
@@ -25474,7 +25497,7 @@ async function loadAuditResultsFromSheet() {
               // fresh above for the rest of this page -- no extra fetch.
               const goalsCancelRate = cfg.isPartial ? computeAmazonCancelRate(amzRows, cfg.year, cfg.month) : null;
               goalsBody.innerHTML =
-                buildGoalGaugeHtml('Total Sales', goalsTotalActual, totalGoal, cfg, daysInMonth, goalsCancelRate) +
+                buildGoalGaugeHtml('Total Sales', goalsTotalActual, totalGoal, cfg, daysInMonth, goalsCancelRate, true) +
                 buildGoalGaugeHtml('Organic Sales', goalsOrganicActual, organicGoal, cfg, daysInMonth, goalsCancelRate) +
                 buildGoalGaugeHtml('Ads Sales', goalsAdsActual, adsGoal, cfg, daysInMonth, goalsCancelRate);
             } else {
@@ -25941,10 +25964,26 @@ window.initProjections = function () {
     const csvOf = k => fetch(ovCsvUrl(cfgOf(k).fileId || '', cfgOf(k).gid || '')).then(r => r.ok ? r.text() : '').catch(() => '');
     const tbody = document.getElementById('proj-quarter-tbody');
     try {
-      const [sales, adCsv, invCsv] = await Promise.all([
-        window.getAmazonMonthlySales(), csvOf('SHEET_STEWARDSHIP_SUMMARY'), csvOf('SHEET_PRODUCT_INVENTORY'),
+      const [sales, adCsv, invCsv, consCsv] = await Promise.all([
+        window.getAmazonMonthlySales(), csvOf('SHEET_STEWARDSHIP_SUMMARY'), csvOf('SHEET_PRODUCT_INVENTORY'), csvOf('SHEET_CONSIGNMENT_INVENTORY'),
       ]);
       const { products, byAsinMonth, monthTotal, syncStart, OTHER_KEY } = sales;
+      // Consignment — added 2026-10-05 per Jaclyn. Same sheet + rules as the
+      // Inventory page's Consignment column and the Home "Units On Hand" KPI:
+      // "available" column, consignment rows only (C- prefix stripped). A
+      // product's SKU is matched on its base SKU (e.g. SVA0001-stickerless →
+      // C-SVA0001); listings with no own consignment row (e.g. a 2-pack)
+      // show "—" so the same units are never counted twice.
+      const consBySku = {};
+      parseCsvToRows(consCsv).forEach(r => {
+        const sku = String(r.sku || '').trim().toUpperCase();
+        if (!/^C-/.test(sku)) return;
+        consBySku[sku.slice(2)] = (consBySku[sku.slice(2)] || 0) + (parseFloat(String(r.available || '').replace(/,/g, '')) || 0);
+      });
+      const consFor = sku => {
+        const base = String(sku || '').trim().toUpperCase().replace(/-(STICKERLESS|STICKER|SF)$/, '');
+        return base in consBySku ? consBySku[base] : null;
+      };
       const now = new Date();
       const lastFull = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const ymOf = dt => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
@@ -26032,18 +26071,19 @@ window.initProjections = function () {
       }
       const pills = document.getElementById('proj-quarter-pills');
       const fmtMoney = v => '$' + (v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      const rowsDef = products.map(p => ({ key: p.asin, sku: p.sku, name: p.name, avail: availByAsin[p.asin] }))
-        .concat([{ key: OTHER_KEY, sku: '—', name: 'Other (bundles, retired & non-catalog ASINs)', avail: null, other: true }]);
+      const rowsDef = products.map(p => ({ key: p.asin, sku: p.sku, name: p.name, avail: availByAsin[p.asin], cons: consFor(p.sku) }))
+        .concat([{ key: OTHER_KEY, sku: '—', name: 'Other (bundles, retired & non-catalog ASINs)', avail: null, cons: null, other: true }]);
       function renderQuarter(idx) {
         const q = quarters[idx];
         if (pills) pills.innerHTML = quarters.map((qq, i) => `<button class="period-pill${i === idx ? ' active' : ''}" onclick="window._projSelectQuarter(${i})">${esc(qq.label)}</button>`).join('');
         const mLabel = ym => MONTHS[parseInt(ym.substring(5, 7), 10) - 1];
-        document.getElementById('proj-quarter-thead').innerHTML = '<tr><th>SKU</th><th>Product</th><th>Inventory Available</th>' +
+        document.getElementById('proj-quarter-thead').innerHTML = '<tr><th>SKU</th><th>Product</th><th>Inventory Available</th><th>Consignment</th>' +
           q.months.map(ym => `<th>${mLabel(ym)} Units</th><th>${mLabel(ym)} Sales $</th>`).join('') +
           `<th>Q${q.label.substring(1, 2)} Units</th><th>Q${q.label.substring(1, 2)} Sales $</th></tr>`;
-        const totals = { avail: 0, months: q.months.map(() => ({ units: 0, sales: 0 })), units: 0, sales: 0 };
+        const totals = { avail: 0, cons: 0, months: q.months.map(() => ({ units: 0, sales: 0 })), units: 0, sales: 0 };
         const rowsHtml = rowsDef.map(p => {
           if (p.avail != null) totals.avail += p.avail;
+          if (p.cons != null) totals.cons += p.cons;
           let qu = 0, qs = 0;
           const cells = q.months.map((ym, i) => {
             const v = (byAsinMonth[ym] && byAsinMonth[ym][p.key]) || { units: 0, sales: 0 };
@@ -26053,9 +26093,9 @@ window.initProjections = function () {
           }).join('');
           totals.units += qu; totals.sales += qs;
           if (p.other && !qu && !qs) return '';
-          return `<tr${p.other ? ' style="color:var(--muted);"' : ''}><td style="font-family:var(--mono);">${esc(p.sku)}</td><td>${esc((p.name || '').trim())}</td><td>${p.avail == null ? '—' : p.avail.toLocaleString()}</td>${cells}<td><strong>${qu.toLocaleString()}</strong></td><td><strong>${fmtMoney(qs)}</strong></td></tr>`;
+          return `<tr${p.other ? ' style="color:var(--muted);"' : ''}><td style="font-family:var(--mono);">${esc(p.sku)}</td><td>${esc((p.name || '').trim())}</td><td>${p.avail == null ? '—' : p.avail.toLocaleString()}</td><td>${p.cons == null ? '—' : p.cons.toLocaleString()}</td>${cells}<td><strong>${qu.toLocaleString()}</strong></td><td><strong>${fmtMoney(qs)}</strong></td></tr>`;
         }).join('');
-        const totalRow = `<tr style="background:var(--bg2);font-weight:700;"><td colspan="2">Total</td><td>${totals.avail.toLocaleString()}</td>${totals.months.map(m => `<td>${m.units.toLocaleString()}</td><td>${fmtMoney(m.sales)}</td>`).join('')}<td>${totals.units.toLocaleString()}</td><td>${fmtMoney(totals.sales)}</td></tr>`;
+        const totalRow = `<tr style="background:var(--bg2);font-weight:700;"><td colspan="2">Total</td><td>${totals.avail.toLocaleString()}</td><td>${totals.cons.toLocaleString()}</td>${totals.months.map(m => `<td>${m.units.toLocaleString()}</td><td>${fmtMoney(m.sales)}</td>`).join('')}<td>${totals.units.toLocaleString()}</td><td>${fmtMoney(totals.sales)}</td></tr>`;
         tbody.innerHTML = rowsHtml ? rowsHtml + totalRow : '<tr><td style="color:var(--muted);">No products found.</td></tr>';
       }
       window._projSelectQuarter = renderQuarter;
