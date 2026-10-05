@@ -1453,7 +1453,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
       <div class="card-title" style="margin-bottom:10px;font-size:20px;">Goal Tracker</div>
       <div class="card" id="ov-goal-tracker-card" style="background:var(--sand);border:none;border-top:3px solid var(--navy);margin-top:0;margin-bottom:0;">
         <div class="card-title" style="font-size:17px;">Amazon</div>
-        <div id="ov-goal-tracker-body" style="display:flex;align-items:flex-start;justify-content:space-around;gap:24px;flex-wrap:wrap;">
+        <div id="ov-goal-tracker-body" style="display:grid;grid-template-columns:repeat(3,1fr);align-items:center;gap:24px;">
           <div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1;flex:1;">Loading…</div>
         </div>
       </div>
@@ -24354,13 +24354,13 @@ async function loadAuditResultsFromSheet() {
     const size = 170, stroke = 16;
     const fmtD = n => '$' + Math.round(n).toLocaleString();
     if ((goal == null || goal <= 0) && !featured) {
-      return `<div style="text-align:center;flex:1;min-width:180px;">
+      return `<div style="text-align:center;">
         <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:10px;">${metricLabel}</div>
         <div style="width:140px;height:140px;margin:0 auto;border-radius:50%;border:14px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;padding:20px;box-sizing:border-box;">No goal set</div>
       </div>`;
     }
     if (goal == null || goal <= 0 || actual == null) {
-      return `<div style="text-align:center;flex:0 0 auto;min-width:220px;">
+      return `<div style="text-align:center;">
         <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:10px;">${metricLabel}</div>
         <div style="position:relative;width:${size}px;height:${size}px;margin:0 auto;">
           ${buildGaugeSvg(0, '#ffffff', '#ffffff', size, stroke, 'rgba(255,255,255,.55)')}
@@ -24391,7 +24391,7 @@ async function loadAuditResultsFromSheet() {
       // only Total Sales gets the MiGuard restyle) — grey track, flat ends,
       // navy % in the center, green/red ring only.
       const ringColor = onPace ? 'var(--green)' : 'var(--danger)';
-      return `<div style="text-align:center;flex:1;min-width:180px;">
+      return `<div style="text-align:center;">
         <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:10px;">${metricLabel}</div>
         <div style="position:relative;width:140px;height:140px;margin:0 auto;">
           ${buildGaugeSvg(actualPct, ringColor, 'var(--border)', 140, 14, null, 'butt')}
@@ -24405,7 +24405,7 @@ async function loadAuditResultsFromSheet() {
     const color = onPace ? GREEN : RED;
     // Opaque tints so they read clearly against the sand panel.
     const fill = onPace ? '#c4f6e4' : '#f4c3c0';
-    return `<div style="text-align:center;flex:0 0 auto;min-width:220px;">
+    return `<div style="text-align:center;">
       <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:10px;">${metricLabel}</div>
       <div style="position:relative;width:${size}px;height:${size}px;margin:0 auto;">
         ${buildGaugeSvg(actualPct, color, '#ffffff', size, stroke, fill)}
@@ -25205,9 +25205,17 @@ async function loadAuditResultsFromSheet() {
         s + Math.min(adUnitsByAsin[asin] || 0, amzUnitsByAsin[asin] || 0)
           + Math.min(wmtAdUnitsByAsin[asin] || 0, wmtUnitsByAsin[asin] || 0), 0);
       const allAsinsPrev = new Set([...Object.keys(amzPrevUnitsByAsin), ...Object.keys(wmtPrevUnitsByAsin)]);
-      const totalAdUnitsPrev = Array.from(allAsinsPrev).reduce((s, asin) =>
-        s + Math.min(adUnitsByAsinPrev[asin] || 0, amzPrevUnitsByAsin[asin] || 0)
-          + Math.min(wmtAdUnitsByAsinPrev[asin] || 0, wmtPrevUnitsByAsin[asin] || 0), 0);
+      // FIXED 2026-10-05 per Jaclyn ("MTD Organic Units +1688%") -- under MTD
+      // the comparison window is last month's first N days, but the ad
+      // sheets are monthly, so adUnitsByAsinPrev held last month's FULL
+      // ad units. Capped per ASIN at only N days of units, that wiped out
+      // nearly all of last month's MTD units as "ad", leaving ~8 organic
+      // units to compare against (hence +1688%). Scale last month's ad
+      // units to the same day-fraction (estimate) before capping.
+      const prevAdFrac = cfg.isPartial ? Math.min(1, daysElapsed / new Date(lastMonthYear, lastMonthNum, 0).getDate()) : 1;
+      const totalAdUnitsPrev = Math.round(Array.from(allAsinsPrev).reduce((s, asin) =>
+        s + Math.min((adUnitsByAsinPrev[asin] || 0) * prevAdFrac, amzPrevUnitsByAsin[asin] || 0)
+          + Math.min((wmtAdUnitsByAsinPrev[asin] || 0) * prevAdFrac, wmtPrevUnitsByAsin[asin] || 0), 0));
       const organicUnits = Math.max(0, mtd.units - totalAdUnitsCurr);
       const organicUnitsPrev = Math.max(0, prev.units - totalAdUnitsPrev);
       setKpi('ov-kpi-organic-orders', organicUnits.toLocaleString(), pctChange(organicUnits, organicUnitsPrev), ovMomSuffix);
@@ -25305,31 +25313,29 @@ async function loadAuditResultsFromSheet() {
       if (adOrdersRowsMerged.length) {
         const adRows = adOrdersRowsMerged;
         if (cfg.isPartial) {
-          // MTD -- unchanged from the original (only) behavior: estimate
-          // "this month so far" by prorating the LAST FULL month's real
-          // total by the exact day-fraction elapsed, then do the same one
-          // month further back, for a fair MTD-vs-MTD comparison built
-          // from monthly-only ad data.
+          // FIXED 2026-10-05 per Jaclyn ("why would sales be down but organic
+          // units that high") -- MTD used to ESTIMATE this month's ad spend/
+          // sales as last month's total × day-fraction, while MTD Ad-Driven
+          // Units / Organic Units used this month's REAL so-far row from the
+          // same ad orders cache. Two different ad numbers on one page, so
+          // Organic Sales and Organic Units disagreed (e.g. Oct 1-5: real ad
+          // sales $3,849 vs the $6k estimate). The cache's current-month row
+          // is already "month so far" (the cron adds orders daily, same row
+          // the Goal Tracker reads), so use it directly. The comparison side
+          // has no day-level data, so it stays an estimate: last month's
+          // total × the same day-fraction (was two months ago, which only
+          // made sense while the current side was itself last month's
+          // estimate).
           let lm = refMonth, ly = refYear;
           lm -= 1; if (lm === 0) { lm = 12; ly--; }
-          let lm2 = lm - 1, ly2 = ly;
-          if (lm2 === 0) { lm2 = 12; ly2--; }
-
+          const curAdRows = adRows.filter(r => parseInt(r.year, 10) === refYear && parseInt(r.month, 10) === refMonth);
           const lastMonthAdRows = adRows.filter(r => parseInt(r.year, 10) === ly && parseInt(r.month, 10) === lm);
-          const twoMonthsAgoAdRows = adRows.filter(r => parseInt(r.year, 10) === ly2 && parseInt(r.month, 10) === lm2);
-
-          const lastMonthSpend = lastMonthAdRows.reduce((s, r) => s + parseAmt(r.spend), 0);
-          const lastMonthSales = lastMonthAdRows.reduce((s, r) => s + parseAmt(r.sales), 0);
-          const twoMonthsAgoSpend = twoMonthsAgoAdRows.reduce((s, r) => s + parseAmt(r.spend), 0);
-          const twoMonthsAgoSales = twoMonthsAgoAdRows.reduce((s, r) => s + parseAmt(r.sales), 0);
-
           const daysInLastMonth = new Date(ly, lm, 0).getDate();
-          const daysInTwoMonthsAgo = new Date(ly2, lm2, 0).getDate();
-
-          proratedSpend = lastMonthSpend * (daysElapsed / daysInLastMonth);
-          proratedSales = lastMonthSales * (daysElapsed / daysInLastMonth);
-          proratedSpendPrev = twoMonthsAgoSpend * (daysElapsed / daysInTwoMonthsAgo);
-          proratedSalesPrev = twoMonthsAgoSales * (daysElapsed / daysInTwoMonthsAgo);
+          const frac = Math.min(1, daysElapsed / daysInLastMonth);
+          proratedSpend = curAdRows.reduce((s, r) => s + parseAmt(r.spend), 0);
+          proratedSales = curAdRows.reduce((s, r) => s + parseAmt(r.sales), 0);
+          proratedSpendPrev = lastMonthAdRows.reduce((s, r) => s + parseAmt(r.spend), 0) * frac;
+          proratedSalesPrev = lastMonthAdRows.reduce((s, r) => s + parseAmt(r.sales), 0) * frac;
         } else {
           // ADDED 2026-08-28 per Jaclyn -- Last Month: both the reference
           // month and the one before it are already fully complete, so use
@@ -25369,6 +25375,14 @@ async function loadAuditResultsFromSheet() {
           const wmtLastMonth = wmtAdvRows.find(r => parseInt(r.year, 10) === lastMonthYear && parseInt(r.month, 10) === lastMonthNum);
           if (wmtThisMonth) { walmartSpendThisMonth = parseAmt(wmtThisMonth.spend); walmartSalesThisMonth = parseAmt(wmtThisMonth.sales); }
           if (wmtLastMonth) { walmartSpendLastMonth = parseAmt(wmtLastMonth.spend); walmartSalesLastMonth = parseAmt(wmtLastMonth.sales); }
+          // FIXED 2026-10-05 -- under MTD the comparison window is only the
+          // same first N days of last month, but this was last month's FULL
+          // total. Scale it to the same day-fraction (estimate), matching
+          // the Amazon side above.
+          if (cfg.isPartial && wmtLastMonth) {
+            const wFrac = Math.min(1, daysElapsed / new Date(lastMonthYear, lastMonthNum, 0).getDate());
+            walmartSpendLastMonth *= wFrac; walmartSalesLastMonth *= wFrac;
+          }
           console.log('[Skinuva][overview] Walmart ad spend added — this month:', walmartSpendThisMonth, 'last month:', walmartSpendLastMonth);
         }
       } catch (e) { console.warn('[Skinuva][overview] Walmart Advertising Cache lookup failed:', e.message); }
