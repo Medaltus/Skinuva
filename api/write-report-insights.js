@@ -39,22 +39,35 @@ const { ensureTab, readRows, replaceRows } = require('./config/_sheets_client');
 const sheets = require('./config/sheets');
 const brands = require('./config/brands');
 
+// FIXED 2026-10-07 per Jaclyn ("Insights tab key insight isn't saving") --
+// this list stopped at ad_impressions_note, but the real Skinuva sheet has
+// grown 31 more columns since (category_key_insight, accomplished1-4,
+// opp5-6, the extra accomplished images). upsertRow() silently DROPS any
+// field not in this list, so every one of those saves returned ok:true
+// while writing nothing. Now mirrors the sheet's header row exactly, in
+// the same left-to-right order (rows are written positionally, so order
+// must match the sheet), plus subscriptions_key_insight appended at the
+// END for the new Subscriptions Key Insight on Marketing > Insights --
+// add that header in column BF of the skinuva tab.
+// Rule for future columns: add them to the END of the sheet AND the END
+// of this list, never in between.
 const MONTHLY_HEADERS = [
-  'year', 'month',
-  'exec_summary_title', 'exec_summary_left', 'exec_summary_right',
-  'amazon_key_insight', 'website_key_insight', 'walmart_key_insight',
-  'opp1_title', 'opp1_subtitle', 'opp1_body',
-  'opp2_title', 'opp2_subtitle', 'opp2_body',
-  'opp3_title', 'opp3_subtitle', 'opp3_body',
-  'opp4_title', 'opp4_subtitle', 'opp4_body',
-  'status', 'approved_by', 'approved_at', 'last_updated', 'last_updated_by',
-  'ad_impressions_note', // NEW 2026-07-28 — Note box under the Ad Impressions
-  // chart on Marketing > Brand Stewardship. Added at the END of the array
-  // deliberately, not interspersed — upsertRow() writes values.map(h =>
-  // r[h]) positionally against whatever order this array lists, so a new
-  // field HAS to go at the end to match wherever the real sheet's header
-  // row physically has its own newest column, or every existing row's data
-  // silently shifts into the wrong columns on the next save.
+  'year', 'month', 'exec_summary_title', 'exec_summary_left',
+  'exec_summary_right', 'amazon_key_insight', 'website_key_insight', 'walmart_key_insight',
+  'opp1_title', 'opp1_subtitle', 'opp1_body', 'opp2_title',
+  'opp2_subtitle', 'opp2_body', 'opp3_title', 'opp3_subtitle',
+  'opp3_body', 'opp4_title', 'opp4_subtitle', 'opp4_body',
+  'status', 'approved_by', 'approved_at', 'last_updated',
+  'last_updated_by', 'ad_impressions_note', 'category_key_insight', 'accomplished1_title',
+  'accomplished1_subtitle', 'accomplished1_body', 'accomplished1_image1', 'accomplished1_image2',
+  'accomplished1_image3', 'accomplished2_title', 'accomplished2_subtitle', 'accomplished2_body',
+  'accomplished2_image1', 'accomplished2_image2', 'accomplished3_title', 'accomplished3_subtitle',
+  'accomplished3_body', 'accomplished4_title', 'accomplished4_subtitle', 'accomplished4_body',
+  'opp5_title', 'opp5_subtitle', 'opp5_body', 'opp6_title',
+  'opp6_subtitle', 'opp6_body', 'accomplished1_image4', 'accomplished1_image5',
+  'accomplished1_image6', 'accomplished2_image3', 'accomplished2_image4', 'accomplished2_image5',
+  'accomplished2_image6',
+  'subscriptions_key_insight', // NEW 2026-10-07 -- column BF
 ];
 
 const EVENT_HEADERS = [
