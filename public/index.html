@@ -1263,6 +1263,10 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     <div class="topbar-right">
       <div class="pdf-events-picker" id="pdf-events-picker" style="display:none;font-size:10.5px;color:var(--muted);align-items:center;gap:6px;flex-wrap:nowrap;white-space:nowrap;overflow-x:auto;max-width:60vw;">
         <span style="flex-shrink:0;">Include in PDF:</span>
+        <!-- Overview (cover / Executive Summary page) — added 2026-10-08 per
+             Jaclyn so an event page can be exported on its own. Default
+             CHECKED, so existing exports are unchanged. -->
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-overview" checked style="margin:0;"> Overview</label>
         <!-- Sales pages — added 2026-08-05 per Jaclyn. Default CHECKED so
              anyone who doesn't touch these gets today's existing behavior
              (all three Sales channels always included). -->
@@ -1279,11 +1283,11 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-opportunities" checked style="margin:0;"> Opportunities</label>
         <!-- Events pages — existing checkboxes, unchanged; default UNCHECKED
              as before. -->
-        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-strategy" style="margin:0;"> Strategy</label>
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-bss" style="margin:0;"> Big Spring Sale</label>
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-pd" style="margin:0;"> Prime Day</label>
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-pbdd" style="margin:0;"> PBDD</label>
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-bfcm" style="margin:0;"> BFCM</label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-strategy" style="margin:0;"> Strategy</label>
       </div>
       <button class="pdf-export-btn" id="pdf-export-btn" onclick="exportPartnerPDF()" style="display:none;">
         <svg viewBox="0 0 16 16"><path d="M8 1v9M4.5 6.5L8 10l3.5-3.5"/><path d="M2 11v2.5a1 1 0 001 1h10a1 1 0 001-1V11"/></svg>
@@ -23861,6 +23865,7 @@ async function loadAuditResultsFromSheet() {
       // doesn't touch the picker gets today's existing "always included"
       // behavior; Events keys still default unchecked, unchanged.
       const includeSections = {
+        overview:      !!document.getElementById('pdf-include-overview')      && document.getElementById('pdf-include-overview').checked,
         amazon:        !!document.getElementById('pdf-include-amazon')        && document.getElementById('pdf-include-amazon').checked,
         website:       !!document.getElementById('pdf-include-website')       && document.getElementById('pdf-include-website').checked,
         walmart:       !!document.getElementById('pdf-include-walmart')       && document.getElementById('pdf-include-walmart').checked,
@@ -24003,15 +24008,18 @@ async function loadAuditResultsFromSheet() {
         includeSections.opportunities ? buildOpportunitiesPage(monthYear) : '',
       ].join('');
 
+      // Strategy now goes AFTER the event pages (2026-10-08 per Jaclyn), so
+      // exporting one event + Strategy with Overview unchecked gives the
+      // event as page 1 and Strategy as page 2.
       const eventPages = [
-        includeSections.strategy ? buildStrategyPage(monthYear) : '',
         includeSections.bss  ? buildEventPage('bss',  'Big Spring Sale',             monthYear) : '',
         includeSections.pd   ? buildEventPage('pd',   'Prime Day',                   monthYear) : '',
         includeSections.pbdd ? buildEventPage('pbdd', 'Prime Big Deal Days',         monthYear) : '',
         includeSections.bfcm ? buildEventPage('bfcm', 'Black Friday & Cyber Monday', monthYear) : '',
+        includeSections.strategy ? buildStrategyPage(monthYear) : '',
       ].join('');
 
-      root.innerHTML = buildCoverPage(monthYear) + salesMarketingPages + eventPages;
+      root.innerHTML = (includeSections.overview ? buildCoverPage(monthYear) : '') + salesMarketingPages + eventPages;
 
       // Positioned off-screen (not display:none, so it still has real layout
       // for the render pipeline to measure/paint) rather than visible on top
@@ -24078,7 +24086,12 @@ async function loadAuditResultsFromSheet() {
       // from VBC/DD): a draft must never land in the shared archive. The
       // local download above always happens regardless of status.
       const skApproved = /approved/i.test(pdfxText('#sales-report-status'));
-      if (skApproved) {
+      // Only archive full reports (Overview checked) — a partial export, e.g.
+      // just an event page, shares the monthly filename and would otherwise
+      // overwrite the month's real report in the Drive archive.
+      if (skApproved && !includeSections.overview) {
+        console.log('[pdf-export] Overview unchecked (partial export) — skipped Drive archive (local download only)');
+      } else if (skApproved) {
         archiveReportToDrive('skinuva', filename, pdfResult.blob);
       } else {
         console.log('[pdf-export] month not Approved — skipped Drive archive (local download only)');
