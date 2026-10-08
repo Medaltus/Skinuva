@@ -23745,7 +23745,7 @@ async function loadAuditResultsFromSheet() {
     const page1 = '<div class="pdfx-page"><div class="pdfx-inner" style="padding-top:18px;padding-bottom:18px;min-height:11in;box-sizing:border-box;display:flex;flex-direction:column;">' +
       pdfxHeaderBand(monthYear, 'Events', strategyEventInfo) +
       '<div class="pdfx-chlabel" style="margin-bottom:4px;">Event Strategy</div>' +
-      leadUp + during + leadOut + outlook +
+      leadUp + during + leadOut +  // Strategic Outlook card removed 2026-10-08 per Jaclyn
       '<div style="margin-top:auto;">' + pdfxFooter(monthYear) + '</div>' +
       '</div></div>';
     return page1;
@@ -23759,7 +23759,7 @@ async function loadAuditResultsFromSheet() {
   // Mirrors the live chart: horizontal grouped bars (prior year grey,
   // current year navy), unit labels inside/next to each bar, and the YoY %
   // pill to the right of each product.
-  function pdfxTopSellersSvg(varName) {
+  function pdfxTopSellersSvg(varName, targetH) {
     const chart = window[varName];
     if (!chart || !chart.data || !chart.data.datasets || chart.data.datasets.length < 2) return '';
     const labels = chart.data.labels || [];
@@ -23769,9 +23769,16 @@ async function loadAuditResultsFromSheet() {
     const currLbl = String(chart.data.datasets[1].label || '').replace(/.*\s(\d{4})$/, '$1');
     const n = labels.length;
     if (!n) return '';
-    const W = PDFX_CARD_WIDTH_PX, labelW = 150, pillW = 58, gapR = 14;
-    const barH = 11, barGap = 3, rowH = 38, top = 6;
-    const H = top + n * rowH + 4;
+    // Label column sized to the longest product name (was a fixed 150px,
+    // which left a wide empty gutter for short names like "Brite").
+    const longest = Math.max(...labels.map(l => Math.min(20, String(l || '').length)));
+    const W = PDFX_CARD_WIDTH_PX, labelW = Math.max(70, Math.round(longest * 6.6 + 16)), pillW = 58, gapR = 14;
+    // Row height grows to fill the page when pdfxStretchTopSellers() passes
+    // a target height (2026-10-08 per Jaclyn — chart wasn't using the space).
+    const top = 6;
+    const rowH = targetH ? Math.max(38, Math.min(80, (targetH - top - 4) / n)) : 38;
+    const barH = Math.round(Math.min(20, Math.max(11, rowH * 0.28))), barGap = 3;
+    const H = Math.round(top + n * rowH + 4);
     const plotX = labelW, plotW = W - labelW - pillW - gapR;
     const max = Math.max(1, ...prev.map(Number), ...curr.map(Number));
     const esc = pdfxEscape;
@@ -23811,6 +23818,22 @@ async function loadAuditResultsFromSheet() {
     return legend + `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;font-family:var(--font),sans-serif;">${out}</svg>`;
   }
 
+  // After the PDF pages are laid out, grow each vector Top Sellers chart to
+  // fill whatever height is left on its page, so the chart uses the page
+  // instead of leaving a blank band at the bottom.
+  function pdfxStretchTopSellers(root) {
+    const PAGE_H = 1056; // 11in at 96px/in
+    Array.prototype.forEach.call(root.querySelectorAll('.pdfx-ts'), function (box) {
+      const inner = box.closest('.pdfx-inner'), svg = box.querySelector('svg');
+      if (!inner || !svg) return;
+      const extra = PAGE_H - inner.offsetHeight - 6;
+      if (extra < 12) return;
+      const curH = parseFloat(svg.getAttribute('height')) || 0;
+      const html = pdfxTopSellersSvg(box.getAttribute('data-var'), curH + extra);
+      if (html) box.innerHTML = html;
+    });
+  }
+
   // Generic across all 4 event tabs. Only Prime Day has real KPI cards +
   // chart built so far — hasKpis detects that by checking whether the KPI
   // element actually exists in the DOM, so Big Spring Sale/PBDD/BFCM pages
@@ -23848,7 +23871,7 @@ async function loadAuditResultsFromSheet() {
         '</div>'
       : '';
     const chartHtml = hasKpis
-      ? '<div class="pdfx-card" style="margin-top:14px;"><div class="pdfx-card-title">Top Sellers — Units Sold</div>' + (pdfxTopSellersSvg('_' + prefix + 'TopSellersChart') || pdfxChartBlock('_' + prefix + 'TopSellersChart')) + '</div>'
+      ? '<div class="pdfx-card" style="margin-top:14px;"><div class="pdfx-card-title">Top Sellers — Units Sold</div>' + (pdfxTopSellersSvg('_' + prefix + 'TopSellersChart') ? '<div class="pdfx-ts" data-var="_' + prefix + 'TopSellersChart">' + pdfxTopSellersSvg('_' + prefix + 'TopSellersChart') + '</div>' : pdfxChartBlock('_' + prefix + 'TopSellersChart')) + '</div>'
       : '';
 
     return '' +
@@ -24137,6 +24160,7 @@ async function loadAuditResultsFromSheet() {
         console.log('[pdf-export] fonts ready, loaded count:', document.fonts.size);
       }
 
+      pdfxStretchTopSellers(root);
       const pageEls = Array.from(root.querySelectorAll('.pdfx-page'));
       console.log('[pdf-export] .pdfx-page count:', pageEls.length);
       if (!pageEls.length) throw new Error('No .pdfx-page elements found — nothing to export.');
