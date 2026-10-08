@@ -3066,7 +3066,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
                fallback for TODAY (2026-09-14 -- Prime Big Deal Days is the
                latest row, Oct 6-7 2026) in case JS hasn't run yet or
                fails. -->
-          <div class="evs-headline" id="evs-event-headline">Amazon Prime Big Deal Days</div>
+          <div class="evs-headline" id="evs-event-headline">Prime Big Deal Days</div>
           <div class="evs-dates" id="evs-event-dates">Oct 6, 2026 &ndash; Oct 7, 2026</div>
         </div>
         <div class="evs-badge">
@@ -14768,11 +14768,10 @@ async function initSnsExternal() {
       // Most recently ADDED event = the last non-empty row in the sheet.
       const latest = rows[rows.length - 1];
       const eventName = latest['Event Name'].trim();
-      // "Amazon " prefix added automatically to match this section's
-      // existing branding convention (Amazon Prime Day, Amazon Big Spring
-      // Sale, etc.) -- skipped if Jaclyn ever types the full "Amazon ..."
-      // name into the sheet herself, so it can't double up.
-      const displayName = /^amazon\b/i.test(eventName) ? eventName : `Amazon ${eventName}`;
+      // CHANGED 2026-10-08 per Jaclyn: no "Amazon " prefix on the title —
+      // just the event name (e.g. "Prime Big Deal Days"). Also strips it if
+      // the sheet itself ever has "Amazon ..." typed in.
+      const displayName = eventName.replace(/^amazon\s+/i, '');
 
       if (headlineEl) headlineEl.textContent = displayName;
       if (contentHealthEl) {
