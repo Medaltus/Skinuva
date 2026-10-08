@@ -23741,13 +23741,75 @@ async function loadAuditResultsFromSheet() {
       label: pdfxText('#evs-event-headline'),
       date: pdfxText('#evs-event-dates')
     };
-    const page1 = '<div class="pdfx-page"><div class="pdfx-inner" style="padding-top:18px;padding-bottom:18px;">' +
+    // Footer pinned to the bottom of the page (2026-10-08 per Jaclyn — the
+    // footer now lives only on this page, not on the event pages).
+    const page1 = '<div class="pdfx-page"><div class="pdfx-inner" style="padding-top:18px;padding-bottom:18px;min-height:11in;box-sizing:border-box;display:flex;flex-direction:column;">' +
       pdfxHeaderBand(monthYear, 'Events', strategyEventInfo) +
       '<div class="pdfx-chlabel" style="margin-bottom:4px;">Event Strategy</div>' +
       leadUp + during + leadOut + outlook +
-      pdfxFooter(monthYear) +
+      '<div style="margin-top:auto;">' + pdfxFooter(monthYear) + '</div>' +
       '</div></div>';
     return page1;
+  }
+
+  // Top Sellers chart as a VECTOR (inline SVG) for the PDF — added
+  // 2026-10-08 per Jaclyn. Built from the live Chart.js instance's own data
+  // (labels + prior-year / current-year datasets), so it always matches the
+  // dashboard, but drawn as real shapes and text instead of a captured
+  // image: crisp at any zoom and the text is selectable in the PDF.
+  // Mirrors the live chart: horizontal grouped bars (prior year grey,
+  // current year navy), unit labels inside/next to each bar, and the YoY %
+  // pill to the right of each product.
+  function pdfxTopSellersSvg(varName) {
+    const chart = window[varName];
+    if (!chart || !chart.data || !chart.data.datasets || chart.data.datasets.length < 2) return '';
+    const labels = chart.data.labels || [];
+    const prev = chart.data.datasets[0].data || [], curr = chart.data.datasets[1].data || [];
+    const cPrev = chart.data.datasets[0].backgroundColor || '#8a94a6', cCurr = chart.data.datasets[1].backgroundColor || '#1b2559';
+    const prevLbl = String(chart.data.datasets[0].label || '').replace(/.*\s(\d{4})$/, '$1');
+    const currLbl = String(chart.data.datasets[1].label || '').replace(/.*\s(\d{4})$/, '$1');
+    const n = labels.length;
+    if (!n) return '';
+    const W = PDFX_CARD_WIDTH_PX, labelW = 150, pillW = 58, gapR = 14;
+    const barH = 11, barGap = 3, rowH = 38, top = 6;
+    const H = top + n * rowH + 4;
+    const plotX = labelW, plotW = W - labelW - pillW - gapR;
+    const max = Math.max(1, ...prev.map(Number), ...curr.map(Number));
+    const esc = pdfxEscape;
+    const wrap = (txt, max) => {
+      const words = String(txt || '').split(/\s+/), lines = [];
+      let line = '';
+      words.forEach(w => { if ((line + ' ' + w).trim().length > max && line) { lines.push(line); line = w; } else { line = (line + ' ' + w).trim(); } });
+      if (line) lines.push(line);
+      return lines.slice(0, 2);
+    };
+    const pctOf = (c, p) => { const d = (!p || p === 0) ? 0.01 : p; return Math.round(((c - d) / d) * 100); };
+    let out = '';
+    for (let i = 0; i < n; i++) {
+      const y0 = top + i * rowH;
+      const groupH = barH * 2 + barGap, yBars = y0 + (rowH - groupH) / 2;
+      const lines = wrap(labels[i], 20);
+      const ly = y0 + rowH / 2 - (lines.length - 1) * 6.5;
+      lines.forEach((ln, k) => {
+        out += `<text x="${labelW - 10}" y="${(ly + k * 13).toFixed(1)}" text-anchor="end" dominant-baseline="middle" font-size="10.5" font-weight="600" fill="#001F60">${esc(ln)}</text>`;
+      });
+      [[Number(prev[i]) || 0, cPrev, yBars], [Number(curr[i]) || 0, cCurr, yBars + barH + barGap]].forEach(([v, col, yb]) => {
+        const w = Math.max(v > 0 ? 2 : 0, (v / max) * plotW);
+        if (w > 0) out += `<rect x="${plotX}" y="${yb.toFixed(1)}" width="${w.toFixed(1)}" height="${barH}" rx="2.5" fill="${col}"/>`;
+        const lbl = String(v), tw = lbl.length * 6;
+        if (w > tw + 12) out += `<text x="${(plotX + w - 6).toFixed(1)}" y="${(yb + barH / 2).toFixed(1)}" text-anchor="end" dominant-baseline="middle" font-size="9" font-weight="600" fill="#ffffff">${lbl}</text>`;
+        else out += `<text x="${(plotX + w + 5).toFixed(1)}" y="${(yb + barH / 2).toFixed(1)}" dominant-baseline="middle" font-size="9" font-weight="600" fill="#8a94a6">${lbl}</text>`;
+      });
+      const p = pctOf(Number(curr[i]) || 0, Number(prev[i]) || 0);
+      const good = p >= 0, ptxt = `${p > 0 ? '+' : ''}${p}%`;
+      const pw = Math.max(34, ptxt.length * 6.2 + 12), py = yBars + groupH / 2;
+      out += `<rect x="${W - pillW}" y="${(py - 8).toFixed(1)}" width="${pw.toFixed(1)}" height="16" rx="3" fill="${good ? 'rgba(36,233,163,.15)' : 'rgba(219,55,45,.12)'}"/>` +
+             `<text x="${(W - pillW + 6).toFixed(1)}" y="${(py + 0.5).toFixed(1)}" dominant-baseline="middle" font-size="9.5" font-weight="700" fill="${good ? '#1a9b6f' : '#c0392b'}">${esc(ptxt)}</text>`;
+    }
+    const legend = `<div style="display:flex;gap:14px;justify-content:flex-end;font-size:9.5px;color:var(--muted);margin:-2px 0 4px;">` +
+      `<span style="display:inline-flex;align-items:center;gap:5px;"><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${cPrev};"></i>${esc(prevLbl)}</span>` +
+      `<span style="display:inline-flex;align-items:center;gap:5px;"><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${cCurr};"></i>${esc(currLbl)}</span></div>`;
+    return legend + `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;font-family:var(--font),sans-serif;">${out}</svg>`;
   }
 
   // Generic across all 4 event tabs. Only Prime Day has real KPI cards +
@@ -23769,6 +23831,15 @@ async function loadAuditResultsFromSheet() {
       ? '<div class="pdfx-insight" style="margin-bottom:10px;">' + dates + '</div>'
       : '';
 
+    // Header — CHANGED 2026-10-08 per Jaclyn: same header as the Strategy
+    // page (event name + dates in the top-right instead of the report
+    // month). Title is the event's own fixed name; the date is the most
+    // recent occurrence on the Events tab — the first span of the live
+    // #<prefix>-event-dates line (the second span is last year's dates).
+    const datesEl = pdfxById(prefix + '-event-dates');
+    const curSpan = datesEl ? datesEl.querySelector('span') : null;
+    const eventHeaderInfo = { label: eventLabel, date: curSpan ? curSpan.textContent.trim() : '' };
+
     const hasKpis = !!pdfxById(prefix + '-kpi-total-units');
     const kpisHtml = hasKpis
       ? '<div class="pdfx-kpis" style="margin-top:6px;">' +
@@ -23778,18 +23849,17 @@ async function loadAuditResultsFromSheet() {
         '</div>'
       : '';
     const chartHtml = hasKpis
-      ? '<div class="pdfx-card" style="margin-top:14px;"><div class="pdfx-card-title">Top Sellers — Units Sold</div>' + pdfxChartBlock('_' + prefix + 'TopSellersChart') + '</div>'
+      ? '<div class="pdfx-card" style="margin-top:14px;"><div class="pdfx-card-title">Top Sellers — Units Sold</div>' + (pdfxTopSellersSvg('_' + prefix + 'TopSellersChart') || pdfxChartBlock('_' + prefix + 'TopSellersChart')) + '</div>'
       : '';
 
     return '' +
       '<div class="pdfx-page">' +
         '<div class="pdfx-inner">' +
-          pdfxHeaderBand(monthYear, 'Events') +
+          pdfxHeaderBand(monthYear, 'Events', eventHeaderInfo) +
           '<div class="pdfx-chlabel">' + pdfxEscape(eventLabel) + '</div>' +
           datesHtml +
           '<div class="pdfx-card"><div class="pdfx-card-title">' + pdfxEscape(headline) + '</div><div style="font-size:11.5px;color:#48557a;line-height:1.6;">' + body + '</div></div>' +
           kpisHtml + chartHtml +
-          pdfxFooter(monthYear) +
         '</div>' +
       '</div>';
   }
