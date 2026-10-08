@@ -23397,9 +23397,13 @@ async function loadAuditResultsFromSheet() {
     });
     const cards = [1, 2, 3, 4].map(function (n) { return slots[n]; }).join('');
     if (!cards.replace(/\s/g, '')) return '';
-    return '<div class="pdfx-card" style="margin-top:4px;margin-bottom:10px;padding:8px 18px;">' +
+    // TIGHTENED 2026-10-08 per Jaclyn (page ran too tall): no card outline
+    // or card padding, and the row gap between the text cards and the
+    // image slots below them is 10px instead of the shared 40px grid gap
+    // (column gap unchanged).
+    return '<div class="pdfx-acc-block" style="margin-top:4px;margin-bottom:0;">' +
       '<span class="pdfx-pill pdfx-pill-sand" style="margin-bottom:6px;">What\'s Been Accomplished</span>' +
-      '<div class="pdfx-cover-cols">' + cards + '</div>' +
+      '<div class="pdfx-cover-cols" style="gap:10px 40px;">' + cards + '</div>' +
       '</div>';
   }
 
@@ -23422,9 +23426,12 @@ async function loadAuditResultsFromSheet() {
     // Margin/padding trimmed 2026-08-28 -- see the page-height comment in
     // buildOpportunitiesPage above; this is the only caller of this
     // function, so these overrides are effectively scoped to this one page.
-    return '<div class="pdfx-card" style="margin-top:4px;padding:8px 18px;">' +
+    // TIGHTENED 2026-10-08 per Jaclyn: no card outline/padding. A single
+    // horizontal line separates it from What's Been Accomplished above
+    // (the .pdfx-acc-block + .pdfx-opp-block rule in buildOpportunitiesPage).
+    return '<div class="pdfx-opp-block" style="margin-top:4px;">' +
       '<span class="pdfx-pill" style="margin-bottom:6px;">Future Opportunities</span>' +
-      '<div class="pdfx-cover-cols">' + cards + '</div>' +
+      '<div class="pdfx-cover-cols" style="gap:10px 40px;">' + cards + '</div>' +
       '</div>';
   }
 
@@ -23544,6 +23551,7 @@ async function loadAuditResultsFromSheet() {
         '<div class="pdfx-inner" style="padding-top:16px;padding-bottom:16px;">' +
           pdfxHeaderBand(monthYear, 'Opportunities') +
           pdfxAccomplishedBlock() +
+          (pdfxAccomplishedBlock() && pdfxFutureOpportunitiesBlock() ? '<div style="border-top:1px solid var(--border);margin:14px 0 12px;"></div>' : '') +
           pdfxFutureOpportunitiesBlock() +
           pdfxFooter(monthYear) +
         '</div>' +
