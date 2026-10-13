@@ -25992,8 +25992,20 @@ window.addEventListener('load', async () => {
     const user = window.Clerk.user;
     if (!user) return; // not signed in — safe default (internal hidden)
 
-    const memberships = await window.Clerk.user.getOrganizationMemberships();
-    const hasAccess = memberships.data.some(m => m.organization.id === SKINUVA_ORG_ID);
+    // FIXED 2026-10-13 per Jaclyn — getOrganizationMemberships() is
+    // PAGINATED (10 per page by default). hello@medaltus.com belongs to 11+
+    // brand orgs, listed alphabetically, so Skinuva landed on page 2 and
+    // was never seen — the internal section stayed hidden for a real
+    // member. Ask for a large page and keep paging until it's found or the
+    // list runs out.
+    let hasAccess = false;
+    for (let page = 1; page <= 20 && !hasAccess; page++) {
+      const res = await window.Clerk.user.getOrganizationMemberships({ initialPage: page, pageSize: 100 });
+      const rows = (res && res.data) || [];
+      hasAccess = rows.some(m => m.organization && m.organization.id === SKINUVA_ORG_ID);
+      const total = res && typeof res.total_count === 'number' ? res.total_count : null;
+      if (!rows.length || (total != null && page * 100 >= total) || rows.length < 100) break;
+    }
 
     if (hasAccess) {
       const internalNav = document.getElementById('nav-internal-section');
