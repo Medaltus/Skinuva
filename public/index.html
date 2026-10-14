@@ -1012,6 +1012,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 .pdfx-kpi{border:1px solid var(--border);border-radius:0;padding:20px 16px;background:#fbfbfd;margin-left:-1px;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;}
 .pdfx-kpi:first-child{margin-left:0;}
 .pdfx-kpi-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.02em;margin-bottom:9px;white-space:nowrap;}
+.pdfx-kpis-wrap .pdfx-kpi-lbl{white-space:normal;line-height:1.3;min-height:26px;}
 .pdfx-kpi-val{font-size:29px;font-weight:700;font-family:var(--font-subheader);color:var(--navy);letter-spacing:-.5px;line-height:1;}
 .pdfx-kpi-mom{font-size:13px;margin-top:6px;font-weight:400;font-family:var(--font-body-light);min-height:16px;}
 .pdfx-kpi-mom.up{color:var(--green);}
@@ -1270,16 +1271,14 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <!-- Sales pages — added 2026-08-05 per Jaclyn. Default CHECKED so
              anyone who doesn't touch these gets today's existing behavior
              (all three Sales channels always included). -->
-        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-amazon" checked style="margin:0;"> Amazon</label>
-        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-website" checked style="margin:0;"> Website (Customer)</label>
-        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-walmart" checked style="margin:0;"> Walmart</label>
-        <!-- Marketing pages — same default-checked reasoning as Sales above.
-             Order matches the Marketing tab order (reordered 2026-09-29 per Jaclyn):
-             Brand Momentum, Insights, Fulfillment & CS, Stewardship, Opportunities. -->
+        <!-- Order matches the PDF page order (2026-10-14 per Jaclyn). -->
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-website" checked style="margin:0;"> Website Sales</label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-walmart" checked style="margin:0;"> Walmart Sales</label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-amazon" checked style="margin:0;"> Amazon Sales</label>
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-momentum" checked style="margin:0;"> Brand Momentum</label>
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-insights" checked style="margin:0;"> Insights</label>
-        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-fulfillment" checked style="margin:0;"> Fulfillment &amp; CS</label>
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-stewardship" checked style="margin:0;"> Stewardship</label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-fulfillment" checked style="margin:0;"> Fulfillment &amp; CS</label>
         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;"><input type="checkbox" id="pdf-include-opportunities" checked style="margin:0;"> Opportunities</label>
         <!-- Events pages — existing checkboxes, unchanged; default UNCHECKED
              as before. -->
@@ -1396,11 +1395,11 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <a href="https://docs.google.com/spreadsheets/d/1N30haUFZkdv9rrvYuWwUhxEm0z7MGp1bz9F462aF-QI/edit?gid=158578426#gid=158578426" target="_blank" rel="noopener"><span class="sheet-link-icon">📣</span>Amazon Ad Orders</a>
         <a href="https://docs.google.com/spreadsheets/d/1equxdiqpzonA5TgsrKzbrpq92QHyJP8kQ2RoUiYmank/edit?gid=1237377804#gid=1237377804" target="_blank" rel="noopener"><span class="sheet-link-icon">💰</span>Amazon Revenue</a>
         <div style="border-top:1px solid var(--border2);margin:6px 4px;"></div>
-        <a href="https://docs.google.com/spreadsheets/d/1Wyc43am0EIk2OArL2EU8fP-EyHkhz-9-S5tcY3E60zw/edit?gid=597852778#gid=597852778" target="_blank" rel="noopener"><span class="sheet-link-icon">🌐</span>Website Orders</a>
-        <a href="https://docs.google.com/spreadsheets/d/1Wyc43am0EIk2OArL2EU8fP-EyHkhz-9-S5tcY3E60zw/edit?gid=1033366681#gid=1033366681" target="_blank" rel="noopener"><span class="sheet-link-icon">↩️</span>Website Returns</a>
-        <a href="https://docs.google.com/spreadsheets/d/1Wyc43am0EIk2OArL2EU8fP-EyHkhz-9-S5tcY3E60zw/edit?gid=7000599#gid=7000599" target="_blank" rel="noopener"><span class="sheet-link-icon">💰</span>Website Revenue</a>
-        <a href="https://docs.google.com/spreadsheets/d/1Wyc43am0EIk2OArL2EU8fP-EyHkhz-9-S5tcY3E60zw/edit?gid=219707263#gid=219707263" target="_blank" rel="noopener"><span class="sheet-link-icon">📣</span>Website Google Ads</a>
-        <a href="https://docs.google.com/spreadsheets/d/1Wyc43am0EIk2OArL2EU8fP-EyHkhz-9-S5tcY3E60zw/edit?gid=1841786277#gid=1841786277" target="_blank" rel="noopener"><span class="sheet-link-icon">🛒</span>Website Shopping/PMAX</a>
+        <a href="https://docs.google.com/spreadsheets/d/1mjMQXycVu87z8K7chHiTILQTn_EAd29fEhWXcjOxKzk/edit?gid=597852778#gid=597852778" target="_blank" rel="noopener"><span class="sheet-link-icon">🌐</span>Website Orders</a>
+        <a href="https://docs.google.com/spreadsheets/d/1mjMQXycVu87z8K7chHiTILQTn_EAd29fEhWXcjOxKzk/edit?gid=1341096453#gid=1341096453" target="_blank" rel="noopener"><span class="sheet-link-icon">↩️</span>Website Returns</a>
+        <a href="https://docs.google.com/spreadsheets/d/1mjMQXycVu87z8K7chHiTILQTn_EAd29fEhWXcjOxKzk/edit?gid=7000599#gid=7000599" target="_blank" rel="noopener"><span class="sheet-link-icon">💰</span>Website Revenue</a>
+        <a href="https://docs.google.com/spreadsheets/d/1mjMQXycVu87z8K7chHiTILQTn_EAd29fEhWXcjOxKzk/edit?gid=219707263#gid=219707263" target="_blank" rel="noopener"><span class="sheet-link-icon">📣</span>Website Google Ads</a>
+        <a href="https://docs.google.com/spreadsheets/d/1mjMQXycVu87z8K7chHiTILQTn_EAd29fEhWXcjOxKzk/edit?gid=923252595#gid=923252595" target="_blank" rel="noopener"><span class="sheet-link-icon">🛒</span>Website Shopping/PMAX</a>
         <div style="border-top:1px solid var(--border2);margin:6px 4px;"></div>
         <a href="https://docs.google.com/spreadsheets/d/1oIZDxN0vSf4nRvE_K95lsNyBWQd4Ef2aARm0RUtvE0Y/edit?gid=1844526926#gid=1844526926" target="_blank" rel="noopener"><span class="sheet-link-icon">📦</span>Walmart Orders</a>
         <a href="https://docs.google.com/spreadsheets/d/1XxYmX0NT-4bqKh4N96zNAPIAzctXDQaK6Yzp6hVWjJc/edit?gid=344983459#gid=344983459" target="_blank" rel="noopener"><span class="sheet-link-icon">↩️</span>Walmart Returns</a>
@@ -1770,10 +1769,10 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <a href="https://docs.google.com/spreadsheets/d/16mnFaFkTfXS4FzZ2mI5aoDKNrw8FWe8R8IUDnv3FHVs/edit?gid=267551179#gid=267551179" target="_blank" rel="noopener"><span class="sheet-link-icon">↩️</span>Amazon Returns</a>
         <a href="https://docs.google.com/spreadsheets/d/1equxdiqpzonA5TgsrKzbrpq92QHyJP8kQ2RoUiYmank/edit?gid=1237377804#gid=1237377804" target="_blank" rel="noopener"><span class="sheet-link-icon">💰</span>Amazon Revenue</a>
         <div style="border-top:1px solid var(--border2);margin:6px 4px;"></div>
-        <a href="https://docs.google.com/spreadsheets/d/1Wyc43am0EIk2OArL2EU8fP-EyHkhz-9-S5tcY3E60zw/edit?gid=597852778#gid=597852778" target="_blank" rel="noopener"><span class="sheet-link-icon">🌐</span>Website Orders</a>
-        <a href="https://docs.google.com/spreadsheets/d/1Wyc43am0EIk2OArL2EU8fP-EyHkhz-9-S5tcY3E60zw/edit?gid=219707263#gid=219707263" target="_blank" rel="noopener"><span class="sheet-link-icon">📣</span>Website Google Ads</a>
-        <a href="https://docs.google.com/spreadsheets/d/1Wyc43am0EIk2OArL2EU8fP-EyHkhz-9-S5tcY3E60zw/edit?gid=1841786277#gid=1841786277" target="_blank" rel="noopener"><span class="sheet-link-icon">🛒</span>Website Shopping/PMAX</a>
-        <a href="https://docs.google.com/spreadsheets/d/1Wyc43am0EIk2OArL2EU8fP-EyHkhz-9-S5tcY3E60zw/edit?gid=7000599#gid=7000599" target="_blank" rel="noopener"><span class="sheet-link-icon">💰</span>Website Revenue</a>
+        <a href="https://docs.google.com/spreadsheets/d/1mjMQXycVu87z8K7chHiTILQTn_EAd29fEhWXcjOxKzk/edit?gid=597852778#gid=597852778" target="_blank" rel="noopener"><span class="sheet-link-icon">🌐</span>Website Orders</a>
+        <a href="https://docs.google.com/spreadsheets/d/1mjMQXycVu87z8K7chHiTILQTn_EAd29fEhWXcjOxKzk/edit?gid=219707263#gid=219707263" target="_blank" rel="noopener"><span class="sheet-link-icon">📣</span>Website Google Ads</a>
+        <a href="https://docs.google.com/spreadsheets/d/1mjMQXycVu87z8K7chHiTILQTn_EAd29fEhWXcjOxKzk/edit?gid=923252595#gid=923252595" target="_blank" rel="noopener"><span class="sheet-link-icon">🛒</span>Website Shopping/PMAX</a>
+        <a href="https://docs.google.com/spreadsheets/d/1mjMQXycVu87z8K7chHiTILQTn_EAd29fEhWXcjOxKzk/edit?gid=7000599#gid=7000599" target="_blank" rel="noopener"><span class="sheet-link-icon">💰</span>Website Revenue</a>
         <div style="border-top:1px solid var(--border2);margin:6px 4px;"></div>
         <a href="https://docs.google.com/spreadsheets/d/1oIZDxN0vSf4nRvE_K95lsNyBWQd4Ef2aARm0RUtvE0Y/edit?gid=1844526926#gid=1844526926" target="_blank" rel="noopener"><span class="sheet-link-icon">📦</span>Walmart Orders</a>
         <a href="https://docs.google.com/spreadsheets/d/1QhKeOxKR0mEfSiM2pdYxrEBWsQdRSxbL8Q86MP6lpFE/edit?gid=812984298#gid=812984298" target="_blank" rel="noopener"><span class="sheet-link-icon">💰</span>Walmart Revenue</a>
@@ -2299,13 +2298,13 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <a href="https://docs.google.com/spreadsheets/d/1gb5uf0MQ5qGp1DSdiD4oZO84t4a28n_aRm0-qZag1l4/edit?gid=1803244874#gid=1803244874" target="_blank" rel="noopener"><span class="sheet-link-icon">📥</span>ASN Master Tracker (Inbound_Shipments tab)</a>
         <a href="https://docs.google.com/spreadsheets/d/16mnFaFkTfXS4FzZ2mI5aoDKNrw8FWe8R8IUDnv3FHVs/edit?gid=267551179#gid=267551179" target="_blank" rel="noopener"><span class="sheet-link-icon">↩️</span>Amazon Returns</a>
         <a href="https://docs.google.com/spreadsheets/d/1XxYmX0NT-4bqKh4N96zNAPIAzctXDQaK6Yzp6hVWjJc/edit?gid=344983459#gid=344983459" target="_blank" rel="noopener"><span class="sheet-link-icon">↩️</span>Walmart Returns</a>
-        <a href="https://docs.google.com/spreadsheets/d/1Wyc43am0EIk2OArL2EU8fP-EyHkhz-9-S5tcY3E60zw/edit?gid=1033366681#gid=1033366681" target="_blank" rel="noopener"><span class="sheet-link-icon">↩️</span>Website Returns</a>
+        <a href="https://docs.google.com/spreadsheets/d/1mjMQXycVu87z8K7chHiTILQTn_EAd29fEhWXcjOxKzk/edit?gid=1341096453#gid=1341096453" target="_blank" rel="noopener"><span class="sheet-link-icon">↩️</span>Website Returns</a>
         <a href="https://docs.google.com/spreadsheets/d/1SiYu8e2-Pfi14Aiuf6SAFytWVXb4_dtdNFT6wvLFPok/edit?gid=1163928587#gid=1163928587" target="_blank" rel="noopener"><span class="sheet-link-icon">📦</span>Amazon Orders</a>
-        <a href="https://docs.google.com/spreadsheets/d/1Wyc43am0EIk2OArL2EU8fP-EyHkhz-9-S5tcY3E60zw/edit?gid=597852778#gid=597852778" target="_blank" rel="noopener"><span class="sheet-link-icon">🌐</span>Website Orders</a>
+        <a href="https://docs.google.com/spreadsheets/d/1mjMQXycVu87z8K7chHiTILQTn_EAd29fEhWXcjOxKzk/edit?gid=597852778#gid=597852778" target="_blank" rel="noopener"><span class="sheet-link-icon">🌐</span>Website Orders</a>
         <a href="https://docs.google.com/spreadsheets/d/1oIZDxN0vSf4nRvE_K95lsNyBWQd4Ef2aARm0RUtvE0Y/edit?gid=1844526926#gid=1844526926" target="_blank" rel="noopener"><span class="sheet-link-icon">📦</span>Walmart Orders</a>
         <div style="border-top:1px solid var(--border2);margin:6px 4px;"></div>
         <a href="https://docs.google.com/spreadsheets/d/16QNnDh7-dTDzI-O7UI-WlzMtOmovssV23nd-quiYPR0/edit?gid=1762221100#gid=1762221100" target="_blank" rel="noopener"><span class="sheet-link-icon">🤝</span>Brand Stewardship Summary</a>
-        <a href="https://docs.google.com/spreadsheets/d/1Wyc43am0EIk2OArL2EU8fP-EyHkhz-9-S5tcY3E60zw/edit?gid=7000599#gid=7000599" target="_blank" rel="noopener"><span class="sheet-link-icon">💰</span>Website Revenue</a>
+        <a href="https://docs.google.com/spreadsheets/d/1mjMQXycVu87z8K7chHiTILQTn_EAd29fEhWXcjOxKzk/edit?gid=7000599#gid=7000599" target="_blank" rel="noopener"><span class="sheet-link-icon">💰</span>Website Revenue</a>
         <a href="https://docs.google.com/spreadsheets/d/1QhKeOxKR0mEfSiM2pdYxrEBWsQdRSxbL8Q86MP6lpFE/edit?gid=812984298#gid=812984298" target="_blank" rel="noopener"><span class="sheet-link-icon">💰</span>Walmart Revenue</a>
         <div style="border-top:1px solid var(--border2);margin:6px 4px;"></div>
         <a href="https://docs.google.com/spreadsheets/d/1i94keQYY21aSh8KP-ZpvqO1MF2g0nX5ThMD93y3wU48/edit?gid=1364801955#gid=1364801955" target="_blank" rel="noopener"><span class="sheet-link-icon">🔁</span>Subscribe &amp; Save Retention</a>
@@ -2373,25 +2372,6 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <div class="ppc-note" id="mfc-chart-footer">Loading…</div>
       </div>
 
-      <div class="section-label" style="margin-top:4px;">Customer Service</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;margin-top:4px;">
-        <div class="kpi-card">
-          <div class="kpi-label">Reviews Requested</div>
-          <div class="kpi-value" id="mfc-kpi-reviews">—</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="mfc-kpi-reviews-sub">Helium 10 Follow Up</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Compliance Cases Resolved</div>
-          <div class="kpi-value" id="mfc-kpi-compliance">—</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="mfc-kpi-compliance-sub">Open Cases: —</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label" id="mfc-lbl-returns">Returns Processed</div>
-          <div class="kpi-value" id="mfc-kpi-returns">—</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="mfc-kpi-returns-sub">Return rate: —</div>
-        </div>
-      </div>
-
       <div class="ppc-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
           <div class="ppc-card-title" style="margin-bottom:0;">Website Orders by State · Last 30 Days</div>
@@ -2422,14 +2402,34 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         </div>
       </div>
 
+      <div class="section-label" style="margin-top:4px;">Customer Service</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;margin-top:4px;">
+        <div class="kpi-card">
+          <div class="kpi-label">Reviews Requested</div>
+          <div class="kpi-value" id="mfc-kpi-reviews">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="mfc-kpi-reviews-sub">Helium 10 Follow Up</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Compliance Cases Resolved</div>
+          <div class="kpi-value" id="mfc-kpi-compliance">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="mfc-kpi-compliance-sub">Open Cases: —</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label" id="mfc-lbl-returns">Returns Processed</div>
+          <div class="kpi-value" id="mfc-kpi-returns">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="mfc-kpi-returns-sub">Return rate: —</div>
+        </div>
+      </div>
+
     </div><!-- /m-fulfillment-cs -->
 
     <div class="channel-page" id="m-stewardship">
 
-      <div class="section-label">Key Performance Metrics</div>
+      <div class="page-sub" style="margin-bottom:14px;"><strong style="color:var(--navy);">Amazon data</strong> · Amazon ad spend, Vine, promos, impressions and revenue only</div>
+      <div class="section-label">Amazon Key Performance Metrics</div>
       <div class="kpi-row">
         <div class="kpi-card" id="kpi-pct-revenue-invested"><div class="kpi-label">% Revenue Invested</div><div class="kpi-value">5%</div><div class="kpi-mom flat"></div></div>
-        <div class="kpi-card" id="kpi-amazon-fees"><div class="kpi-label">Amazon Fees</div><div class="kpi-value sm">$613.86</div><div class="kpi-mom flat"></div></div>
+        <div class="kpi-card" id="kpi-amazon-fees"><div class="kpi-label">Amazon Fees</div><div class="kpi-value sm">—</div><div class="kpi-mom flat"></div></div>
         <div class="kpi-card" id="kpi-pct-units-ads"><div class="kpi-label">% Units from Ads</div><div class="kpi-value">26%</div><div class="kpi-mom flat"></div></div>
         <div class="kpi-card" id="kpi-ad-clicks"><div class="kpi-label">Ad Clicks</div><div class="kpi-value">272</div><div class="kpi-mom flat">0% MOM</div></div>
         <div class="kpi-card" id="kpi-ad-impressions"><div class="kpi-label">Ad Impressions</div><div class="kpi-value">85K</div><div class="kpi-mom dn">▼ 38% MOM</div></div>
@@ -2624,8 +2624,9 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
          Bundle/kit SKUs excluded, same convention as everywhere else this
          sheet is read. -->
     <div class="channel-page" id="m-insights">
+      <div class="page-sub" style="margin-bottom:14px;"><strong style="color:var(--navy);">Amazon data</strong> · Amazon orders and Amazon Subscribe &amp; Save only</div>
       <div class="card" style="margin-bottom:20px;">
-        <div class="card-title">Unit Sales by Product Category</div>
+        <div class="card-title">Amazon Unit Sales by Product Category</div>
         <div style="position:relative;height:340px;"><canvas id="chart-category"></canvas></div>
       </div>
       <div class="insight-bar" style="margin-top:0;margin-bottom:6px;">
@@ -2650,7 +2651,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
            (kpi-active-subs, kpi-retention, chart-sns) so initSns() and
            the PDF export keep working as-is. -->
       <div class="card" style="margin-top:20px;margin-bottom:6px;">
-        <div class="card-title">Subscriptions</div>
+        <div class="card-title">Amazon Subscribe &amp; Save</div>
         <div class="kpi-row" style="grid-template-columns:repeat(2,1fr);margin-bottom:18px;">
           <div class="kpi-card" id="kpi-active-subs"><div class="kpi-label">Total Active Subscriptions</div><div class="kpi-value" style="font-size:36px;">—</div><div class="kpi-mom flat">Loading…</div></div>
           <div class="kpi-card" id="kpi-retention"><div class="kpi-label">Subscribe &amp; Save Retention 90 Days</div><div class="kpi-value" style="font-size:36px;">—</div><div class="kpi-mom flat">Loading…</div></div>
@@ -2698,16 +2699,50 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
       <div><div class="page-title">Marketing</div><div class="page-sub">Brand stewardship · Growth opportunities</div></div>
     </div>
     <div class="channel-tabs">
-      <button class="ch-tab active" onclick="showChannel('marketing-external','mx-fulfillment-cs',this)">Fulfillment &amp; Customer Service</button>
+      <!-- Tabs + content matched to the internal Marketing page 2026-10-14
+           per Jaclyn. Key Insights / notes / Opportunities / Accomplished
+           only ever come from the most recently APPROVED report month. -->
+      <button class="ch-tab active" onclick="showChannel('marketing-external','mx-momentum',this)">Brand Momentum</button>
+      <button class="ch-tab" onclick="showChannel('marketing-external','mx-insights',this)">Insights</button>
+      <button class="ch-tab" onclick="showChannel('marketing-external','mx-fulfillment-cs',this)">Fulfillment &amp; Customer Service</button>
       <button class="ch-tab" onclick="showChannel('marketing-external','mx-stewardship',this)">Brand Stewardship</button>
       <button class="ch-tab" onclick="showChannel('marketing-external','mx-opportunities',this)">Opportunities</button>
     </div>
 
-    <div class="channel-page active" id="mx-fulfillment-cs">
+    <div class="channel-page active" id="mx-momentum">
+      <div id="mx-momentum-container"><div class="evo-pending">Loading momentum data…</div></div>
+    </div>
+
+    <div class="channel-page" id="mx-insights">
+      <div class="page-sub" style="margin-bottom:14px;"><strong style="color:var(--navy);">Amazon data</strong> · Amazon orders and Amazon Subscribe &amp; Save only</div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-title">Amazon Unit Sales by Product Category</div>
+        <div style="position:relative;height:340px;"><canvas id="mx-chart-category"></canvas></div>
+      </div>
+      <div class="insight-bar" id="mx-cat-insight-bar" style="margin-top:0;margin-bottom:6px;display:none;">
+        <strong>Key Insight:</strong>
+        <span class="insight-text" id="mx-cat-insight-text"></span>
+      </div>
+      <div class="card" style="margin-top:20px;margin-bottom:6px;">
+        <div class="card-title">Amazon Subscribe &amp; Save</div>
+        <div class="kpi-row" style="grid-template-columns:repeat(2,1fr);margin-bottom:18px;">
+          <div class="kpi-card" id="mx-kpi-active-subs"><div class="kpi-label">Total Active Subscriptions</div><div class="kpi-value" style="font-size:36px;">—</div><div class="kpi-mom flat">Loading…</div></div>
+          <div class="kpi-card" id="mx-kpi-retention"><div class="kpi-label">Subscribe &amp; Save Retention 90 Days</div><div class="kpi-value" style="font-size:36px;">—</div><div class="kpi-mom flat">Loading…</div></div>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:var(--slate);margin-bottom:4px;">Active Subscriptions by Month <span style="font-weight:400;">(Year over Year)</span></div>
+        <div style="position:relative;height:300px;"><canvas id="mx-chart-sns"></canvas></div>
+      </div>
+      <div class="insight-bar" id="mx-sns-insight-bar" style="margin-top:14px;display:none;">
+        <strong>Key Insight:</strong>
+        <span class="insight-text" id="mx-sns-insight-text"></span>
+      </div>
+    </div>
+
+    <div class="channel-page" id="mx-fulfillment-cs">
 
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px;">
         <div class="kpi-card">
-          <div class="kpi-label">Shipped Orders · Last 30 Days</div>
+          <div class="kpi-label">Shipped Website Orders · Last 30 Days</div>
           <div class="kpi-value" id="mx-mfc-kpi-shipped30">—</div>
         </div>
         <div class="kpi-card">
@@ -2724,41 +2759,22 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
           <div class="kpi-label">Avg Shipping Cost · Last 7 Days</div>
           <div class="kpi-value" id="mx-mfc-kpi-shipcost">—</div>
         </div>
-        <div class="kpi-card" style="opacity:.6;">
+        <div class="kpi-card">
           <div class="kpi-label">Inventory Prepped</div>
-          <div class="kpi-value" style="color:var(--muted);">—</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Coming soon</div>
+          <div class="kpi-value" id="mx-mfc-kpi-invprepped">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="mx-mfc-lbl-invprepped">Units received</div>
         </div>
       </div>
 
       <div class="ppc-card">
-        <div class="ppc-card-title">Orders Shipped by Date · Last 30 Days</div>
+        <div class="ppc-card-title">Website Orders Shipped by Date · Last 30 Days</div>
         <div style="position:relative;height:170px;"><canvas id="mx-mfc-shipped-chart"></canvas></div>
         <div class="ppc-note" id="mx-mfc-chart-footer">Loading…</div>
       </div>
 
-      <div class="section-label" style="margin-top:4px;">Customer Service</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;margin-top:4px;">
-        <div class="kpi-card">
-          <div class="kpi-label">Reviews Requested</div>
-          <div class="kpi-value" id="mx-mfc-kpi-reviews">—</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Helium 10 Follow Up</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Compliance Cases Resolved</div>
-          <div class="kpi-value" id="mx-mfc-kpi-compliance">—</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="mx-mfc-kpi-compliance-sub">Open Cases: —</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Returns Processed</div>
-          <div class="kpi-value" id="mx-mfc-kpi-returns">—</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="mx-mfc-kpi-returns-sub">Return rate: —</div>
-        </div>
-      </div>
-
       <div class="ppc-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <div class="ppc-card-title" style="margin-bottom:0;">Orders by State · Last 30 Days</div>
+          <div class="ppc-card-title" style="margin-bottom:0;">Website Orders by State · Last 30 Days</div>
           <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);">
             <span>Fewer</span>
             <div style="width:80px;height:7px;border-radius:4px;background:linear-gradient(to right,#dce6f5,#001F60);"></div>
@@ -2786,16 +2802,36 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         </div>
       </div>
 
+      <div class="section-label" style="margin-top:4px;">Customer Service</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;margin-top:4px;">
+        <div class="kpi-card">
+          <div class="kpi-label">Reviews Requested</div>
+          <div class="kpi-value" id="mx-mfc-kpi-reviews">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Helium 10 Follow Up</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Compliance Cases Resolved</div>
+          <div class="kpi-value" id="mx-mfc-kpi-compliance">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="mx-mfc-kpi-compliance-sub">Open Cases: —</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Returns Processed</div>
+          <div class="kpi-value" id="mx-mfc-kpi-returns">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="mx-mfc-kpi-returns-sub">Return rate: —</div>
+        </div>
+      </div>
+
     </div><!-- /mx-fulfillment-cs -->
 
     <div class="channel-page" id="mx-stewardship">
 
+      <div class="page-sub" style="margin-bottom:14px;"><strong style="color:var(--navy);">Amazon data</strong> · Amazon ad spend, Vine, promos, impressions and revenue only</div>
       <div style="font-size:11.5px;color:var(--muted);margin-bottom:14px;" id="mx-stewardship-date-note">Loading…</div>
 
-      <div class="section-label">Key Performance Metrics</div>
+      <div class="section-label">Amazon Key Performance Metrics</div>
       <div class="kpi-row">
         <div class="kpi-card" id="mx-kpi-pct-revenue-invested"><div class="kpi-label">% Revenue Invested</div><div class="kpi-value">—</div><div class="kpi-mom flat"></div></div>
-        <div class="kpi-card" id="mx-kpi-amazon-fees"><div class="kpi-label">Amazon Fees</div><div class="kpi-value sm">$613.86</div><div class="kpi-mom flat"></div></div>
+        <div class="kpi-card" id="mx-kpi-amazon-fees"><div class="kpi-label">Amazon Fees</div><div class="kpi-value sm">—</div><div class="kpi-mom flat"></div></div>
         <div class="kpi-card" id="mx-kpi-pct-units-ads"><div class="kpi-label">% Units from Ads</div><div class="kpi-value">—</div><div class="kpi-mom flat"></div></div>
         <div class="kpi-card" id="mx-kpi-ad-clicks"><div class="kpi-label">Ad Clicks</div><div class="kpi-value">—</div><div class="kpi-mom flat"></div></div>
         <div class="kpi-card" id="mx-kpi-ad-impressions"><div class="kpi-label">Ad Impressions</div><div class="kpi-value">—</div><div class="kpi-mom flat"></div></div>
@@ -2842,18 +2878,35 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 
     </div>
     <div class="channel-page" id="mx-opportunities">
-
-      <div class="section-label">Subscribe &amp; Save</div>
-      <div class="kpi-row" style="margin-bottom:20px;">
-        <div class="kpi-card" id="mx-kpi-active-subs"><div class="kpi-label">Active Subscriptions</div><div class="kpi-value" style="font-size:36px;">—</div><div class="kpi-mom flat">Loading…</div></div>
-        <div class="kpi-card" id="mx-kpi-retention"><div class="kpi-label">Subscribe &amp; Save Retention (90 Days)</div><div class="kpi-value" style="font-size:36px;">—</div><div class="kpi-mom flat">Loading…</div></div>
-      </div>
-      <div class="card" style="margin-bottom:20px;">
+      <!-- Subscribe & Save moved to the Insights tab (same as internal). -->
+      <div class="card" style="margin-bottom:16px;display:none;" id="mx-acc-section">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <div class="card-title" style="margin-bottom:0;">Active Subscriptions by Month</div>
-          <div id="legend-mx-sns" style="display:flex;align-items:center;"></div>
+          <div style="display:inline-block;background:#f4dfd0;border:1px solid rgba(138,96,16,.35);border-radius:4px;padding:3px 10px;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--warn);">What's Been Accomplished</div>
         </div>
-        <div style="position:relative;height:320px;"><canvas id="mx-chart-sns"></canvas></div>
+        <div class="opp-grid" id="mx-acc-grid">
+          <div class="opp-card" id="mx-acc-card-1" style="display:none;">
+            <div class="opp-title" id="mx-acc-title-1"></div>
+            <div class="opp-subtitle" id="mx-acc-subtitle-1"></div>
+            <div class="opp-body" id="mx-acc-body-1"></div>
+            <div class="opp-card-images" id="mx-acc-images-1"></div>
+          </div>
+          <div class="opp-card" id="mx-acc-card-2" style="display:none;">
+            <div class="opp-title" id="mx-acc-title-2"></div>
+            <div class="opp-subtitle" id="mx-acc-subtitle-2"></div>
+            <div class="opp-body" id="mx-acc-body-2"></div>
+            <div class="opp-card-images" id="mx-acc-images-2"></div>
+          </div>
+          <div class="opp-card" id="mx-acc-card-3" style="display:none;">
+            <div class="opp-title" id="mx-acc-title-3"></div>
+            <div class="opp-subtitle" id="mx-acc-subtitle-3"></div>
+            <div class="opp-body" id="mx-acc-body-3"></div>
+          </div>
+          <div class="opp-card" id="mx-acc-card-4" style="display:none;">
+            <div class="opp-title" id="mx-acc-title-4"></div>
+            <div class="opp-subtitle" id="mx-acc-subtitle-4"></div>
+            <div class="opp-body" id="mx-acc-body-4"></div>
+          </div>
+        </div>
       </div>
 
       <div class="card" style="margin-bottom:16px;">
@@ -9098,26 +9151,12 @@ async function initSns() {
         return rows;
       }
 
-      let allChannelRevenue = amzRevenueThisMonth;
-      try {
-        const WEB_SHEET_ID_LOCAL = '1Wyc43am0EIk2OArL2EU8fP-EyHkhz-9-S5tcY3E60zw';
-        const WEB_REVENUE_GID_LOCAL = '7000599';
-        const WMT_REVENUE_SHEET_ID_LOCAL = '1QhKeOxKR0mEfSiM2pdYxrEBWsQdRSxbL8Q86MP6lpFE';
-        const WMT_REVENUE_GID_LOCAL = '812984298';
-        const [webRevCsv, wmtRevCsv] = await Promise.all([
-          fetch(sheetCsvUrl(WEB_SHEET_ID_LOCAL, WEB_REVENUE_GID_LOCAL) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
-          fetch(sheetCsvUrl(WMT_REVENUE_SHEET_ID_LOCAL, WMT_REVENUE_GID_LOCAL) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
-        ]);
-        const webRevRows = parseRevenueHistoryLocal(webRevCsv);
-        const wmtRevRows = parseRevenueHistoryLocal(wmtRevCsv);
-        console.log('[Skinuva][qa] % Revenue Invested — target year/month:', year, '/', month, '— webRevRows count:', webRevRows.length, '— last 4:', JSON.stringify(webRevRows.slice(-4)), '— first 4:', JSON.stringify(webRevRows.slice(0, 4)));
-        const webRevThisMonth = (webRevRows.find(r => r.year === year && r.month === month) || {}).revenue || 0;
-        const wmtRevThisMonth = (wmtRevRows.find(r => r.year === year && r.month === month) || {}).revenue || 0;
-        allChannelRevenue = amzRevenueThisMonth + webRevThisMonth + wmtRevThisMonth;
-        console.log('[Skinuva] % Revenue Invested — revenue by channel:', 'amazon=', amzRevenueThisMonth, 'website=', webRevThisMonth, 'walmart=', wmtRevThisMonth, 'total=', allChannelRevenue);
-      } catch (e) {
-        console.warn('[Skinuva] could not fetch Website/Walmart revenue for % Revenue Invested — falling back to Amazon-only revenue:', e.message);
-      }
+      // CHANGED 2026-10-14 per Jaclyn: Brand Stewardship is Amazon-only, so
+      // % Revenue Invested = Amazon ads + Vine + promos ÷ Amazon revenue
+      // (Stewardship Summary). It used to add Website + Walmart revenue to
+      // the denominator — and the Website revenue was being read from
+      // évolis's sheet (hardcoded 1Wyc… id), not Skinuva's.
+      const allChannelRevenue = amzRevenueThisMonth;
 
       if (allChannelRevenue) {
         const pctRevenueInvested = Math.round((currInvestTotal / allChannelRevenue) * 100);
@@ -9137,7 +9176,16 @@ async function initSns() {
         ltdEl.textContent = '$' + Math.round(ltdTotal).toLocaleString();
       }
 
-      // Amazon Fees KPI intentionally left as-is — pending a Finances/Product Fees
+      // Amazon Fees — wired 2026-10-14 per Jaclyn: sum of column P
+      // ("Amazon Estimated fees") on the Amazon orders sync sheet for the
+      // month, cancelled orders excluded (see window.skLoadAmazonFees).
+      try {
+        const fees = await window.skLoadAmazonFees(year, month, prevYear, prevMonth);
+        if (fees.curr != null) setKpiVal('kpi-amazon-fees', '$' + fees.curr.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        setKpiMom('kpi-amazon-fees', fees.curr != null && fees.prev ? Math.round(((fees.curr - fees.prev) / fees.prev) * 100) : null);
+      } catch (e) { console.warn('[Skinuva] Amazon Fees KPI failed:', e.message); }
+
+      // (old note, superseded:) Amazon Fees KPI intentionally left as-is — pending a Finances/Product Fees
       // API sync (net-new backend job), same shape as AD_SUMMARY. Do not overwrite
       // with a guess in the meantime.
 
@@ -11653,7 +11701,7 @@ async function initSns() {
   // {year, month} whose status is exactly "Approved".
   async function getLatestApprovedMonth() {
     try {
-      const res = await fetch(gvizCsvUrl('evolis'));
+      const res = await fetch(gvizCsvUrl((window.SHEET_CFG.BRAND_SLUG || 'skinuva'))); // FIXED 2026-10-14: was hardcoded 'evolis' — the client pages were reading évolis's approval tab
       if (!res.ok) return null;
       const csv = await res.text();
       if (!isCsv(csv)) return null;
@@ -11739,7 +11787,7 @@ async function initSns() {
       // (rather than showing a placeholder) wherever the cell is blank.
       if (typeof window.reportInsightsFetchRow === 'function') {
         try {
-          const row = await window.reportInsightsFetchRow('evolis', { year: String(key.year), month: String(key.month) });
+          const row = await window.reportInsightsFetchRow((window.SHEET_CFG.BRAND_SLUG || 'skinuva'), { year: String(key.year), month: String(key.month) });
           setDisplay('x-exec-summary-headline', row && row.exec_summary_title);
           setDisplay('x-exec-summary-left',     row && row.exec_summary_left);
           setDisplay('x-exec-summary-right',    row && row.exec_summary_right);
@@ -12101,7 +12149,7 @@ async function initSns() {
       // elsewhere on this external dashboard).
       if (typeof window.reportInsightsFetchRow === 'function') {
         try {
-          const insightRow = await window.reportInsightsFetchRow('evolis', { year: String(year), month: String(month) });
+          const insightRow = await window.reportInsightsFetchRow((window.SHEET_CFG.BRAND_SLUG || 'skinuva'), { year: String(year), month: String(month) });
           const noteBar  = document.getElementById('mx-adimp-insight-bar');
           const noteText = document.getElementById('mx-adimp-insight-text');
           const noteVal = insightRow && insightRow.ad_impressions_note;
@@ -12207,35 +12255,12 @@ async function initSns() {
         return rows;
       }
 
-      let allChannelRevenue = amzRevenueThisMonth;
-      try {
-        const WEB_SHEET_ID_LOCAL = '1Wyc43am0EIk2OArL2EU8fP-EyHkhz-9-S5tcY3E60zw';
-        const WEB_REVENUE_GID_LOCAL = '7000599';
-        const WEB_ADS_GID_LOCAL = '219707263';
-        const WMT_REVENUE_SHEET_ID_LOCAL = '1QhKeOxKR0mEfSiM2pdYxrEBWsQdRSxbL8Q86MP6lpFE';
-        const WMT_REVENUE_GID_LOCAL = '812984298';
-        const [webRevCsv, wmtRevCsv, webAdsCsv] = await Promise.all([
-          fetch(sheetCsvUrl(WEB_SHEET_ID_LOCAL, WEB_REVENUE_GID_LOCAL) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
-          fetch(sheetCsvUrl(WMT_REVENUE_SHEET_ID_LOCAL, WMT_REVENUE_GID_LOCAL) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
-          fetch(sheetCsvUrl(WEB_SHEET_ID_LOCAL, WEB_ADS_GID_LOCAL) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
-        ]);
-        const webRevRows = parseRevenueHistoryLocal(webRevCsv);
-        const wmtRevRows = parseRevenueHistoryLocal(wmtRevCsv);
-        console.log('[Skinuva][qa] % Revenue Invested — target year/month:', year, '/', month, '— webRevRows count:', webRevRows.length, '— last 4:', JSON.stringify(webRevRows.slice(-4)), '— first 4:', JSON.stringify(webRevRows.slice(0, 4)));
-        const webRevThisMonth = (webRevRows.find(r => r.year === year && r.month === month) || {}).revenue || 0;
-        const wmtRevThisMonth = (wmtRevRows.find(r => r.year === year && r.month === month) || {}).revenue || 0;
-        allChannelRevenue = amzRevenueThisMonth + webRevThisMonth + wmtRevThisMonth;
-
-        const targetPrefix = `${year}-${String(month).padStart(2, '0')}`;
-        const webAdsRows = parseGenericCsvLocal(webAdsCsv);
-        const webAdsSpendThisMonth = webAdsRows
-          .filter(r => (r.date || '').substring(0, 7) === targetPrefix)
-          .reduce((s, r) => s + parseAmt(r.spend), 0);
-        currInvestTotal += webAdsSpendThisMonth;
-        console.log('[Skinuva] % Revenue Invested — revenue by channel:', 'amazon=', amzRevenueThisMonth, 'website=', webRevThisMonth, 'walmart=', wmtRevThisMonth, 'total=', allChannelRevenue, '— website Google Ads spend added to numerator:', webAdsSpendThisMonth);
-      } catch (e) {
-        console.warn('[Skinuva] could not fetch Website/Walmart revenue or Website Google Ads spend for % Revenue Invested — falling back to Amazon-only numerator/revenue:', e.message);
-      }
+      // CHANGED 2026-10-14 per Jaclyn: Brand Stewardship is Amazon-only, so
+      // % Revenue Invested = Amazon ads + Vine + promos ÷ Amazon revenue
+      // (Stewardship Summary). It used to add Website + Walmart revenue to
+      // the denominator — and the Website revenue was being read from
+      // évolis's sheet (hardcoded 1Wyc… id), not Skinuva's.
+      const allChannelRevenue = amzRevenueThisMonth;
 
       if (allChannelRevenue) {
         const pctRevenueInvested = Math.round((currInvestTotal / allChannelRevenue) * 100);
@@ -12255,7 +12280,14 @@ async function initSns() {
         ltdEl.textContent = '$' + Math.round(ltdTotal).toLocaleString();
       }
 
-      // Amazon Fees KPI intentionally left as-is — pending a Finances/Product Fees
+      // Amazon Fees — wired 2026-10-14 (same as the internal page).
+      try {
+        const fees = await window.skLoadAmazonFees(year, month, prevYear, prevMonth);
+        if (fees.curr != null) setKpiVal('mx-kpi-amazon-fees', '$' + fees.curr.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        setKpiMom('mx-kpi-amazon-fees', fees.curr != null && fees.prev ? Math.round(((fees.curr - fees.prev) / fees.prev) * 100) : null);
+      } catch (e) { console.warn('[Skinuva] Amazon Fees KPI (external) failed:', e.message); }
+
+      // (old note, superseded:) Amazon Fees KPI intentionally left as-is — pending a Finances/Product Fees
       // API sync (net-new backend job), same shape as AD_SUMMARY. Do not overwrite
       // with a guess in the meantime.
 
@@ -12397,7 +12429,7 @@ async function mxMfcLoadReturns() {
       fetch(ovCsvUrl(OV_RETURNS_SHEET_ID, OV_RETURNS_EVOLIS_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
       fetch(ovCsvUrl(OV_WMT_RETURNS_SHEET_ID, OV_WMT_RETURNS_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
       fetch(ovCsvUrl(OV_WEB_ORDERS_SHEET_ID, OV_WEB_RETURNS_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
-      getBlendedOrdersForMonth(year, month),
+      getOrdersByChannelForMonth(year, month),
     ]);
 
     const stripAccents = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -12413,7 +12445,7 @@ async function mxMfcLoadReturns() {
     const returnsThisMonth = amzReturnsThisMonth + wmtReturnsThisMonth + webReturnsThisMonth;
 
     if (valEl) valEl.textContent = returnsThisMonth.toLocaleString();
-    if (subEl) subEl.textContent = totalOrdersThisMonth > 0 ? `Return rate: ${((returnsThisMonth / totalOrdersThisMonth) * 100).toFixed(1)}%` : 'Return rate: —';
+    if (subEl) subEl.textContent = mfcReturnRatesHtml({ amazon: amzReturnsThisMonth, website: webReturnsThisMonth, walmart: wmtReturnsThisMonth }, totalOrdersThisMonth);
   } catch (err) {
     console.warn('[MarketingExternal/FulfillmentCS] returns load failed:', err.message);
   }
@@ -12428,6 +12460,9 @@ window.initMarketingFulfillmentCSExternal = async function() {
 };
 
 async function initSnsExternal() {
+  // Cloned 2026-10-14 from initSns() (internal) so the client-facing
+  // Insights tab shows the same YoY line chart + KPIs; only the element ids
+  // and chart variable differ. Live data (not approval-locked), same as before.
   const canvas = document.getElementById('mx-chart-sns');
   if (!canvas) return;
 
@@ -12485,8 +12520,7 @@ async function initSnsExternal() {
   const RETENTION_SHEET_ID = window.SHEET_CFG.SHEET_SUBSCRIPTIONS.fileId;  // Subscriptions cache — confirmed correct directly from Jaclyn's own URL text 2026-07-28 (my prior 'KR' correction was wrong — misread a screenshot; P and R look nearly identical in that font). The real bug was ONLY the gid below, which pointed at a tab with pbj's data instead of évolis's.
   const RETENTION_GID      = window.SHEET_CFG.SHEET_SUBSCRIPTIONS.gid;                                   // 'evolis' tab, confirmed directly from Jaclyn's screenshot 2026-07-28 (previous gid 1742224413 was also wrong — different tab in the wrong file entirely)
 
-  const kpiValues = document.querySelectorAll('#mx-opportunities .kpi-value');
-  const subsKpiEl = kpiValues[0] || null;
+  const subsKpiEl = document.querySelector('#mx-kpi-active-subs .kpi-value') || null;
   const retentionKpiEl = document.querySelector('#mx-kpi-retention .kpi-value') || null;
 
   try {
@@ -12546,24 +12580,40 @@ async function initSnsExternal() {
       console.log('[Skinuva][subscriptions] months actually plotted on the chart (trailing', TRAILING_MONTHS, 'of', labels.length, 'available):', trimmedLabels.join(', '));
 
       if (values.length) {
-        // Color by calendar year: 2024 sand, 2025 slate, 2026 navy. Falls
-        // back gracefully for any other year (older -> sand-ish, newer ->
-        // navy) so this doesn't quietly break once 2027 data shows up.
-        const YEAR_COLORS = { 2024: '#f4dfd0', 2025: '#6b7ba2', 2026: '#001f60' };
-        const distinctYears = [...new Set(trimmedYears)].sort((a, b) => a - b);
-        const bg = trimmedYears.map(y => {
-          if (YEAR_COLORS[y]) return YEAR_COLORS[y];
-          const idx = distinctYears.indexOf(y);
-          return idx <= 0 ? '#f4dfd0' : (idx === distinctYears.length - 1 ? '#001f60' : '#6b7ba2');
+        // Year-over-year line chart, restyled 2026-09-29 per Jaclyn (moved
+        // to the Insights tab): current year in brand green with a soft
+        // area fill, prior year in navy, Jan-Dec on the x axis. Months with
+        // no usable value are left as gaps (null), not plotted as zero.
+        const byYearMonth = {};
+        withDate.forEach(x => {
+          const t = num(x.row.active_subscriptions ?? x.row.total_subscriptions ?? x.row.total_subs ?? x.row.subscriptions);
+          if (t === null || t === 0 || isNaN(x.y) || isNaN(x.m)) return;
+          (byYearMonth[x.y] = byYearMonth[x.y] || {})[x.m] = t;
         });
+        const yrNow = Math.max.apply(null, Object.keys(byYearMonth).map(Number));
+        const yrPrev = yrNow - 1;
+        const seriesFor = y => monthAbbr.map((_, i) => (byYearMonth[y] && byYearMonth[y][i + 1] !== undefined) ? byYearMonth[y][i + 1] : null);
+        const snsTick = { font: { family: 'DM Sans, sans-serif', size: 10 }, color: '#6B7BA2' };
         window._snsChartExternal = new Chart(canvas, {
-          type: 'bar',
-          data: { labels: trimmedLabels, datasets: [{ label: 'Active Subscriptions', data: trimmedValues, backgroundColor: bg }] },
+          type: 'line',
+          data: {
+            labels: monthAbbr,
+            datasets: [
+              { label: String(yrNow), data: seriesFor(yrNow), borderColor: '#24E9A3', backgroundColor: 'rgba(36,233,163,0.08)', fill: true, tension: 0.35, borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#24E9A3', pointBorderColor: '#24E9A3', spanGaps: false, order: 1 },
+              { label: String(yrPrev), data: seriesFor(yrPrev), borderColor: '#001F60', backgroundColor: 'transparent', fill: false, tension: 0.35, borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#001F60', pointBorderColor: '#001F60', spanGaps: false, order: 2 },
+            ],
+          },
           options: {
             responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { x: { grid: { display: false } }, y: { grid: { color: 'rgba(0,0,0,0.04)' }, beginAtZero: true } }
-          }
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { position: 'top', align: 'end', labels: { usePointStyle: true, pointStyle: 'line', boxWidth: 16, font: { family: 'DM Sans, sans-serif', size: 11, weight: '600' }, color: '#001F60' } },
+            },
+            scales: {
+              x: { grid: { display: false }, border: { display: false }, ticks: snsTick },
+              y: { beginAtZero: true, grid: { color: 'rgba(0,31,96,0.05)' }, border: { display: false }, ticks: Object.assign({}, snsTick, { callback: v => Number(v).toLocaleString() }) },
+            },
+          },
         });
         if (subsKpiEl) subsKpiEl.textContent = Math.round(values[values.length - 1]).toLocaleString();
         const subsMomEl = subsKpiEl ? subsKpiEl.nextElementSibling : null;
@@ -12583,7 +12633,7 @@ async function initSnsExternal() {
         console.warn('[Skinuva][subscriptions] no active_subscriptions values matched in Subscriptions cache sheet -- check RETENTION_GID/column name. Available columns:', rows.length ? Object.keys(rows[0]) : '(none)');
       }
     } else {
-      console.warn('[Skinuva][subscriptions] totals sheet did not return CSV (check it is published/shared, and TOTALS_GID is correct).');
+      console.warn('[Skinuva][subscriptions] Subscriptions cache sheet did not return CSV (check it is published/shared, and RETENTION_GID is correct).');
     }
 
     // ── Subscribe & Save Retention KPI ───────────────────────────────────
@@ -12714,7 +12764,7 @@ async function initSnsExternal() {
       return;
     }
     try {
-      const row = await window.reportInsightsFetchRow('evolis', { year: String(key.year), month: String(key.month) });
+      const row = await window.reportInsightsFetchRow((window.SHEET_CFG.BRAND_SLUG || 'skinuva'), { year: String(key.year), month: String(key.month) });
       let anyVisible = false;
       [1,2,3,4].forEach(n => {
         const title    = row ? (row[`opp${n}_title`]    || '') : '';
@@ -12740,6 +12790,61 @@ async function initSnsExternal() {
     }
   }
 
+  // Approved-only content for the client-facing Insights + Opportunities
+  // tabs (2026-10-14 per Jaclyn): Key Insights and What's Been Accomplished
+  // are read ONLY from the most recently Approved report month — a draft
+  // never shows here. Blank fields stay hidden (no placeholders).
+  async function renderApprovedInsightsExternal(key) {
+    let row = null;
+    if (key && typeof window.reportInsightsFetchRow === 'function') {
+      try { row = await window.reportInsightsFetchRow((window.SHEET_CFG.BRAND_SLUG || 'skinuva'), { year: String(key.year), month: String(key.month) }); }
+      catch (e) { console.warn('[MarketingExternal] approved insights fetch failed:', e.message); }
+    }
+    if (row && String(row.status || '').trim() !== 'Approved') row = null;
+    const showBar = (barId, textId, val) => {
+      const bar = document.getElementById(barId), t = document.getElementById(textId);
+      if (val) { if (t) t.innerHTML = String(val).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g, '<br>'); if (bar) bar.style.display = ''; }
+      else if (bar) bar.style.display = 'none';
+    };
+    showBar('mx-cat-insight-bar', 'mx-cat-insight-text', row && row.category_key_insight);
+    showBar('mx-sns-insight-bar', 'mx-sns-insight-text', row && row.subscriptions_key_insight);
+    let anyAcc = false;
+    [1, 2, 3, 4].forEach(n => {
+      const card = document.getElementById(`mx-acc-card-${n}`);
+      if (!card) return;
+      const title = row ? (row[`accomplished${n}_title`] || '') : '';
+      if (!title) { card.style.display = 'none'; return; }
+      anyAcc = true;
+      card.style.display = '';
+      document.getElementById(`mx-acc-title-${n}`).textContent = title;
+      const sub = row[`accomplished${n}_subtitle`] || '';
+      const subEl = document.getElementById(`mx-acc-subtitle-${n}`);
+      subEl.textContent = sub; subEl.style.display = sub ? '' : 'none';
+      document.getElementById(`mx-acc-body-${n}`).textContent = row[`accomplished${n}_body`] || '';
+      const imgBox = document.getElementById(`mx-acc-images-${n}`);
+      if (imgBox) {
+        const urls = [1, 2, 3, 4, 5, 6].map(m => (row[`accomplished${n}_image${m}`] || '').trim()).filter(u => /^https?:\/\//i.test(u));
+        imgBox.innerHTML = urls.map(u => `<img class="opp-card-img" src="${u.replace(/"/g, '&quot;')}" alt="">`).join('');
+      }
+    });
+    const sec = document.getElementById('mx-acc-section');
+    if (sec) sec.style.display = anyAcc ? '' : 'none';
+  }
+
+  // Inventory Prepped mirrors the internal tab's live value (same source).
+  async function mirrorInventoryPreppedExternal() {
+    if (typeof window.initMarketingFulfillmentCS === 'function') { try { await window.initMarketingFulfillmentCS(); } catch (e) {} }
+    for (let i = 0; i < 50; i++) {
+      const v = document.getElementById('mfc-kpi-invprepped');
+      if (v && v.textContent.trim() && v.textContent.trim() !== '—') break;
+      await new Promise(r => setTimeout(r, 200));
+    }
+    [['mfc-kpi-invprepped', 'mx-mfc-kpi-invprepped'], ['mfc-lbl-invprepped', 'mx-mfc-lbl-invprepped']].forEach(([from, to]) => {
+      const f = document.getElementById(from), t = document.getElementById(to);
+      if (f && t && f.textContent.trim()) t.textContent = f.textContent;
+    });
+  }
+
   window.initMarketingExternalPage = function () {
     if (window.__marketingExternalPromise) return window.__marketingExternalPromise;
     window.__marketingExternalPromise = (async function () {
@@ -12759,12 +12864,16 @@ async function initSnsExternal() {
         await window.initStewardshipExternal();
       }
       await renderFutureOpportunitiesExternal(key);
+      await renderApprovedInsightsExternal(key);
 
       // Fulfillment & CS + Subscribe & Save — always live/current, regardless
       // of whether anything has ever been approved.
       await Promise.all([
         typeof window.initMarketingFulfillmentCSExternal === 'function' ? window.initMarketingFulfillmentCSExternal() : null,
         typeof initSnsExternal === 'function' ? initSnsExternal() : null,
+        typeof window.loadSkinuvaCategoryChart === 'function' ? window.loadSkinuvaCategoryChart('mx-chart-category', '_catChartExternal') : null,
+        typeof window.renderSkinuvaMomentumExternal === 'function' ? window.renderSkinuvaMomentumExternal() : null,
+        mirrorInventoryPreppedExternal(),
       ]);
     })();
     return window.__marketingExternalPromise;
@@ -15558,9 +15667,12 @@ document.addEventListener('DOMContentLoaded', function() {
   // Stacked (not grouped, unlike the DD reference) — Skinuva's catalog spans
   // more distinct categories than DD's 6, and a grouped chart with that many
   // series per month reads as clutter rather than a trend line.
-  window.loadSkinuvaCategoryChart = async function () {
-    if (window._catChart) return;
-    const canvas = document.getElementById('chart-category');
+  window.loadSkinuvaCategoryChart = async function (canvasId, chartVar) {
+    // canvasId/chartVar default to the internal Insights tab; the
+    // client-facing Insights tab passes its own (2026-10-14).
+    canvasId = canvasId || 'chart-category'; chartVar = chartVar || '_catChart';
+    if (window[chartVar]) return;
+    const canvas = document.getElementById(canvasId);
     if (!canvas) return;
     try {
       const HIST_SHEET_ID = window.SHEET_CFG.SHEET_ORDERS_HISTORICAL.fileId;
@@ -15623,7 +15735,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }));
       const catTick = { font: { family: 'DM Sans, sans-serif', size: 10 }, color: '#6B7BA2' };
 
-      window._catChart = new Chart(canvas, {
+      window[chartVar] = new Chart(canvas, {
         type: 'bar',
         data: { labels, datasets },
         options: {
@@ -15818,7 +15930,8 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>`;
 
-    return checkboxRow + top3 + productCardsSection + kwSection + nextSection;
+    const sourceLine = '<div class="page-sub" style="margin-bottom:14px;"><strong style="color:var(--navy);">Amazon data</strong> · Amazon sessions, keyword ranks, BSR and reviews only</div>';
+    return sourceLine + checkboxRow + top3 + productCardsSection + kwSection + nextSection;
   }
 
   // Momentum roster — built straight from the Product Short Name sheet with
@@ -15857,6 +15970,23 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('[Momentum][roster]', Object.keys(out).length, 'Skinuva LIVE CATALOG SKUs:', Object.values(out).join(' | '));
     return out;
   }
+
+
+  // ── Client-facing Brand Momentum (2026-10-14) — same cards/tables as the
+  // internal tab, built from the same loaded data; element ids are
+  // prefixed "mx-" so the two copies on the page never collide.
+  window.renderSkinuvaMomentumExternal = async function () {
+    const box = document.getElementById('mx-momentum-container');
+    if (!box) return;
+    if (typeof window.loadSkinuvaMomentum === 'function') window.loadSkinuvaMomentum();
+    for (let i = 0; i < 150 && !window._skinuvaMomentumData; i++) await new Promise(r => setTimeout(r, 200));
+    if (!window._skinuvaMomentumData) { box.innerHTML = '<div class="evo-pending">Momentum data unavailable right now.</div>'; return; }
+    box.innerHTML = buildSkinuvaMomentumHTML(window._skinuvaMomentumData)
+      .replace(/id="mo-/g, 'id="mx-mo-')
+      .replace(/getElementById\('mo-/g, "getElementById('mx-mo-")
+      .replace(/id="skinuva-momentum-cards-grid"/g, 'id="mx-skinuva-momentum-cards-grid"')
+      .replace(/document\.querySelectorAll\('\[data-bsr-neg\] \[data-bsr-chng\]'\)/g, "this.closest('.card').querySelectorAll('[data-bsr-neg] [data-bsr-chng]')");
+  };
 
   window.loadSkinuvaMomentum = async function () {
     if (window._skinuvaMomentumLoaded) return;
@@ -20657,6 +20787,12 @@ function mfcNormalizeDate(val) {
 // (year, 1-indexed month) — dedup by order_id, same convention used
 // everywhere else on this dashboard.
 async function getBlendedOrdersForMonth(year, month) {
+  const c = await getOrdersByChannelForMonth(year, month);
+  return c.amazon + c.website + c.walmart;
+}
+// Same counts, split by channel — added 2026-10-14 per Jaclyn so the Returns
+// Processed card can show a return rate per channel.
+async function getOrdersByChannelForMonth(year, month) {
   const prefix = `${year}-${String(month).padStart(2, '0')}`;
   const [amzCsv, webCsv, wmtCsv] = await Promise.all([
     fetch(ovCsvUrl(OV_ORDER_SYNC_SHEET_ID, OV_ORDER_SYNC_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
@@ -20685,7 +20821,16 @@ async function getBlendedOrdersForMonth(year, month) {
     const status = (r.status || '').toLowerCase().trim();
     return status !== 'cancelled' && status !== 'canceled';
   });
-  return amzOrders + webOrders + wmtOrders;
+  return { amazon: amzOrders, website: webOrders, walmart: wmtOrders };
+}
+
+// Return-rate line for the Returns Processed card — one rate per channel
+// (returns ÷ that channel's orders for the month), per Jaclyn 2026-10-14.
+function mfcReturnRatesHtml(returns, orders) {
+  const rate = (r, o) => o > 0 ? ((r / o) * 100).toFixed(1) + '%' : '—';
+  return 'Return rate: Amazon ' + rate(returns.amazon, orders.amazon) +
+    ' · Website ' + rate(returns.website, orders.website) +
+    ' · Walmart ' + rate(returns.walmart, orders.walmart);
 }
 // (mfcLastFullMonthRange, which built a start/end Date range, was removed
 // 2026-07-28 — mfcLoadReturns now works directly off mfcGetLastFullMonth()'s
@@ -20702,7 +20847,7 @@ async function mfcLoadReturns() {
       fetch(ovCsvUrl(OV_RETURNS_SHEET_ID, OV_RETURNS_EVOLIS_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
       fetch(ovCsvUrl(OV_WMT_RETURNS_SHEET_ID, OV_WMT_RETURNS_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
       fetch(ovCsvUrl(OV_WEB_ORDERS_SHEET_ID, OV_WEB_RETURNS_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
-      getBlendedOrdersForMonth(year, month),
+      getOrdersByChannelForMonth(year, month),
     ]);
 
     // Each of these is a shared, multi-brand sheet with its own brand
@@ -20732,7 +20877,7 @@ async function mfcLoadReturns() {
     const returnsThisMonth = amzReturnsThisMonth + wmtReturnsThisMonth + webReturnsThisMonth;
 
     if (valEl) valEl.textContent = returnsThisMonth.toLocaleString();
-    if (subEl) subEl.textContent = totalOrdersThisMonth > 0 ? `Return rate: ${((returnsThisMonth / totalOrdersThisMonth) * 100).toFixed(1)}%` : 'Return rate: —';
+    if (subEl) subEl.textContent = mfcReturnRatesHtml({ amazon: amzReturnsThisMonth, website: webReturnsThisMonth, walmart: wmtReturnsThisMonth }, totalOrdersThisMonth);
   } catch (err) {
     console.warn('[Marketing/FulfillmentCS] returns load failed:', err.message);
   }
@@ -23153,7 +23298,7 @@ async function loadAuditResultsFromSheet() {
   // so this surfaces them in the header instead (Strategy page only --
   // every other page still just passes monthYear through as before).
   function pdfxHeaderBand(monthYear, activeTab, eventInfo) {
-    const tabs = ['Sales', 'Momentum', 'Insights', 'Fulfillment & Customer Service', 'Brand Stewardship', 'Opportunities', 'Events'];
+    const tabs = ['Sales', 'Momentum', 'Insights', 'Brand Stewardship', 'Fulfillment & Customer Service', 'Opportunities', 'Events'];
     const tabsHtml = tabs.map(function (t) {
       return '<span class="pdfx-tab' + (t === activeTab ? ' on' : '') + '">' + t + '</span>';
     }).join('');
@@ -23318,7 +23463,7 @@ async function loadAuditResultsFromSheet() {
       '<div class="pdfx-page">' +
         '<div class="pdfx-inner" style="padding-top:18px;padding-bottom:20px;">' +
           pdfxHeaderBand(monthYear, 'Brand Stewardship') +
-          '<div class="pdfx-chlabel">Key Performance Metrics</div>' +
+          '<div class="pdfx-chlabel">Amazon Key Performance Metrics</div>' +
           '<div class="pdfx-kpis" style="margin-top:6px;margin-bottom:8px;">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
           '<div class="pdfx-two-col">' +
             '<div class="pdfx-card" style="margin-bottom:0;padding:10px 18px;">' +
@@ -23447,7 +23592,7 @@ async function loadAuditResultsFromSheet() {
     // reason. Confirmed 2026-07-21 as the actual cause of KPI text getting
     // cut off at the page's right edge.
     const topKpis = [
-      { label: 'Shipped Orders (30d)', value: pdfxText('#mfc-kpi-shipped30') },
+      { label: 'Shipped Orders', value: pdfxText('#mfc-kpi-shipped30') },
       { label: 'Fulfillment Promise (7d)', value: '100%' },
       { label: 'Avg Processing Time (7d)', value: pdfxText('#mfc-kpi-proctime') },
       { label: 'Avg Shipping Cost (7d)', value: pdfxText('#mfc-kpi-shipcost') },
@@ -23462,7 +23607,7 @@ async function loadAuditResultsFromSheet() {
     const csKpis = [
       { label: 'Reviews Requested', value: pdfxText('#mfc-kpi-reviews'), sub: pdfxText('#mfc-kpi-reviews-sub') },
       { label: 'Compliance Cases Resolved', value: pdfxText('#mfc-kpi-compliance'), sub: pdfxText('#mfc-kpi-compliance-sub') },
-      { label: 'Returns Processed (30d)', value: pdfxText('#mfc-kpi-returns'), sub: pdfxText('#mfc-kpi-returns-sub') },
+      { label: 'Returns Processed', value: pdfxText('#mfc-kpi-returns'), sub: pdfxText('#mfc-kpi-returns-sub'), small: true },
     ];
 
     // KPI cards with a sub-line (where MoM normally sits) need their own
@@ -23472,7 +23617,7 @@ async function loadAuditResultsFromSheet() {
       return '<div class="pdfx-kpi">' +
         '<div class="pdfx-kpi-lbl">' + pdfxEscape(k.label) + '</div>' +
         '<div class="pdfx-kpi-val">' + pdfxEscape(k.value || '—') + '</div>' +
-        '<div class="pdfx-kpi-mom flat">' + pdfxEscape(k.sub || '') + '</div>' +
+        '<div class="pdfx-kpi-mom flat"' + (k.small ? ' style="font-size:10px;line-height:1.4;"' : '') + '>' + pdfxEscape(k.sub || '') + '</div>' +
         '</div>';
     }
     function kpiCardPlain(k) {
@@ -23513,21 +23658,19 @@ async function loadAuditResultsFromSheet() {
       '<div class="pdfx-page">' +
         '<div class="pdfx-inner">' +
           pdfxHeaderBand(monthYear, 'Fulfillment & Customer Service') +
-          '<div class="pdfx-chlabel">Fulfillment Performance</div>' +
-          '<div class="pdfx-kpis" style="margin-top:6px;">' + topKpis.map(kpiCardPlain).join('') + '</div>' +
+          // 2026-10-14 per Jaclyn: labelled as Website data (matching the
+          // dashboard's "Shipped Website Orders" / "Website Orders by State"
+          // labels), and the map now comes BEFORE Customer Service, same
+          // order as the dashboard tab.
+          '<div class="pdfx-chlabel">Website Fulfillment Performance' + (pdfxText('#mfc-page-sub') ? ' <span style="text-transform:none;letter-spacing:0;font-weight:400;">· ' + pdfxEscape(pdfxText('#mfc-page-sub')) + '</span>' : '') + '</div>' +
+          '<div class="pdfx-kpis pdfx-kpis-wrap" style="margin-top:6px;grid-template-columns:repeat(5,minmax(0,1fr));">' + topKpis.map(kpiCardPlain).join('') + '</div>' +
           '<div class="pdfx-card" style="margin-top:14px;margin-bottom:0;">' +
-            '<div class="pdfx-card-title">Orders Shipped by Date · Last 30 Days</div>' +
+            '<div class="pdfx-card-title">' + pdfxEscape(pdfxText('#mfc-lbl-chart') || 'Website Orders Shipped by Date') + '</div>' +
             pdfxChartBlock('mfcShippedChartInstance', 'Chart not yet loaded — open this tab once on the dashboard, then re-export.', undefined, 'pdfx-mfc-shipped-chart-img') +
           '</div>' +
-          '<div class="pdfx-chlabel" style="margin-top:16px;">Customer Service</div>' +
-          '<div class="pdfx-kpis n3" style="margin-top:6px;">' + csKpis.map(kpiCardWithSub).join('') + '</div>' +
           '<div class="pdfx-card" style="margin-top:14px;margin-bottom:0;">' +
             '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-              '<div class="pdfx-card-title" style="margin-bottom:0;">Orders by State · Last 30 Days</div>' +
-              // ADDED 2026-09-21 per Jaclyn -- the live page's "Fewer ...
-              // More" gradient legend (see e.g. the mfc-us-svg card's own
-              // header) was never carried into the PDF export, so the
-              // exported map had no key explaining what the shading means.
+              '<div class="pdfx-card-title" style="margin-bottom:0;">Website Orders by State · Last 30 Days</div>' +
               '<div style="display:flex;align-items:center;gap:6px;font-size:9px;color:var(--muted);">' +
                 '<span>Fewer</span>' +
                 '<div style="width:60px;height:6px;border-radius:3px;background:linear-gradient(to right,#dce6f5,#001F60);"></div>' +
@@ -23536,6 +23679,8 @@ async function loadAuditResultsFromSheet() {
             '</div>' +
             mapHtml +
           '</div>' +
+          '<div class="pdfx-chlabel" style="margin-top:16px;">Customer Service</div>' +
+          '<div class="pdfx-kpis n3" style="margin-top:6px;">' + csKpis.map(kpiCardWithSub).join('') + '</div>' +
         '</div>' +
       '</div>';
   }
@@ -23570,9 +23715,10 @@ async function loadAuditResultsFromSheet() {
       '<div class="pdfx-page">' +
         '<div class="pdfx-inner" style="padding-top:16px;padding-bottom:16px;">' +
           pdfxHeaderBand(monthYear, 'Insights') +
-          '<div class="pdfx-card" style="margin-bottom:6px;padding:8px 18px;"><div class="pdfx-card-title" style="margin-bottom:6px;">Unit Sales by Product Category</div>' + pdfxChartBlock('_catChart', undefined, undefined, 'pdfx-category-chart-img') + '</div>' +
+          '<div class="pdfx-chlabel" style="margin-bottom:4px;">Amazon Insights</div>' +
+          '<div class="pdfx-card" style="margin-bottom:6px;padding:8px 18px;"><div class="pdfx-card-title" style="margin-bottom:6px;">Amazon Unit Sales by Product Category</div>' + pdfxChartBlock('_catChart', undefined, undefined, 'pdfx-category-chart-img') + '</div>' +
           insightHtml(catInsight) +
-          '<div class="pdfx-chlabel" style="margin-top:8px;margin-bottom:4px;">Subscriptions</div>' +
+          '<div class="pdfx-chlabel" style="margin-top:8px;margin-bottom:4px;">Amazon Subscribe &amp; Save</div>' +
           '<div class="pdfx-kpis n2" style="margin-top:4px;margin-bottom:6px;">' + snsKpis.map(pdfxKpiCardHtml).join('') + '</div>' +
           '<div class="pdfx-card" style="margin-bottom:6px;padding:8px 18px;"><div class="pdfx-card-title" style="margin-bottom:6px;">Active Subscriptions by Month <span style="font-weight:400;color:var(--muted);">(Year over Year)</span></div>' + pdfxChartBlock('_snsChart', undefined, undefined, 'pdfx-sns-chart-img') + '</div>' +
           insightHtml(snsInsight) +
@@ -23632,7 +23778,7 @@ async function loadAuditResultsFromSheet() {
     };
 
     let out = pageWrap(
-      '<div class="pdfx-chlabel" style="margin-bottom:4px;">Brand Momentum</div>' +
+      '<div class="pdfx-chlabel" style="margin-bottom:4px;">Amazon Brand Momentum</div>' +
       '<div class="pdfx-kpis n3" style="margin-top:4px;margin-bottom:6px;">' + kpis.map(pdfxKpiCardHtml).join('') + '</div>' +
       (chunks.length ? cardsBlock(chunks[0], true) : '')
     );
@@ -24098,13 +24244,16 @@ async function loadAuditResultsFromSheet() {
       // hardcoded into every export unconditionally; now gated on the same
       // checkbox pattern as the 5 event pages below.
       const salesMarketingPages = [
-        includeSections.amazon        ? buildAmazonPage(monthYear)        : '',
+        // Order set 2026-10-14 per Jaclyn — grouped by channel: Website,
+        // Walmart, then everything Amazon (Sales, Momentum, Insights,
+        // Stewardship), then Website Fulfillment, then Opportunities.
         includeSections.website       ? buildWebsitePage(monthYear)       : '',
         includeSections.walmart       ? buildWalmartPage(monthYear)       : '',
+        includeSections.amazon        ? buildAmazonPage(monthYear)        : '',
         includeSections.momentum      ? buildMomentumPages(monthYear)     : '',
         includeSections.insights      ? buildInsightsPage(monthYear)      : '',
-        includeSections.fulfillment   ? buildFulfillmentCsPage(monthYear) : '',
         includeSections.stewardship   ? buildStewardshipPage(monthYear)   : '',
+        includeSections.fulfillment   ? buildFulfillmentCsPage(monthYear) : '',
         includeSections.opportunities ? buildOpportunitiesPage(monthYear) : '',
       ].join('');
 
@@ -25968,6 +26117,41 @@ async function loadHomeTotalSkus() {
   }
 }
 document.addEventListener('DOMContentLoaded', loadHomeTotalSkus);
+
+// Amazon Fees for a month — sum of column P ("Amazon Estimated fees") on
+// the Amazon orders sync sheet (SHEET_ORDERS), Skinuva rows only, cancelled
+// orders excluded (Amazon doesn't charge fees on those). Column is found by
+// header name, with P (index 15) as the fallback. Returns {curr, prev};
+// null when the sheet has no fee values for that month (the sync sheet only
+// goes back to mid-April 2026; the historical sheet has no fee column).
+window.skLoadAmazonFees = function (year, month, prevYear, prevMonth) {
+  if (!window._skAmzFeesCsv) {
+    window._skAmzFeesCsv = fetch(ovCsvUrl(window.SHEET_CFG.SHEET_ORDERS.fileId, window.SHEET_CFG.SHEET_ORDERS.gid)).then(r => r.ok ? r.text() : '').catch(() => '');
+  }
+  return window._skAmzFeesCsv.then(csv => {
+    const g = parseCsvFull(csv);
+    if (g.length < 2) return { curr: null, prev: null };
+    const hdr = g[0].map(h => String(h || '').trim().toLowerCase());
+    const col = n => hdr.indexOf(n);
+    const cFee = col('amazon estimated fees') >= 0 ? col('amazon estimated fees') : 15;
+    const cDate = col('date') >= 0 ? col('date') : 1, cStatus = col('status') >= 0 ? col('status') : 2, cBrand = col('brand');
+    const ym = (y, m) => `${y}-${String(m).padStart(2, '0')}`;
+    const want = { [ym(year, month)]: 'curr', [ym(prevYear, prevMonth)]: 'prev' };
+    const out = { curr: null, prev: null };
+    g.slice(1).forEach(r => {
+      const d = mfcNormalizeDate(String(r[cDate] || '').trim()).substring(0, 7);
+      const key = want[d]; if (!key) return;
+      if (String(r[cStatus] || '').trim().toLowerCase() === 'cancelled') return;
+      const b = cBrand >= 0 ? String(r[cBrand] || '').trim().toLowerCase() : '';
+      if (b && b !== 'skinuva') return;
+      const raw = String(r[cFee] || '').replace(/[$,\s]/g, '');
+      if (raw === '') return;
+      const v = parseFloat(raw); if (isNaN(v)) return;
+      out[key] = (out[key] || 0) + v;
+    });
+    return out;
+  });
+};
 
 // CLERK AUTH — internal-section gating only, NOT a page-wide gate.
 // Org-membership check, matching Cosmette's own getOrganizationMemberships()
