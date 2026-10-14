@@ -22648,8 +22648,8 @@ async function loadAuditResultsFromSheet() {
     _walmartChart:           250,
     _investChart:            200,
     _impressChart:           180,
-    _snsChart:               200,
-    _catChart:               220,
+    _snsChart:               140, // shortened 2026-10-14 per Jaclyn (was 200)
+    _catChart:               195, // shortened 2026-10-14 per Jaclyn (was 220)
     mfcShippedChartInstance: 230,
   };
 
@@ -23000,8 +23000,8 @@ async function loadAuditResultsFromSheet() {
     { id: 'pdfx-walmart-chart-img',      varName: '_walmartChart',           defaultHeightPx: 250, minHeightPx: 120 },
     { id: 'pdfx-invest-chart-img',       varName: '_investChart',            defaultHeightPx: 200, minHeightPx: 130 },
     { id: 'pdfx-impress-chart-img',      varName: '_impressChart',           defaultHeightPx: 180, minHeightPx: 110 },
-    { id: 'pdfx-sns-chart-img',          varName: '_snsChart',               defaultHeightPx: 200, minHeightPx: 120 },
-    { id: 'pdfx-category-chart-img',     varName: '_catChart',               defaultHeightPx: 220, minHeightPx: 140 },
+    { id: 'pdfx-sns-chart-img',          varName: '_snsChart',               defaultHeightPx: 140, minHeightPx: 100 },
+    { id: 'pdfx-category-chart-img',     varName: '_catChart',               defaultHeightPx: 195, minHeightPx: 130 },
     { id: 'pdfx-mfc-shipped-chart-img',  varName: 'mfcShippedChartInstance', defaultHeightPx: 230, minHeightPx: 130 },
   ];
   const PDFX_BLANK_IMG = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
@@ -23679,8 +23679,7 @@ async function loadAuditResultsFromSheet() {
             '</div>' +
             mapHtml +
           '</div>' +
-          '<div class="pdfx-chlabel" style="margin-top:16px;">Customer Service</div>' +
-          '<div class="pdfx-kpis n3" style="margin-top:6px;">' + csKpis.map(kpiCardWithSub).join('') + '</div>' +
+          // Customer Service row moved to the Insights page (2026-10-14).
         '</div>' +
       '</div>';
   }
@@ -23706,6 +23705,25 @@ async function loadAuditResultsFromSheet() {
   // Insights page — Unit Sales by Product Category + Subscriptions (moved
   // here from Opportunities 2026-09-29 per Jaclyn), each with its own Key
   // Insight. Both charts are fit-charts (see PDFX_SKINUVA_FIT_CHARTS).
+  // Customer Service KPI row — moved from the Fulfillment page to the bottom
+  // of the Insights page (2026-10-14 per Jaclyn). Reads the live Fulfillment
+  // tab's values, same as before.
+  function pdfxCustomerServiceRow() {
+    const items = [
+      { label: 'Reviews Requested', value: pdfxText('#mfc-kpi-reviews'), sub: pdfxText('#mfc-kpi-reviews-sub') },
+      { label: 'Compliance Cases Resolved', value: pdfxText('#mfc-kpi-compliance'), sub: pdfxText('#mfc-kpi-compliance-sub') },
+      { label: 'Returns Processed', value: pdfxText('#mfc-kpi-returns'), sub: pdfxText('#mfc-kpi-returns-sub'), small: true },
+    ];
+    return '<div class="pdfx-chlabel" style="margin-top:8px;margin-bottom:4px;">Customer Service</div>' +
+      '<div class="pdfx-kpis n3" style="margin-top:4px;margin-bottom:0;">' + items.map(function (k) {
+        return '<div class="pdfx-kpi" style="padding:12px 16px;">' +
+          '<div class="pdfx-kpi-lbl">' + pdfxEscape(k.label) + '</div>' +
+          '<div class="pdfx-kpi-val">' + pdfxEscape(k.value || '—') + '</div>' +
+          '<div class="pdfx-kpi-mom flat"' + (k.small ? ' style="font-size:10px;line-height:1.4;"' : '') + '>' + pdfxEscape(k.sub || '') + '</div>' +
+          '</div>';
+      }).join('') + '</div>';
+  }
+
   function buildInsightsPage(monthYear) {
     const snsKpis = ['kpi-active-subs', 'kpi-retention'].map(pdfxKpi);
     const catInsight = pdfxText('#cat-insight-text');
@@ -23722,7 +23740,7 @@ async function loadAuditResultsFromSheet() {
           '<div class="pdfx-kpis n2" style="margin-top:4px;margin-bottom:6px;">' + snsKpis.map(pdfxKpiCardHtml).join('') + '</div>' +
           '<div class="pdfx-card" style="margin-bottom:6px;padding:8px 18px;"><div class="pdfx-card-title" style="margin-bottom:6px;">Active Subscriptions by Month <span style="font-weight:400;color:var(--muted);">(Year over Year)</span></div>' + pdfxChartBlock('_snsChart', undefined, undefined, 'pdfx-sns-chart-img') + '</div>' +
           insightHtml(snsInsight) +
-          pdfxFooter(monthYear) +
+          pdfxCustomerServiceRow() +
         '</div>' +
       '</div>';
   }
