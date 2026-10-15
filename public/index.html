@@ -24336,6 +24336,16 @@ async function loadAuditResultsFromSheet() {
       }
 
       pdfxStretchTopSellers(root);
+      // Page numbers — bottom-right corner of every page (2026-10-15 per
+      // Jaclyn). The cover counts as page 1 but isn't labelled.
+      Array.prototype.forEach.call(root.querySelectorAll('.pdfx-page'), function (pg, i) {
+        if (pg.classList.contains('pdfx-cover')) return;
+        const num = document.createElement('div');
+        num.className = 'pdfx-page-num';
+        num.textContent = String(i + 1);
+        num.style.cssText = 'position:absolute;right:24px;bottom:8px;font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.04em;z-index:5;';
+        pg.appendChild(num);
+      });
       const pageEls = Array.from(root.querySelectorAll('.pdfx-page'));
       console.log('[pdf-export] .pdfx-page count:', pageEls.length);
       if (!pageEls.length) throw new Error('No .pdfx-page elements found — nothing to export.');
