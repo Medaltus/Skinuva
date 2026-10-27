@@ -1167,7 +1167,6 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 .trf-seg{display:inline-flex;background:var(--bg);border:1px solid var(--border2);border-radius:999px;padding:3px;gap:2px;}
 .trf-seg button{border:0;background:transparent;border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;}
 .trf-seg button.active{background:var(--navy);color:#fff;}
-.trf-seg button:disabled{opacity:.4;cursor:not-allowed;}
 .trf-seg-lg button{padding:8px 18px;font-size:12.5px;}
 .trf-source{font-size:11px;color:var(--muted);flex:1;min-width:220px;text-align:right;}
 .trf-card{margin-bottom:18px;}
@@ -1256,9 +1255,6 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     <button class="nav-btn" onclick="showPage('marketing',this)">
       <svg viewBox="0 0 16 16"><path d="M2 10V6l5-4h2v12H7l-5-4z"/><path d="M9 5.5c1.5.5 3 1.5 3 2.5s-1.5 2-3 2.5"/><path d="M9 3c2.5.8 5 2.5 5 5s-2.5 4.2-5 5"/></svg>Marketing
     </button>
-    <button class="nav-btn" onclick="showPage('traffic',this)">
-      <svg viewBox="0 0 16 16"><path d="M1 13l4-5 3 3 4-6 3 3"/><circle cx="12" cy="5" r="1.2"/><line x1="1" y1="15" x2="15" y2="15"/></svg>Traffic
-    </button>
     <button class="nav-btn" onclick="showPage('events',this)">
       <svg viewBox="0 0 16 16"><rect x="1" y="3" width="14" height="12" rx="1.2"/><path d="M1 7h14M5 1v4M11 1v4"/></svg>Events
     </button>
@@ -1267,6 +1263,9 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     <button class="nav-btn" onclick="showPage('insights',this)">
       <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 5.5v.5"/></svg>Insights
       <span class="nav-badge">3</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('traffic',this)">
+      <svg viewBox="0 0 16 16"><path d="M1 13l4-5 3 3 4-6 3 3"/><circle cx="12" cy="5" r="1.2"/><line x1="1" y1="15" x2="15" y2="15"/></svg>Traffic
     </button>
     <button class="nav-btn" onclick="showPage('listing',this)">
       <svg viewBox="0 0 16 16"><path d="M2 2h12v12H2z"/><path d="M5 6h6M5 9h4"/></svg>Listing Audit
@@ -3102,8 +3101,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
        time in three charts: brand-wide → by category → one product.
        Monthly = Jan–Dec, one line per year, from the Business Report
        (skinuva tab). Daily = needs a daily business report sheet
-       (SHEET_CFG.SHEET_DAILY_BUSINESS_REPORT); until one is connected the
-       Daily toggle is disabled. Amazon events are shaded on the charts. -->
+       (SHEET_CFG.SHEET_DAILY_BUSINESS_REPORT); fills in as backfills land. Amazon events are shaded on the charts. -->
   <div class="page" id="page-traffic">
     <div class="sheet-link-menu">
       <button class="sheet-link-btn" onclick="document.getElementById('traffic-sheet-dropdown').classList.toggle('open')">🔗 Source Sheets <span style="font-size:9px;">▾</span></button>
@@ -27040,8 +27038,9 @@ window.initBmKpis = function () {
 //   Daily:   last 7–365 days from a daily business report sheet, with the
 //            same calendar days a year earlier as a second line. Reads
 //            SHEET_CFG.SHEET_DAILY_BUSINESS_REPORT (DATE, ASIN, SESSIONS,
-//            UNITS_ORDERED); Skinuva has no daily sheet yet, so until one
-//            is added to /api/sheet-config the Daily toggle stays disabled.
+//            UNITS_ORDERED). Until that sheet has rows, Daily shows an
+//            empty state and the page opens on Monthly (same as VBC).
+//            Both views fill in automatically as the backfills land.
 // Conversion is always units ÷ sessions for the group, never an average of
 // per-product rates. Categories + names come from the Master SKU List
 // (Product Category / Product Short Name). Amazon events (Events tab) are
@@ -27167,14 +27166,13 @@ window.initBmKpis = function () {
     const dd = _trf.daily.dates, canDaily = dd.length > 0;
     document.querySelectorAll('#trf-view button').forEach(b => {
       b.classList.toggle('active', b.dataset.view === _trf.view);
-      if (b.dataset.view === 'daily') { b.disabled = !canDaily; b.title = canDaily ? '' : 'No daily business report connected for Skinuva yet'; }
     });
     const win = document.getElementById('trf-window');
     win.style.display = _trf.view === 'daily' ? '' : 'none';
     win.querySelectorAll('button').forEach(b => b.classList.toggle('active', Number(b.dataset.days) === _trf.win));
     document.getElementById('trf-source').textContent = _trf.view === 'daily'
-      ? `Daily: Amazon Daily Business Report · ${dd.length} day${dd.length === 1 ? '' : 's'} available (${dd[0]} → ${dd[dd.length - 1]}) · dashed = still settling`
-      : 'Monthly: Amazon Business Report · current year runs through the last full month' + (canDaily ? '' : ' · Daily view needs a daily business report sheet');
+      ? (canDaily ? `Daily: Amazon Daily Business Report · ${dd.length} day${dd.length === 1 ? '' : 's'} available (${dd[0]} → ${dd[dd.length - 1]}) · dashed = still settling` : 'Daily: no data in the Daily Business Report yet')
+      : 'Monthly: Amazon Business Report · current year runs through the last full month';
     ['overall','cat','prod'].forEach(k => document.querySelectorAll(`#trf-${k}-metric button`).forEach(b => b.classList.toggle('active', b.dataset.metric === _trf.metric[k])));
     document.getElementById('trf-cat-tabs').innerHTML = _trf.cats.map((c, i) => `<button class="trf-cat-tab${_trf.cat === c ? ' active' : ''}" onclick="trfSetCat(${i})">${esc(c)}</button>`).join('');
     const cur = curMonthS();
@@ -27184,7 +27182,7 @@ window.initBmKpis = function () {
       return list.length ? `<optgroup label="${esc(c)}">${list.map(a => `<option value="${a}"${a === _trf.asin ? ' selected' : ''}>${esc(_trf.nameOf[a])}${_trf.skuOf[a] ? ' · ' + esc(_trf.skuOf[a]) : ''}</option>`).join('')}</optgroup>` : '';
     }).join('') || '<option>No products with traffic yet</option>';
   }
-  window.trfSetView   = v => { if (v === 'daily' && !(_trf.daily && _trf.daily.dates.length)) return; _trf.view = v; renderControls(); renderAll(); };
+  window.trfSetView   = v => { _trf.view = v; renderControls(); renderAll(); };
   window.trfSetWindow = n => { _trf.win = n; renderControls(); renderAll(); };
   window.trfSetMetric = (k, m) => { _trf.metric[k] = m; renderControls(); render(k); };
   window.trfSetCat    = i => { _trf.cat = _trf.cats[i]; renderControls(); render('cat'); };
@@ -27305,7 +27303,7 @@ window.initBmKpis = function () {
         const short = synced < _trf.win ? ` <span style="color:var(--muted);">(${synced} of ${_trf.win} days synced so far)</span>` : '';
         if (a != null) note = [`Last ${N} days: <b>${fmtBig(a)}</b>${short}`, (b != null && pw.n === N) ? `${pctChg(a, b, metric)} vs the ${N} days before` : ''].filter(Boolean).join(' &nbsp;·&nbsp; ');
         if (!cur.some(v => v != null)) note = key === 'prod' ? 'No daily sessions for this product in this window.' : 'No daily data for this selection yet.';
-      } else note = 'No daily data yet.';
+      } else note = 'No daily data yet — the Daily Business Report is still filling in.';
     }
     noteEl.innerHTML = note || 'No data for this selection yet.';
 
