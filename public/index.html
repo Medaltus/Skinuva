@@ -24886,6 +24886,45 @@ async function loadAuditResultsFromSheet() {
     if (momEl) { momEl.className = 'kpi-mom flat'; momEl.textContent = label || ''; }
   }
 
+  // ── CAD → USD rates (ADDED 2026-10-27 per Jaclyn) ──────────────────────
+  // Source: Bank of Canada Valet API, daily FXCADUSD ("US dollars per
+  // Canadian dollar"), averaged per calendar month -- i.e. each month's
+  // Bank of Canada monthly average, and for the month in progress the
+  // average of the business days published so far. Fetched once per page
+  // load, covering the 13 months up to the selected month (enough for the
+  // comparison month and the 6-month revenue trend). Returns
+  // { 'YYYY-MM': rate } or null if the feed can't be reached.
+  async function ovLoadCadToUsd(year, month) {
+    try {
+      const start = new Date(year, month - 1 - 12, 1);
+      const startStr = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-01`;
+      const j = await fetch(`https://www.bankofcanada.ca/valet/observations/FXCADUSD/json?start_date=${startStr}`).then(r => r.ok ? r.json() : null);
+      const sums = {};
+      ((j && j.observations) || []).forEach(o => {
+        const v = parseFloat(o.FXCADUSD && o.FXCADUSD.v);
+        if (!v || !o.d) return;
+        const k = o.d.slice(0, 7);
+        (sums[k] = sums[k] || { t: 0, n: 0 }).t += v; sums[k].n++;
+      });
+      const out = {};
+      Object.keys(sums).forEach(k => { out[k] = sums[k].t / sums[k].n; });
+      return Object.keys(out).length ? out : null;
+    } catch (e) { console.warn('[Skinuva][overview][fx] Bank of Canada CAD→USD fetch failed:', e.message); return null; }
+  }
+  // Rate for a month; if that month has no published days yet (e.g. the
+  // 1st falls on a weekend), the most recent earlier month's average is
+  // used. null when there's no rate at all -- callers then leave the CA
+  // dollars out rather than adding them unconverted.
+  function ovCadRateFor(byMonth, y, m) {
+    if (!byMonth) return null;
+    const key = `${y}-${String(m).padStart(2, '0')}`;
+    if (byMonth[key] != null) return byMonth[key];
+    const earlier = Object.keys(byMonth).filter(k => k < key).sort();
+    if (earlier.length) return byMonth[earlier[earlier.length - 1]];
+    const later = Object.keys(byMonth).sort();
+    return later.length ? byMonth[later[0]] : null;
+  }
+
   // ── Period selector — Month to Date / Last Month ────────────────────────
   // ADDED 2026-08-28 per Jaclyn. Overview used to only ever compute "so far
   // this month" -- there was no "Last Month" concept here at all (unlike
@@ -25055,7 +25094,8 @@ async function loadAuditResultsFromSheet() {
       const CA_SYNC_GID = '1347068338';
       const CA_RETURNS_GID = '2019659648';
       const CA_AD_ORDERS_GID = '1657515163';
-      const [amzCsv, webCsv, wmtCsv, adOrdersCsv, amzReturnsCsv, wmtReturnsCsv, webReturnsCsv, namesCsv, webAdsCsv, webShoppingCsv, caSyncCsv, caReturnsCsv, caAdOrdersCsv, adSummaryCsv] = await Promise.all([
+      const CA_AD_SUMMARY_GID = '193268511'; // Advertising Cache → skinuva-ca tab (same gid the Amazon Sales page uses)
+      const [amzCsv, webCsv, wmtCsv, adOrdersCsv, amzReturnsCsv, wmtReturnsCsv, webReturnsCsv, namesCsv, webAdsCsv, webShoppingCsv, caSyncCsv, caReturnsCsv, caAdOrdersCsv, adSummaryCsv, caAdSummaryCsv, cadToUsdByMonth] = await Promise.all([
         fetch(sheetCsvUrl(AMAZON_SHEET_ID, AMAZON_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
         fetch(sheetCsvUrl(WEB_SHEET_ID, WEB_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
         fetch(sheetCsvUrl(WMT_SHEET_ID, WMT_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
@@ -25098,14 +25138,43 @@ async function loadAuditResultsFromSheet() {
         // columns, for the Ad Spend by Type card (see AD_SUMMARY_SHEET_ID
         // above).
         fetch(sheetCsvUrl(AD_SUMMARY_SHEET_ID, AD_SUMMARY_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+        // Advertising Cache — skinuva-ca tab (amounts in CAD). See "Ad totals"
+        // below: ad spend/sales/units come from this cache, not Ad Orders.
+        fetch(sheetCsvUrl(AD_SUMMARY_SHEET_ID, CA_AD_SUMMARY_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+        // CAD → USD rates, Bank of Canada monthly averages (see ovLoadCadToUsd).
+        ovLoadCadToUsd(cfg.year, cfg.month),
       ]);
+
+      // ── CAD → USD (ADDED 2026-10-27 per Jaclyn) ─────────────────────────
+      // Every skinuva-ca tab is in Canadian dollars. Before any CA amount is
+      // added to US amounts on this page it's converted with that month's
+      // Bank of Canada average CAD→USD rate (current month = average of the
+      // business days so far). cadToUsd(y, m) returns null if the feed
+      // couldn't be reached — CA dollar amounts are then LEFT OUT (never
+      // added unconverted) and the affected cards say so.
+      const cadToUsd = (y, m) => ovCadRateFor(cadToUsdByMonth, y, m);
+      let ovCaFxMissing = false;
+      const convertCaRow = r => {
+        const d = normalizeDate(r.date);
+        const fx = d ? cadToUsd(parseInt(d.slice(0, 4), 10), parseInt(d.slice(5, 7), 10)) : null;
+        // No rate: keep the row (units/orders aren't currency) but zero its
+        // dollar fields, so CA revenue is left out rather than added in CAD.
+        if (fx == null) ovCaFxMissing = true;
+        ['item_price', 'order_total', 'promotion_discount'].forEach(k => { if (r[k] !== undefined && r[k] !== '') r[k] = String(fx == null ? 0 : parseAmt(r[k]) * fx); });
+        r._cadToUsd = fx;
+        return true;
+      };
 
       const amzRows = isCsv(amzCsv) ? parseCsv(amzCsv).filter(isEvolisRow) : [];
       // Merge in the skinuva-ca tab — every row unconditionally tagged CA
       // (not run through any territory classifier, since the whole tab is
       // CA-dedicated now), matching the Amazon Sales page's own "Merge in
       // the skinuva-ca tabs" convention (see that page's fetch code).
-      const caSyncRows = isCsv(caSyncCsv) ? parseCsv(caSyncCsv).filter(isEvolisRow) : [];
+      // CA order amounts are converted CAD → USD here, at merge, so CA
+      // revenue, the CA per-ASIN prices used to value CA returns, and every
+      // total built from amzRows below are all in USD. A row whose month
+      // has no rate keeps its units but contributes $0 rather than CAD.
+      const caSyncRows = isCsv(caSyncCsv) ? parseCsv(caSyncCsv).filter(isEvolisRow).filter(convertCaRow) : [];
       caSyncRows.forEach(r => { r._territory = 'CA'; });
       amzRows.push(...caSyncRows);
       console.log('[Skinuva][overview][CA-merge] caSyncRows:', caSyncRows.length, 'caReturnRows pending merge below');
@@ -25376,6 +25445,44 @@ async function loadAuditResultsFromSheet() {
       // over the MTD window (see webAdsMtd above) and added to Amazon's
       // count for one blended figure. No MOM here either, to avoid mixing
       // an exact Website sum with Amazon's monthly-bucketed estimate.
+      // ── Ad totals (REPLACED 2026-10-27 per Jaclyn) ─────────────────────
+      // Ad Spend, Ad Sales, Blended ACOS, Ad-Driven Units and the Organic
+      // cards read the ADVERTISING CACHE (campaign-level, one row per
+      // year+month per brand tab): its spend / sales / ad_units columns are
+      // totals across Sponsored Products + Sponsored Brands + Sponsored
+      // Display. The Ad Orders Cache is ASIN-level and can only ever hold
+      // SP + SD (Amazon can't attribute SB to an ASIN), so it's now used
+      // only for per-ASIN views (Top Selling Products' ad/organic split).
+      // US tab (skinuva) + CA tab (skinuva-ca, CAD → USD with that month's
+      // Bank of Canada average rate; CA dollars are left out, never added
+      // in CAD, if the rate isn't available).
+      const advUsRows = isCsv(adSummaryCsv) ? parseCsv(adSummaryCsv) : [];
+      const advCaRows = isCsv(caAdSummaryCsv) ? parseCsv(caAdSummaryCsv) : [];
+      function advMonth(y, m) {
+        const pick = rows => rows.find(r => parseInt(r.year, 10) === y && parseInt(r.month, 10) === m) || {};
+        const us = pick(advUsRows), ca = pick(advCaRows);
+        const int = v => parseInt(String(v || '').replace(/[^0-9-]/g, ''), 10) || 0;
+        const fx = cadToUsd(y, m);
+        const caSpend = parseAmt(ca.spend), caSales = parseAmt(ca.sales);
+        if (fx == null && (caSpend || caSales)) ovCaFxMissing = true;
+        const f = fx == null ? 0 : fx;
+        return {
+          spend: parseAmt(us.spend) + caSpend * f,
+          sales: parseAmt(us.sales) + caSales * f,
+          units: int(us.ad_units) + int(ca.ad_units),
+          usSpend: parseAmt(us.spend), usSales: parseAmt(us.sales), caSpendCad: caSpend, caSalesCad: caSales, fx,
+        };
+      }
+      const amzAdCur = advMonth(refYear, refMonth);
+      const amzAdPrevFull = advMonth(lastMonthYear, lastMonthNum);
+      // MTD comparison side: both caches are monthly, so last month's full
+      // total is pro-rated to the same day-fraction (days elapsed ÷ days in
+      // last month) -- the existing "(Est.)" method, now applied to the
+      // Advertising Cache numbers. Completed months compare in full.
+      const adPrevFrac = cfg.isPartial ? Math.min(1, daysElapsed / new Date(lastMonthYear, lastMonthNum, 0).getDate()) : 1;
+      if (!advUsRows.length) console.warn('[Skinuva][overview] Advertising Cache (skinuva tab) did not return CSV — Amazon ad totals will read 0.');
+      console.log('[Skinuva][overview][ads] Advertising Cache', refYear + '-' + refMonth, amzAdCur, '| prev', lastMonthYear + '-' + lastMonthNum, amzAdPrevFull, '× frac', adPrevFrac.toFixed(3));
+
       let adDrivenOrders = 0;
       let adDrivenOrdersLastMonthFull = 0;
       // FIXED 2026-08-28 per Jaclyn -- lastMonthYear/lastMonthNum are now
@@ -25431,7 +25538,12 @@ async function loadAuditResultsFromSheet() {
         }
       } catch (e) { console.warn('[Skinuva][overview] Walmart ad units (for Ad-Driven Orders) lookup failed:', e.message); }
 
-      setKpiPlain('ov-kpi-ad-orders', (adDrivenOrders + walmartAdUnitsThisMonth).toLocaleString(), (cfg.isPartial ? 'This month' : 'Last month') + ' (Amazon + Walmart ad units)');
+      // REPLACED 2026-10-27 per Jaclyn -- Amazon ad units now come from the
+      // Advertising Cache (campaign-level, SP + SB + SD), not the ASIN-level
+      // Ad Orders Cache above, which can never contain Sponsored Brands.
+      // adDrivenOrders (Ad Orders sum) is kept only for the console check.
+      console.log('[Skinuva][overview][ads] Amazon ad units — Advertising Cache (US+CA):', amzAdCur.units, '| Ad Orders Cache (SP+SD only):', adDrivenOrders);
+      setKpiPlain('ov-kpi-ad-orders', (amzAdCur.units + walmartAdUnitsThisMonth).toLocaleString(), (cfg.isPartial ? 'This month' : 'Last month') + ' (Amazon + Walmart ad units)');
       // NOTE: this card's own MOM/"Organic Orders" companion logic moved
       // further down — see "MTD Organic Units" below, after per-ASIN net
       // units and ad-attributed units are available. Per Jaclyn
@@ -25564,10 +25676,13 @@ async function loadAuditResultsFromSheet() {
       // is genuine ad activity.
       let wmtAdUnitsByAsin = {};
       let wmtAdUnitsByAsinPrev = {};
+      let wmtAdUnitsPrevTotal = 0; // all Walmart ad units last month (for Organic Units' comparison side)
       try {
         const wmtAdOrdersCsv2 = await fetch(sheetCsvUrl(WALMART_AD_ORDERS_SHEET_ID, WALMART_AD_ORDERS_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => '');
         if (isCsv(wmtAdOrdersCsv2)) {
           const wmtAdRows2All = parseCsv(wmtAdOrdersCsv2);
+          wmtAdUnitsPrevTotal = wmtAdRows2All.filter(r => parseInt(r.year, 10) === lastMonthYear && parseInt(r.month, 10) === lastMonthNum)
+            .reduce((s, r) => s + (parseInt(String(r.ad_units || '').replace(/^'/, ''), 10) || 0), 0);
           wmtAdRows2All.filter(r => parseInt(r.year, 10) === refYear && parseInt(r.month, 10) === refMonth)
             .forEach(r => {
               const asin = walmartItemIdToAsinMap[(r.item_id || '').trim()];
@@ -25614,8 +25729,18 @@ async function loadAuditResultsFromSheet() {
       const totalAdUnitsPrev = Math.round(Array.from(allAsinsPrev).reduce((s, asin) =>
         s + Math.min((adUnitsByAsinPrev[asin] || 0) * prevAdFrac, amzPrevUnitsByAsin[asin] || 0)
           + Math.min((wmtAdUnitsByAsinPrev[asin] || 0) * prevAdFrac, wmtPrevUnitsByAsin[asin] || 0), 0));
-      const organicUnits = Math.max(0, mtd.units - totalAdUnitsCurr);
-      const organicUnitsPrev = Math.max(0, prev.units - totalAdUnitsPrev);
+      // CHANGED 2026-10-27 per Jaclyn -- Organic Units = total net units −
+      // ad units, where Amazon's ad units are the Advertising Cache total
+      // (SP + SB + SD, US + CA) and Walmart's are its ad orders total. The
+      // per-ASIN capped figures above (totalAdUnitsCurr/Prev) can't include
+      // Sponsored Brands, so they're kept only for the console check and
+      // the per-product table. Comparison side: last month's ad units
+      // pro-rated to the same day-fraction under MTD (same "(Est.)" method).
+      const blendedAdUnitsCurr = amzAdCur.units + walmartAdUnitsThisMonth;
+      const blendedAdUnitsPrev = Math.round((amzAdPrevFull.units + wmtAdUnitsPrevTotal) * adPrevFrac);
+      console.log('[Skinuva][overview][ads] organic units — ad units used:', blendedAdUnitsCurr, '(per-ASIN SP+SD capped was', totalAdUnitsCurr + ')');
+      const organicUnits = Math.max(0, mtd.units - blendedAdUnitsCurr);
+      const organicUnitsPrev = Math.max(0, prev.units - blendedAdUnitsPrev);
       setKpi('ov-kpi-organic-orders', organicUnits.toLocaleString(), pctChange(organicUnits, organicUnitsPrev), ovMomSuffix);
 
       function momBadge(curr, prevVal) {
@@ -25707,51 +25832,17 @@ async function loadAuditResultsFromSheet() {
       // all: webAdsMtd/webAdsPrevMtd (computed above) are already true,
       // day-aligned MTD and prior-MTD sums. They're added directly to
       // Amazon's prorated figures for one blended Ad Spend / ACOS number.
-      let proratedSpend = 0, proratedSales = 0, proratedSpendPrev = 0, proratedSalesPrev = 0;
-      if (adOrdersRowsMerged.length) {
-        const adRows = adOrdersRowsMerged;
-        if (cfg.isPartial) {
-          // FIXED 2026-10-05 per Jaclyn ("why would sales be down but organic
-          // units that high") -- MTD used to ESTIMATE this month's ad spend/
-          // sales as last month's total × day-fraction, while MTD Ad-Driven
-          // Units / Organic Units used this month's REAL so-far row from the
-          // same ad orders cache. Two different ad numbers on one page, so
-          // Organic Sales and Organic Units disagreed (e.g. Oct 1-5: real ad
-          // sales $3,849 vs the $6k estimate). The cache's current-month row
-          // is already "month so far" (the cron adds orders daily, same row
-          // the Goal Tracker reads), so use it directly. The comparison side
-          // has no day-level data, so it stays an estimate: last month's
-          // total × the same day-fraction (was two months ago, which only
-          // made sense while the current side was itself last month's
-          // estimate).
-          let lm = refMonth, ly = refYear;
-          lm -= 1; if (lm === 0) { lm = 12; ly--; }
-          const curAdRows = adRows.filter(r => parseInt(r.year, 10) === refYear && parseInt(r.month, 10) === refMonth);
-          const lastMonthAdRows = adRows.filter(r => parseInt(r.year, 10) === ly && parseInt(r.month, 10) === lm);
-          const daysInLastMonth = new Date(ly, lm, 0).getDate();
-          const frac = Math.min(1, daysElapsed / daysInLastMonth);
-          proratedSpend = curAdRows.reduce((s, r) => s + parseAmt(r.spend), 0);
-          proratedSales = curAdRows.reduce((s, r) => s + parseAmt(r.sales), 0);
-          proratedSpendPrev = lastMonthAdRows.reduce((s, r) => s + parseAmt(r.spend), 0) * frac;
-          proratedSalesPrev = lastMonthAdRows.reduce((s, r) => s + parseAmt(r.sales), 0) * frac;
-        } else {
-          // ADDED 2026-08-28 per Jaclyn -- Last Month: both the reference
-          // month and the one before it are already fully complete, so use
-          // each month's real total directly. No proration applies (or is
-          // needed) once a month is over -- these vars keep the
-          // "prorated*" names below only so every downstream reference
-          // (blendedSpend, ACOS, the Channel Breakdown table, etc.) didn't
-          // need touching.
-          const curAdRows = adRows.filter(r => parseInt(r.year, 10) === refYear && parseInt(r.month, 10) === refMonth);
-          const prevAdRows = adRows.filter(r => parseInt(r.year, 10) === lastMonthYear && parseInt(r.month, 10) === lastMonthNum);
-          proratedSpend = curAdRows.reduce((s, r) => s + parseAmt(r.spend), 0);
-          proratedSales = curAdRows.reduce((s, r) => s + parseAmt(r.sales), 0);
-          proratedSpendPrev = prevAdRows.reduce((s, r) => s + parseAmt(r.spend), 0);
-          proratedSalesPrev = prevAdRows.reduce((s, r) => s + parseAmt(r.sales), 0);
-        }
-      } else {
-        console.warn('[Skinuva][overview] ad orders sheet did not return CSV — Ad Spend/ACOS will reflect Website only.');
-      }
+      // REPLACED 2026-10-27 per Jaclyn -- Amazon ad spend/sales now come from
+      // the Advertising Cache (amzAdCur / amzAdPrevFull, see "Ad totals"
+      // above): SP + SB + SD, US + CA (CAD → USD). Current side = this
+      // month's row as-is (month so far under MTD); comparison side = last
+      // month's total, pro-rated to the same day-fraction under MTD. The
+      // "prorated*" names are kept so every downstream reference (Channel
+      // Breakdown, ACOS, Ad/Organic Sales) is unchanged.
+      const proratedSpend = amzAdCur.spend;
+      const proratedSales = amzAdCur.sales;
+      const proratedSpendPrev = amzAdPrevFull.spend * adPrevFrac;
+      const proratedSalesPrev = amzAdPrevFull.sales * adPrevFrac;
 
       // Walmart — added 2026-08-06 per Jaclyn. Reads SHEET_WALMART_ADVERTISING
       // directly (evolis tab), which is ALREADY pre-aggregated at
@@ -25837,6 +25928,24 @@ async function loadAuditResultsFromSheet() {
       setKpi('ov-kpi-ad-sales', '$' + blendedSales.toLocaleString(undefined, { maximumFractionDigits: 0 }), pctChange(blendedSales, blendedSalesPrev), ovMomSuffix);
       setKpi('ov-kpi-organic-sales', '$' + organicSales.toLocaleString(undefined, { maximumFractionDigits: 0 }), pctChange(organicSales, organicSalesPrev), ovMomSuffix);
 
+      // CA currency disclosure (2026-10-27): hover on the dollar cards shows
+      // the rate used; if the Bank of Canada feed was unreachable, the cards
+      // say CA dollars were left out rather than silently showing US only.
+      (function () {
+        const fxNote = amzAdCur.fx != null
+          ? `Includes Skinuva CA converted at C$1 = US$${amzAdCur.fx.toFixed(4)} (Bank of Canada ${monthNames[refMonth - 1]} ${refYear} average${cfg.isPartial ? ' so far' : ''}). Amazon ads = Advertising Cache, Sponsored Products + Brands + Display.`
+          : 'Amazon ads = Advertising Cache, Sponsored Products + Brands + Display.';
+        ['ov-kpi-adspend', 'ov-kpi-acos', 'ov-kpi-ad-sales', 'ov-kpi-organic-sales'].forEach(id => {
+          const card = document.getElementById(id); if (!card) return;
+          card.title = fxNote;
+          if (ovCaFxMissing) {
+            const momEl = card.querySelector('.kpi-mom');
+            if (momEl) momEl.textContent += ' · CA $ excluded (no CAD rate)';
+          }
+        });
+        console.log('[Skinuva][overview][fx]', fxNote, ovCaFxMissing ? '| CA amounts EXCLUDED — rate unavailable' : '');
+      })();
+
       // ── Goal Tracker (Amazon) ────────────────────────────────────────────
       // ADDED 2026-09-10 per Jaclyn. Goal side comes from a separate, hand-
       // maintained Google Sheet (one row per month) -- NOT this function's
@@ -25891,11 +26000,13 @@ async function loadAuditResultsFromSheet() {
               // only projection applied, matching how the goal ring is
               // supposed to work (actual = genuine so-far progress,
               // projection computed once, in one place).
-              const goalsAdsActual = cfg.isPartial
-                ? adOrdersRowsMerged
-                    .filter(r => parseInt(r.year, 10) === cfg.year && parseInt(r.month, 10) === cfg.month)
-                    .reduce((s, r) => s + parseAmt(r.sales), 0)
-                : proratedSales;
+              // CHANGED 2026-10-27 per Jaclyn -- Advertising Cache (SP + SB +
+              // SD, US + CA in USD) instead of the Ad Orders Cache, so the
+              // Ads gauge includes Sponsored Brands and the CA dollars are
+              // converted. amzAdCur is this month's real so-far row under
+              // MTD (not a projection), so buildGoalGaugeHtml's own
+              // projection is still the only one applied.
+              const goalsAdsActual = amzAdCur.sales;
               const goalsOrganicActual = Math.max(0, goalsTotalActual - goalsAdsActual);
 
               const daysInMonth = new Date(cfg.year, cfg.month, 0).getDate();
@@ -27086,7 +27197,12 @@ window.initBmKpis = function () {
     if (_trf.loading) return _trf.loading;
     _trf.loading = (async () => {
       const cfg = window.SHEET_CFG || {};
-      const br = cfg.SHEET_BUSINESS_REPORT, dly = cfg.SHEET_DAILY_BUSINESS_REPORT;
+      // Daily source: "Newderm - Daily Business Reports" → skinuva tab (per
+      // Jaclyn 2026-10-27). A SHEET_DAILY_BUSINESS_REPORT entry in
+      // /api/sheet-config overrides it if one is ever added.
+      const br = cfg.SHEET_BUSINESS_REPORT,
+            dly = (cfg.SHEET_DAILY_BUSINESS_REPORT && cfg.SHEET_DAILY_BUSINESS_REPORT.fileId) ? cfg.SHEET_DAILY_BUSINESS_REPORT
+                : { fileId:'1QLjUvYg-JR6jQmdFlykypkNarqsZvTCOgA3bFagDlVg', gid:'685174956' };
       const [monRows, dayRows, evRows, master] = await Promise.all([
         br ? csvRows(br.fileId, br.gid) : Promise.resolve([]),
         dly && dly.fileId ? csvRows(dly.fileId, dly.gid).catch(() => []) : Promise.resolve([]),
@@ -27311,6 +27427,8 @@ window.initBmKpis = function () {
     if (!canvas || typeof Chart === 'undefined') return;
     const opts = chartOptions(fmt);
     opts.scales.y.beginAtZero = metric !== 'conv';
+    // Empty chart: keep a clean 0-based axis instead of Chart.js's 0/1 filler ticks
+    if (!datasets.some(d => d.data.some(v => v != null))) { opts.scales.y.min = 0; opts.scales.y.max = metric === 'conv' ? 100 : 10; opts.scales.y.ticks.stepSize = metric === 'conv' ? 20 : 2; }
     opts.plugins.trfEvents = { bands };
     const evYr = b => b.yr ? ` ${b.yr}` : (b.ly ? ' (last year)' : '');
     opts.plugins.tooltip.callbacks.footer = items => {
