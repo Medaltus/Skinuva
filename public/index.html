@@ -24754,6 +24754,12 @@ async function loadAuditResultsFromSheet() {
       </div>`;
     }
     const actualPct = Math.round((actual / goal) * 100);
+    // ADDED 2026-10-27 per Jaclyn (matches the other dashboard): under MTD,
+    // the real so-far number sits under the goal, marked LIVE. Not shown
+    // for Last Month -- there the status line already reads "Revenue $X".
+    const liveLine = (fs) => cfg.isPartial
+      ? `<div style="font-size:${fs}px;color:var(--navy);margin-top:3px;display:flex;align-items:center;justify-content:center;gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:#1db88a;display:inline-block;"></span>LIVE: <strong>${fmtD(actual)}</strong></div>`
+      : '';
     let onPace, statusText, cancelLine = '';
     if (cfg.isPartial) {
       const rawProjected = cfg.day > 0 ? actual * (daysInMonth / cfg.day) : actual;
@@ -24782,8 +24788,9 @@ async function loadAuditResultsFromSheet() {
           <div style="position:absolute;top:0;left:0;width:140px;height:140px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--navy);font-family:var(--font-subheader);">${actualPct}%</div>
         </div>
         <div style="font-size:14px;font-weight:700;color:var(--navy);margin-top:10px;">${statusText}</div>
-        ${cfg.isPartial ? `<div style="font-size:10px;color:var(--muted);margin-top:1px;">${cancelRate != null ? `adj. for ${Math.round(cancelRate * 100)}% avg. cancel rate` : 'no cancel-rate history yet'}</div>` : ''}
-        <div style="font-size:14px;font-weight:700;color:var(--navy);margin-top:${cfg.isPartial ? '4px' : '0'};">Goal ${fmtD(goal)}</div>
+        <div style="font-size:14px;font-weight:700;color:var(--navy);margin-top:2px;">Goal ${fmtD(goal)}</div>
+        ${liveLine(12)}
+        ${cfg.isPartial ? `<div style="font-size:10px;color:var(--muted);margin-top:2px;">${cancelRate != null ? `adj. for ${Math.round(cancelRate * 100)}% avg. cancel rate` : 'no cancel-rate history yet'}</div>` : ''}
       </div>`;
     }
     const color = onPace ? GREEN : RED;
@@ -24797,6 +24804,7 @@ async function loadAuditResultsFromSheet() {
       </div>
       <div style="font-size:15px;font-weight:600;color:${color};margin-top:12px;">${statusText}</div>
       <div style="font-size:15px;color:var(--navy);margin-top:2px;">Goal <strong>${fmtD(goal)}</strong></div>
+      ${liveLine(13)}
       ${cancelLine}
     </div>`;
   }
