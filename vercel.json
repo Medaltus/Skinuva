@@ -22,3 +22,4 @@
     "api/cron/check-data-freshness.js":        { "maxDuration": 60 }
   }
 }
+ 
