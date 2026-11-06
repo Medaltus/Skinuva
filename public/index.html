@@ -11788,15 +11788,38 @@ async function initSns() {
     out.push(cur);
     return out;
   }
+  // FIXED 2026-11-06 per Jaclyn ("S&S key insight saves but doesn't show"):
+  // this used to split the CSV on every line break, but report-insight text
+  // can contain line breaks inside a cell (quoted in the CSV). October's
+  // accomplished2_body had one, which cut the October row in two -- every
+  // column after it (including subscriptions_key_insight) was lost. Now
+  // parses quoted fields across line breaks, per the CSV standard.
+  function parseCsvRecords(text) {
+    const recs = []; let rec = [], cur = '', inQ = false;
+    text = String(text || '').replace(/\r\n?/g, '\n');
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQ) {
+        if (c === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else inQ = false; }
+        else cur += c;
+      } else if (c === '"') inQ = true;
+      else if (c === ',') { rec.push(cur); cur = ''; }
+      else if (c === '\n') { rec.push(cur); recs.push(rec); rec = []; cur = ''; }
+      else cur += c;
+    }
+    if (cur !== '' || rec.length) { rec.push(cur); recs.push(rec); }
+    return recs;
+  }
   function parseCsv(text) {
-    const lines = text.trim().split('\n');
-    const headers = parseCsvLine(lines[0]).map(h => h.replace(/^"|"$/g,'').trim());
+    const recs = parseCsvRecords(String(text || '').trim());
+    if (!recs.length) return [];
+    const headers = recs[0].map(h => h.trim());
     const rows = [];
-    for (let i = 1; i < lines.length; i++) {
-      if (!lines[i].trim()) continue;
-      const cols = parseCsvLine(lines[i]);
+    for (let i = 1; i < recs.length; i++) {
+      const cols = recs[i];
+      if (!cols.some(v => v.trim())) continue;
       const row = {};
-      headers.forEach((h, idx) => { row[h] = (cols[idx] || '').replace(/^"|"$/g,'').trim(); });
+      headers.forEach((h, idx) => { if (h) row[h] = (cols[idx] || '').trim(); });
       rows.push(row);
     }
     return rows;
@@ -14262,15 +14285,38 @@ async function initSnsExternal() {
     out.push(cur);
     return out;
   }
+  // FIXED 2026-11-06 per Jaclyn ("S&S key insight saves but doesn't show"):
+  // this used to split the CSV on every line break, but report-insight text
+  // can contain line breaks inside a cell (quoted in the CSV). October's
+  // accomplished2_body had one, which cut the October row in two -- every
+  // column after it (including subscriptions_key_insight) was lost. Now
+  // parses quoted fields across line breaks, per the CSV standard.
+  function parseCsvRecords(text) {
+    const recs = []; let rec = [], cur = '', inQ = false;
+    text = String(text || '').replace(/\r\n?/g, '\n');
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQ) {
+        if (c === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else inQ = false; }
+        else cur += c;
+      } else if (c === '"') inQ = true;
+      else if (c === ',') { rec.push(cur); cur = ''; }
+      else if (c === '\n') { rec.push(cur); recs.push(rec); rec = []; cur = ''; }
+      else cur += c;
+    }
+    if (cur !== '' || rec.length) { rec.push(cur); recs.push(rec); }
+    return recs;
+  }
   function parseCsv(text) {
-    const lines = text.trim().split('\n');
-    const headers = parseCsvLine(lines[0]).map(h => h.replace(/^"|"$/g,'').trim());
+    const recs = parseCsvRecords(String(text || '').trim());
+    if (!recs.length) return [];
+    const headers = recs[0].map(h => h.trim());
     const rows = [];
-    for (let i = 1; i < lines.length; i++) {
-      if (!lines[i].trim()) continue;
-      const cols = parseCsvLine(lines[i]);
+    for (let i = 1; i < recs.length; i++) {
+      const cols = recs[i];
+      if (!cols.some(v => v.trim())) continue;
       const row = {};
-      headers.forEach((h, idx) => { row[h] = (cols[idx] || '').replace(/^"|"$/g,'').trim(); });
+      headers.forEach((h, idx) => { if (h) row[h] = (cols[idx] || '').trim(); });
       rows.push(row);
     }
     return rows;
