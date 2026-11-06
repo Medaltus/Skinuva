@@ -6665,6 +6665,20 @@ function renderStewardshipCharts(investData, impressData) {
 // sheet from here — every fetch logs the actual column headers it found,
 // so if a guess is wrong it's immediately visible in the console rather
 // than requiring another blind round-trip. Per Jaclyn 2026-07-14.
+// ── Closed-month rule (ADDED 2026-11-06 per Jaclyn) ──────────────────────
+// Performance pages and PDF exports report on the month PRIOR — reports
+// are pulled the 3rd–15th for the month before — so a month's data is
+// never shown until that month has ended. A row (year, month) counts only
+// if it's strictly before the current calendar month; the in-progress
+// month's partial row is dropped before anything (chart, KPI, MOM) reads it.
+function isClosedReportMonth(y, m) {
+  y = parseInt(y, 10); m = parseInt(m, 10);
+  if (!y || !m) return false;
+  const now = new Date();
+  return y * 12 + m < now.getFullYear() * 12 + (now.getMonth() + 1);
+}
+function isClosedReportMonthRow(r) { return isClosedReportMonth(r && r.year, r && r.month); }
+
 async function initSns() {
   const canvas = document.getElementById('chart-sns');
   if (!canvas) return;
@@ -6743,7 +6757,7 @@ async function initSns() {
     // across brands; a looser filter previously leaked another brand's
     // row through as if it were this brand's own).
     if (looksLikeCsv(retentionCsv)) {
-      const rows = csvToRows(retentionCsv);
+      const rows = csvToRows(retentionCsv).filter(isClosedReportMonthRow);
       const stripAccentsSnsChart = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       const brandRows = rows.filter(r => stripAccentsSnsChart(r.brand).toLowerCase().trim() === (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase());
       console.log('[Skinuva][subscriptions] active-subscriptions chart -- rows after STRICT brand filter:', brandRows.length, 'of', rows.length);
@@ -6841,7 +6855,7 @@ async function initSns() {
 
     // ── Subscribe & Save Retention KPI ───────────────────────────────────
     if (looksLikeCsv(retentionCsv)) {
-      const rows = csvToRows(retentionCsv);
+      const rows = csvToRows(retentionCsv).filter(isClosedReportMonthRow);
       console.log('[Skinuva][subscriptions] retention sheet columns:', rows.length ? Object.keys(rows[0]) : '(no rows)');
       // Strict, explicit brand match on this sheet's own 'brand' column —
       // NOT the shared isEvolisRow() helper, and deliberately NO fallback
@@ -12633,7 +12647,7 @@ async function initSnsExternal() {
     // across brands; a looser filter previously leaked another brand's
     // row through as if it were this brand's own).
     if (looksLikeCsv(retentionCsv)) {
-      const rows = csvToRows(retentionCsv);
+      const rows = csvToRows(retentionCsv).filter(isClosedReportMonthRow);
       const stripAccentsSnsChart = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       const brandRows = rows.filter(r => stripAccentsSnsChart(r.brand).toLowerCase().trim() === (window.SHEET_CFG.BRAND_SLUG || 'evolis').toLowerCase());
       console.log('[Skinuva][subscriptions] active-subscriptions chart -- rows after STRICT brand filter:', brandRows.length, 'of', rows.length);
@@ -12731,7 +12745,7 @@ async function initSnsExternal() {
 
     // ── Subscribe & Save Retention KPI ───────────────────────────────────
     if (looksLikeCsv(retentionCsv)) {
-      const rows = csvToRows(retentionCsv);
+      const rows = csvToRows(retentionCsv).filter(isClosedReportMonthRow);
       console.log('[Skinuva][subscriptions] retention sheet columns:', rows.length ? Object.keys(rows[0]) : '(no rows)');
       // Strict, explicit brand match on this sheet's own 'brand' column —
       // NOT the shared isEvolisRow() helper, and deliberately NO fallback
