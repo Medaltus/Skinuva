@@ -1184,6 +1184,28 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 .trf-cat-tab:hover{border-color:var(--navy);}
 .trf-cat-tab.active{background:var(--navy);border-color:var(--navy);color:#fff;}
 @media (max-width:640px){ .trf-source{text-align:left;} .trf-select{min-width:0;width:100%;} }
+/* Overview → Top Selling Products (restyled 2026-11-10) */
+.ovtp-note{font-size:11px;font-style:italic;color:var(--muted);margin:2px 0 12px;}
+.ovtp-scroll{overflow-x:auto;}
+.ovtp-table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px;min-width:820px;}
+.ovtp-table thead th{background:var(--navy);color:#fff;text-align:left;padding:11px 12px;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;}
+.ovtp-table thead th:first-child{border-top-left-radius:8px;}
+.ovtp-table thead th:last-child{border-top-right-radius:8px;}
+.ovtp-table tbody td{padding:12px 12px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--navy);}
+.ovtp-table tbody tr:nth-child(even) td{background:var(--bg);}
+.ovtp-table .ovtp-div{border-left:1px dashed rgba(0,31,96,0.18);}
+.ovtp-table thead th.ovtp-div{border-left:1px dashed rgba(255,255,255,0.35);}
+.ovtp-name{font-weight:700;font-family:var(--font-bold);}
+.ovtp-big{font-weight:700;font-family:var(--font-bold);font-size:13px;}
+.ovtp-sub{font-size:9.5px;color:var(--muted);margin-top:3px;white-space:nowrap;letter-spacing:.02em;}
+.ovtp-sub b{font-weight:700;color:var(--muted);text-transform:uppercase;font-size:9px;margin-right:2px;}
+.ovtp-up{color:#1db88a;font-weight:700;white-space:nowrap;}
+.ovtp-dn{color:#db372d;font-weight:700;white-space:nowrap;}
+.ovtp-flat{color:var(--muted);white-space:nowrap;}
+.ovtp-pill{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:700;font-family:var(--font-bold);font-size:12px;}
+.ovtp-pill.good{background:rgba(36,233,163,0.16);color:#128a63;}
+.ovtp-pill.bad{background:rgba(219,55,45,0.12);color:#db372d;}
+.ovtp-pill.none{background:var(--bg2);color:var(--muted);}
 </style>
 <link rel="icon" type="image/png" href="/skinuva_favicon.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -1480,7 +1502,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     <div style="margin-bottom:20px;">
       <div class="card-title" style="margin-bottom:10px;font-size:20px;">Goal Tracker</div>
       <div class="card" id="ov-goal-tracker-card" style="background:var(--sand);border:none;border-top:3px solid var(--navy);margin-top:0;margin-bottom:0;">
-        <div class="card-title" style="font-size:17px;">Amazon</div>
+        <div class="card-title" style="font-size:17px;">Amazon US + CA · Walmart</div>
         <div id="ov-goal-tracker-body" style="display:grid;grid-template-columns:repeat(3,1fr);align-items:center;gap:24px;">
           <div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1;flex:1;">Loading…</div>
         </div>
@@ -1562,21 +1584,28 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     </div>
 
     <div class="card" style="margin-bottom:20px;">
-      <div class="card-title">Top Selling Products <span style="font-weight:400;color:var(--muted);" id="ov-topproducts-title-suffix">(by Units, Amazon + Walmart, Month to Date)</span></div>
-      <table class="tp-table" style="width:100%;border-collapse:collapse;font-size:12px;">
+      <!-- RESTYLED 2026-11-10 per Jaclyn: matches the "Sales by Product" table
+           layout (units + MOM/YOY, then sessions + conversion rate on the
+           right), without revenue. Units = Amazon (US + CA) + Walmart, net of
+           returns; sessions/conversion = Amazon US (Daily Business Report). -->
+      <div class="card-title" style="margin-bottom:2px;">Top Selling Products <span style="font-weight:400;color:var(--muted);" id="ov-topproducts-title-suffix">(by Units, Amazon + Walmart, Month to Date)</span></div>
+      <div class="ovtp-note" id="ov-topproducts-note">MOM% and YOY% compare the same days of last month / last year.</div>
+      <div class="ovtp-scroll">
+      <table class="ovtp-table">
         <thead>
-          <tr style="background:var(--navy);color:#fff;">
-            <th style="text-align:left;padding:8px 10px;">#</th>
-            <th style="text-align:left;padding:8px 10px;">Product</th>
-            <th style="text-align:left;padding:8px 10px;">Amazon</th>
-            <th style="text-align:left;padding:8px 10px;">Walmart</th>
-            <th style="text-align:left;padding:8px 10px;">Total Units</th>
-            <th style="text-align:left;padding:8px 10px;">Ads (Amazon)</th>
-            <th style="text-align:left;padding:8px 10px;">Organic</th>
+          <tr>
+            <th style="width:36px;">#</th>
+            <th>Product</th>
+            <th>Units</th>
+            <th>MOM%</th>
+            <th>YOY%</th>
+            <th class="ovtp-div">Sessions</th>
+            <th>Conv Rate</th>
           </tr>
         </thead>
         <tbody id="ov-products-tbody"><tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);">Loading…</td></tr></tbody>
       </table>
+      </div>
     </div>
 
     </div><!-- /ov-main -->
@@ -24793,7 +24822,17 @@ async function loadAuditResultsFromSheet() {
   // projected); `goal` is this period's target from the Goals sheet, or null
   // if none is set. cancelRate (0-1, or null) only discounts the MTD run-rate
   // projection — never the ring fill or `actual` itself.
-  function buildGoalGaugeHtml(metricLabel, actual, goal, cfg, daysInMonth, cancelRate, featured) {
+  // UPDATED 2026-11-10 per Jaclyn -- same math as the Medaltus Hub's Skinuva
+  // card. opts.applyCancel (Total + Organic, MTD only): the ring fill, the
+  // LIVE figure and the projection all use actual × (1 − cancel rate), so the
+  // % can't read "over goal" while the projection reads "under". Ad Sales
+  // comes from the Advertising Cache (no order-level cancels) and is never
+  // adjusted. opts.note replaces the cancel-rate note (Last Month's
+  // "N pending · adj. X%" / "closed · no pending").
+  function buildGoalGaugeHtml(metricLabel, actual, goal, cfg, daysInMonth, cancelRate, featured, opts) {
+    opts = opts || {};
+    const applyCancel = !!opts.applyCancel && cfg.isPartial && cancelRate != null;
+    const adjActual = (actual != null && applyCancel) ? actual * (1 - cancelRate) : actual;
     const GREEN = '#1db88a', RED = '#db372d';
     const size = 170, stroke = 16;
     const fmtD = n => '$' + Math.round(n).toLocaleString();
@@ -24813,22 +24852,22 @@ async function loadAuditResultsFromSheet() {
         <div style="font-size:14px;color:var(--navy);margin-top:12px;">Goal <strong>${goal == null || goal <= 0 ? '—' : fmtD(goal)}</strong></div>
       </div>`;
     }
-    const actualPct = Math.round((actual / goal) * 100);
+    const actualPct = Math.round((adjActual / goal) * 100);
     // ADDED 2026-10-27 per Jaclyn (matches the other dashboard): under MTD,
     // the real so-far number sits under the goal, marked LIVE. Not shown
     // for Last Month -- there the status line already reads "Revenue $X".
     const liveLine = (fs) => cfg.isPartial
-      ? `<div style="font-size:${fs}px;color:var(--navy);margin-top:3px;display:flex;align-items:center;justify-content:center;gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:#1db88a;display:inline-block;"></span>LIVE: <strong>${fmtD(actual)}</strong></div>`
+      ? `<div style="font-size:${fs}px;color:var(--navy);margin-top:3px;display:flex;align-items:center;justify-content:center;gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:#1db88a;display:inline-block;"></span>LIVE: <strong>${fmtD(adjActual)}</strong></div>`
       : '';
     let onPace, statusText, cancelLine = '';
     if (cfg.isPartial) {
       const rawProjected = cfg.day > 0 ? actual * (daysInMonth / cfg.day) : actual;
       // ADDED 2026-09-17 per Jaclyn (from MiGuard) — discount the naive
       // run-rate by this brand's historical cancellation rate.
-      const projected = cancelRate != null ? rawProjected * (1 - cancelRate) : rawProjected;
+      const projected = applyCancel ? rawProjected * (1 - cancelRate) : rawProjected;
       onPace = projected >= goal;
       statusText = 'Projecting ' + fmtD(projected);
-      cancelLine = `<div style="font-size:10.5px;color:var(--muted);margin-top:3px;">${cancelRate != null ? `adj. ${Math.round(cancelRate * 100)}% cancel rate` : 'no cancel-rate history yet'}</div>`;
+      cancelLine = opts.applyCancel ? `<div style="font-size:10.5px;color:var(--muted);margin-top:3px;">${cancelRate != null ? `adj. ${Math.round(cancelRate * 100)}% cancel rate` : 'no cancel-rate history yet'}</div>` : '';
     } else {
       // Last Full Month — final. Shows the month's revenue total (changed
       // 2026-10-02 per Jaclyn, was "Hit goal" / "Missed goal"); the ring's
@@ -24836,6 +24875,7 @@ async function loadAuditResultsFromSheet() {
       onPace = actualPct >= 100;
       statusText = 'Revenue ' + fmtD(actual);
     }
+    if (opts.note !== undefined) cancelLine = opts.note ? `<div style="font-size:10.5px;color:var(--muted);margin-top:3px;">${opts.note}</div>` : '';
     if (!featured) {
       // Organic / Ads keep the original Skinuva ring (per Jaclyn 2026-10-05:
       // only Total Sales gets the MiGuard restyle) — grey track, flat ends,
@@ -24850,7 +24890,7 @@ async function loadAuditResultsFromSheet() {
         <div style="font-size:14px;font-weight:700;color:var(--navy);margin-top:10px;">${statusText}</div>
         <div style="font-size:14px;font-weight:700;color:var(--navy);margin-top:2px;">Goal ${fmtD(goal)}</div>
         ${liveLine(12)}
-        ${cfg.isPartial ? `<div style="font-size:10px;color:var(--muted);margin-top:2px;">${cancelRate != null ? `adj. for ${Math.round(cancelRate * 100)}% avg. cancel rate` : 'no cancel-rate history yet'}</div>` : ''}
+        ${cancelLine}
       </div>`;
     }
     const color = onPace ? GREEN : RED;
@@ -25290,6 +25330,14 @@ async function loadAuditResultsFromSheet() {
             if (sku && asin) skuToAsinMap[sku] = asin;
             if (walmartItemId && asin) walmartItemIdToAsinMap[walmartItemId] = asin;
           }
+          // ADDED 2026-11-10: Walmart sells some products under a
+          // "-stickerless" SKU (e.g. SVA0002-stickerless) that the master
+          // list only has as the plain SKU, so they showed up as their own
+          // unnamed rows. Try the SKU without that suffix too.
+          Object.keys(skuToAsinMap).forEach(k => {
+            const alt = /-STICKERLESS$/.test(k) ? k.replace(/-STICKERLESS$/, '') : k + '-STICKERLESS';
+            if (!skuToAsinMap[alt]) skuToAsinMap[alt] = skuToAsinMap[k];
+          });
           console.log('[Skinuva][overview] product name lookup: ', Object.keys(asinNameMap).length, 'ASINs,', Object.keys(skuToAsinMap).length, 'SKU→ASIN mappings,', Object.keys(walmartItemIdToAsinMap).length, 'Walmart Item ID→ASIN mappings');
         }
       } catch (e) { console.warn('[Skinuva][overview] product name lookup failed:', e.message); }
@@ -25811,47 +25859,144 @@ async function loadAuditResultsFromSheet() {
       const organicUnitsPrev = Math.max(0, prev.units - blendedAdUnitsPrev);
       setKpi('ov-kpi-organic-orders', organicUnits.toLocaleString(), pctChange(organicUnits, organicUnitsPrev), ovMomSuffix);
 
-      function momBadge(curr, prevVal) {
-        if (!prevVal) return '';
-        const p = Math.round(((curr - prevVal) / prevVal) * 100);
-        if (p > 0) return `<span class="tp-mom-up">▲ ${p}%</span>`;
-        if (p < 0) return `<span class="tp-mom-dn">▼ ${Math.abs(p)}%</span>`;
-        return `<span class="tp-mom-flat">—</span>`;
-      }
-      function unitCell(curr, prevVal) {
-        if (!curr) return '<span class="tp-dash">—</span>';
-        return `<span class="tp-units">${curr.toLocaleString()}</span>${momBadge(curr, prevVal)}`;
-      }
+      // ── Top Selling Products (RESTYLED 2026-11-10 per Jaclyn) ──────────
+      // Layout matches the "Sales by Product" table: Units with MOM% / YOY%,
+      // then Sessions and Conversion Rate (each with MOM / YOY) on the right.
+      //   Units  = Amazon (US + CA) + Walmart, net of returns (same figures
+      //            as before). MOM compares the same days of last month.
+      //            YOY compares the same days last year using gross units on
+      //            both sides, because returns history only starts Jun 2026
+      //            (Amazon last year = Orders_HISTORICAL; Walmart started
+      //            selling Dec 2025, so its YOY reads "—" until then).
+      //   Sessions / Conv Rate = Amazon US, from the Daily Business Report
+      //            (DATE, ASIN, SESSIONS, UNITS_ORDERED). Conversion is that
+      //            report's units ÷ sessions (Amazon's unit session %). Amazon
+      //            reports with a 24–48h delay, so the session window ends on
+      //            the newest reported day, and the MOM / YOY windows are cut
+      //            to the same number of days (pace-adjusted).
+      //   Conv pill: green when the product converts at or above the brand's
+      //            overall rate for the same window, red when below.
+      const tpShiftYear = (iso, n) => { const [y, m, d] = iso.split('-').map(Number); const yy = y + n; const last = new Date(yy, m, 0).getDate(); return `${yy}-${String(m).padStart(2, '0')}-${String(Math.min(d, last)).padStart(2, '0')}`; };
+      const tpAddDays = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+      const tpDaysIncl = (a, b) => Math.round((Date.parse(b + 'T12:00:00Z') - Date.parse(a + 'T12:00:00Z')) / 86400000) + 1;
+      const lyStartStr = tpShiftYear(mtdStartStr, -1), lyEndStr = tpShiftYear(mtdEndStr, -1);
 
+      let tpHistRows = [], tpBrRows = [];
+      try {
+        const DAILY_BR_FILE = '1QLjUvYg-JR6jQmdFlykypkNarqsZvTCOgA3bFagDlVg', DAILY_BR_GID = '685174956'; // "Newderm - Daily Business Reports" → skinuva tab
+        const [histCsvTp, brCsvTp] = await Promise.all([
+          fetch(sheetCsvUrl(window.SHEET_CFG.SHEET_ORDERS_HISTORICAL.fileId, window.SHEET_CFG.SHEET_ORDERS_HISTORICAL.gid) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+          fetch(sheetCsvUrl(DAILY_BR_FILE, DAILY_BR_GID) + `&_cb=${Date.now()}`).then(r => r.ok ? r.text() : '').catch(() => ''),
+        ]);
+        tpHistRows = isCsv(histCsvTp) ? parseCsv(histCsvTp).filter(isEvolisRow) : [];
+        tpBrRows = isCsv(brCsvTp) ? parseCsv(brCsvTp) : [];
+      } catch (e) { console.warn('[Skinuva][overview][top-products] history / business report fetch failed:', e.message); }
+
+      // Units: last year, same days (gross). Amazon from Orders_HISTORICAL,
+      // Walmart from its own orders sheet (same rows as above).
+      const amzLyUnitsByAsin = unitsByAsin(aggregateRange(tpHistRows, lyStartStr, lyEndStr, isValidAmazonRow).filteredRows, skuToAsinMap);
+      const wmtLyUnitsByAsin = unitsByAsin(aggregateRange(wmtRows, lyStartStr, lyEndStr, isValidWalmartRow).filteredRows, skuToAsinMap);
+      const amzGrossByAsin = unitsByAsin(amzMtd.filteredRows, skuToAsinMap);
+      const wmtGrossByAsin = unitsByAsin(wmtMtd.filteredRows, skuToAsinMap);
+      const histHasLy = tpHistRows.some(r => { const d = normalizeDate(r.date); return d && d <= lyEndStr; });
+      const wmtFirstDate = wmtRows.reduce((min, r) => { const d = normalizeDate(r.date); return d && (!min || d < min) ? d : min; }, '');
+      const wmtHasLy = !!wmtFirstDate && wmtFirstDate <= lyEndStr;
+
+      // Sessions windows (pace-adjusted to the newest reported day).
+      const brByDate = {};
+      let brLatest = '';
+      tpBrRows.forEach(r => {
+        const d = normalizeDate(r.DATE || r.date), asin = (r.ASIN || r.asin || '').trim().toUpperCase();
+        if (!d || !asin) return;
+        const o = ((brByDate[d] = brByDate[d] || {})[asin] = brByDate[d][asin] || { s: 0, u: 0 });
+        o.s += parseFloat(String(r.SESSIONS || r.sessions || '0').replace(/[^0-9.-]/g, '')) || 0;
+        o.u += parseFloat(String(r.UNITS_ORDERED || r.units_ordered || '0').replace(/[^0-9.-]/g, '')) || 0;
+        if (d > brLatest) brLatest = d;
+      });
+      const brDates = Object.keys(brByDate);
+      const sessCurEnd = brLatest && brLatest < mtdEndStr ? brLatest : mtdEndStr;
+      const sessDays = sessCurEnd >= mtdStartStr ? tpDaysIncl(mtdStartStr, sessCurEnd) : 0;
+      const truncated = sessCurEnd < mtdEndStr;
+      const sessPrevEnd = truncated ? tpAddDays(prevStartStr, sessDays - 1) : prevEndStr;
+      const sessLyEnd = tpShiftYear(sessCurEnd, -1);
+      function brWindow(start, end) {
+        const by = {}; let s = 0, u = 0, days = 0;
+        brDates.forEach(d => {
+          if (d < start || d > end) return;
+          days++;
+          Object.entries(brByDate[d]).forEach(([a, o]) => { const e = (by[a] = by[a] || { s: 0, u: 0 }); e.s += o.s; e.u += o.u; s += o.s; u += o.u; });
+        });
+        return { by, s, u, days, expected: tpDaysIncl(start, end) };
+      }
+      const brCur  = sessDays > 0 ? brWindow(mtdStartStr, sessCurEnd) : { by: {}, s: 0, u: 0, days: 0, expected: 0 };
+      const brPrev = sessDays > 0 ? brWindow(prevStartStr, sessPrevEnd) : { by: {}, s: 0, u: 0, days: 0, expected: 0 };
+      const brLy   = sessDays > 0 ? brWindow(lyStartStr, sessLyEnd) : { by: {}, s: 0, u: 0, days: 0, expected: 0 };
+      // A comparison window only counts if the report covers every day of it.
+      const prevComplete = brPrev.days > 0 && brPrev.days === brPrev.expected;
+      const lyComplete = brLy.days > 0 && brLy.days === brLy.expected;
+      const brandConv = brCur.s > 0 ? brCur.u / brCur.s * 100 : null;
+
+      const pctOf = (cur, base) => (base == null || !base || cur == null) ? null : Math.round((cur - base) / base * 100);
+      const chg = p => p == null ? '<span class="ovtp-flat">—</span>'
+        : p > 0 ? `<span class="ovtp-up">▲+${p}%</span>` : p < 0 ? `<span class="ovtp-dn">▼${p}%</span>` : '<span class="ovtp-flat">0%</span>';
+      const fmtN = v => Math.round(v).toLocaleString();
+
+      // Amazon Canada listings have their own ASINs (same product names as
+      // US), so they're labelled "(CA)"; Amazon US Business Report sessions
+      // don't cover them.
+      const caAsins = new Set(amzRows.filter(r => r._territory === 'CA').map(r => (r.asin || '').trim().toUpperCase()).filter(Boolean));
       const productRows = Array.from(allAsins).map(asin => {
         const a = amzUnitsByAsin[asin] || 0, m = wmtUnitsByAsin[asin] || 0;
         const aPrev = amzPrevUnitsByAsin[asin] || 0, mPrev = wmtPrevUnitsByAsin[asin] || 0;
-        const total = a + m, totalPrev = aPrev + mPrev;
-        // Ad units = Amazon Ads (capped at Amazon's own net units) +
-        // Walmart Ads (capped at Walmart's own net units, added
-        // 2026-08-06 per Jaclyn).
-        const adUnits = Math.min(adUnitsByAsin[asin] || 0, a) + Math.min(wmtAdUnitsByAsin[asin] || 0, m);
-        const orgUnits = total - adUnits;
-        return { asin, name: asinNameMap[asin] || asin, amazon: a, amazonPrev: aPrev, walmart: m, walmartPrev: mPrev, total, totalPrev, adUnits, orgUnits };
+        const aGross = amzGrossByAsin[asin] || 0, mGross = wmtGrossByAsin[asin] || 0;
+        const aLy = amzLyUnitsByAsin[asin] || 0, mLy = wmtLyUnitsByAsin[asin] || 0;
+        const sc = brCur.by[asin], sp = brPrev.by[asin], sl = brLy.by[asin];
+        const conv = o => (o && o.s > 0) ? o.u / o.s * 100 : null;
+        return {
+          asin, name: (asinNameMap[asin] || asin) + (caAsins.has(asin) ? ' (CA)' : ''),
+          amazon: a, walmart: m, total: a + m,
+          momTotal: pctOf(a + m, aPrev + mPrev), momAmz: pctOf(a, aPrev), momWmt: pctOf(m, mPrev),
+          yoyTotal: histHasLy ? pctOf(aGross + mGross, aLy + mLy) : null,
+          yoyAmz: histHasLy ? pctOf(aGross, aLy) : null,
+          yoyWmt: wmtHasLy ? pctOf(mGross, mLy) : null,
+          sessions: sc ? sc.s : null,
+          sessMom: prevComplete && sc && sp ? pctOf(sc.s, sp.s) : null,
+          sessYoy: lyComplete && sc && sl ? pctOf(sc.s, sl.s) : null,
+          conv: conv(sc),
+          convMom: prevComplete ? pctOf(conv(sc), conv(sp)) : null,
+          convYoy: lyComplete ? pctOf(conv(sc), conv(sl)) : null,
+        };
       }).sort((x, y) => y.total - x.total).slice(0, 15);
+
+      const noteEl = document.getElementById('ov-topproducts-note');
+      if (noteEl) {
+        const md = iso => { const [y, mo, d] = iso.split('-').map(Number); return `${monthNames[mo - 1]} ${d}`; };
+        noteEl.textContent = 'MOM% and YOY% compare the same days of last month / last year (YOY on gross units — returns history starts Jun 2026).'
+          + (sessDays > 0 ? ` Sessions & conversion: Amazon US, ${md(mtdStartStr)}–${md(sessCurEnd)}${truncated ? ' (Amazon reports with a 24–48 hour delay; comparisons use the same number of days)' : ''}.` : ' Sessions & conversion: no Business Report data for this period yet.');
+      }
 
       const tbody = document.getElementById('ov-products-tbody');
       if (tbody) {
         if (!productRows.length) {
           tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);">No sales ${cfg.isPartial ? 'yet this month' : 'this period'}.</td></tr>`;
         } else {
-          tbody.innerHTML = productRows.map((r, i) => `
-            <tr>
-              <td style="padding:7px 10px;">${i + 1}.</td>
-              <td style="padding:7px 10px;">${r.name}</td>
-              <td style="padding:7px 10px;"><div class="tp-cell">${unitCell(r.amazon, r.amazonPrev)}</div></td>
-              <td style="padding:7px 10px;"><div class="tp-cell">${unitCell(r.walmart, r.walmartPrev)}</div></td>
-              <td style="padding:7px 10px;"><div class="tp-cell">${unitCell(r.total, r.totalPrev)}</div></td>
-              <td style="padding:7px 10px;">${r.adUnits > 0 ? `<span class="tp-units">${r.adUnits.toLocaleString()}</span>` : '<span class="tp-dash">—</span>'}</td>
-              <td style="padding:7px 10px;">${r.orgUnits > 0 ? `<span class="tp-units">${r.orgUnits.toLocaleString()}</span>` : '<span class="tp-dash">—</span>'}</td>
-            </tr>`).join('');
+          const chanSub = (amz, wmt) => `<div class="ovtp-sub"><b>AMZ</b> ${amz} &nbsp;<b>WMT</b> ${wmt}</div>`;
+          tbody.innerHTML = productRows.map((r, i) => {
+            const pill = r.conv == null ? '<span class="ovtp-pill none">—</span>'
+              : `<span class="ovtp-pill ${brandConv != null && r.conv >= brandConv ? 'good' : 'bad'}">${r.conv.toFixed(2)}%</span>`;
+            return `<tr>
+              <td>${i + 1}</td>
+              <td class="ovtp-name">${r.name}</td>
+              <td><div class="ovtp-big">${fmtN(r.total)}</div>${chanSub(r.amazon ? fmtN(r.amazon) : '—', r.walmart ? fmtN(r.walmart) : '—')}</td>
+              <td>${chg(r.momTotal)}${chanSub(chg(r.momAmz), chg(r.momWmt))}</td>
+              <td>${chg(r.yoyTotal)}${chanSub(chg(r.yoyAmz), chg(r.yoyWmt))}</td>
+              <td class="ovtp-div"><div class="ovtp-big">${r.sessions == null ? '—' : fmtN(r.sessions)}</div><div class="ovtp-sub"><b>MOM</b> ${chg(r.sessMom)} &nbsp;<b>YOY</b> ${chg(r.sessYoy)}</div></td>
+              <td>${pill}<div class="ovtp-sub"><b>MOM</b> ${chg(r.convMom)} &nbsp;<b>YOY</b> ${chg(r.convYoy)}</div></td>
+            </tr>`;
+          }).join('');
         }
       }
+      console.log('[Skinuva][overview][top-products] sessions window', mtdStartStr, '→', sessCurEnd, '| prev →', sessPrevEnd, prevComplete ? '(complete)' : '(incomplete)', '| LY →', sessLyEnd, lyComplete ? '(complete)' : '(incomplete)', '| brand conv', brandConv && brandConv.toFixed(2) + '%', '| hist LY rows?', histHasLy, '| walmart LY?', wmtHasLy);
 
       // -- Donut: revenue share by channel (real MTD revenue, net of returns) --
       // Switched to the net figures 2026-08-03 — using gross here while the
@@ -26042,55 +26187,86 @@ async function loadAuditResultsFromSheet() {
 
               // Amazon-only actuals, pending included, netted against
               // returns the same way amzMtdNetRevenue is above.
-              const goalsAmzAgg = aggregateRange(amzRows, mtdStartStr, mtdEndStr, goalsIsValidAmazonRow);
-              const goalsTotalActual = Math.max(0, goalsAmzAgg.totalRevenue - amzReturnsMtd.totalAmt);
-              // FIXED 2026-09-14 per Jaclyn -- "MTD field is broken." This
-              // used to reuse `proratedSales` directly, but that variable
-              // means two different things depending on the period (see
-              // its own comment above): for Last Full Month it's the real,
-              // final total for that completed month (fine to reuse as-is
-              // -- no proration actually happens in that branch despite
-              // the name); for MTD it's ALREADY a pace-based projection
-              // built from LAST MONTH's total (lastMonthSales * dayFrac),
-              // because Amazon's ad sheets have no day-level breakdown to
-              // read a true "this month so far" figure from directly.
-              // Feeding that pre-projected number into buildGoalGaugeHtml
-              // as `actual` double-projects it -- that function applies
-              // its OWN day-elapsed projection on top (see its `projected
-              // = actual * daysInMonth/cfg.day` below), which had been
-              // inflating both the ring fill and the "Projecting $X" line,
-              // and by extension goalsOrganicActual too (Total - Ads).
-              // Fixed by reading THIS month's own (partial, still-in-
-              // progress) row from the ad orders cache directly under MTD
-              // -- same real-row lookup the Last Full Month branch above
-              // already does for its own reference month -- so
-              // buildGoalGaugeHtml's single day-elapsed projection is the
-              // only projection applied, matching how the goal ring is
-              // supposed to work (actual = genuine so-far progress,
-              // projection computed once, in one place).
-              // CHANGED 2026-10-27 per Jaclyn -- Advertising Cache (SP + SB +
-              // SD, US + CA in USD) instead of the Ad Orders Cache, so the
-              // Ads gauge includes Sponsored Brands and the CA dollars are
-              // converted. amzAdCur is this month's real so-far row under
-              // MTD (not a projection), so buildGoalGaugeHtml's own
-              // projection is still the only one applied.
-              const goalsAdsActual = amzAdCur.sales;
-              const goalsOrganicActual = Math.max(0, goalsTotalActual - goalsAdsActual);
+              // ── Actuals: same logic as the Medaltus Hub's Skinuva card ──
+              // (CHANGED 2026-11-10 per Jaclyn, was Amazon-only net of returns)
+              //   Total   = Amazon US + Amazon CA (already CAD→USD, see
+              //             convertCaRow) + Walmart, gross order revenue for
+              //             the period. Pending IS counted; Cancelled and Vine
+              //             are not. Not netted against returns (Hub doesn't).
+              //   Ad      = Advertising Cache sales (SP+SB+SD), US + CA in USD.
+              //             No US row for the month yet → "Not available yet".
+              //   Organic = Total − Ad.
+              //   MTD: ring fill, LIVE and projection for Total + Organic are
+              //        discounted by the pooled Amazon (US+CA) cancel rate.
+              //   Last Month: pending orders' value is discounted by the
+              //        cancel rate until they settle ("N pending · adj. X%"),
+              //        then shows the plain total ("closed · no pending").
+              const GT_UNSETTLED = new Set(['pending', 'unshipped', 'partiallyshipped', 'created', 'acknowledged']);
+              const gtValid = r => {
+                const st = (r.status || '').toLowerCase().trim();
+                if (st === 'cancelled' || st === 'canceled') return false;
+                if ((r.promotion_ids || '').toLowerCase().includes('vine')) return false;
+                return true;
+              };
+              const gtSum = rows => {
+                const orders = {};
+                rows.forEach(r => {
+                  const d = normalizeDate(r.date);
+                  if (!d || d < mtdStartStr || d > mtdEndStr || !gtValid(r) || !r.order_id) return;
+                  const o = orders[r.order_id] || (orders[r.order_id] = { v: 0, pending: false });
+                  o.v += parseAmt(r.item_price);
+                  if (GT_UNSETTLED.has((r.status || '').toLowerCase().trim())) o.pending = true;
+                });
+                let total = 0, pendingValue = 0, pendingOrders = 0;
+                Object.values(orders).forEach(o => { total += o.v; if (o.pending) { pendingValue += o.v; pendingOrders++; } });
+                return { total, pendingValue, pendingOrders };
+              };
+              // Pooled cancel rate (Hub method): order-level (any cancelled
+              // line = cancelled order), Vine excluded, leaving out the real
+              // current month and the earliest month in the data (both partial).
+              const gtCancelRate = rows => {
+                const now = new Date(), curKey = `${now.getFullYear()}-${now.getMonth() + 1}`;
+                const orders = {};
+                rows.forEach(r => {
+                  const oid = (r.order_id || '').trim(); if (!oid) return;
+                  const d = normalizeDate(r.date); if (!d) return;
+                  const [y, m] = d.split('-').map(Number);
+                  const o = orders[oid] || (orders[oid] = { c: false, vine: false, key: `${y}-${m}`, sort: y * 12 + m });
+                  if ((r.status || '').trim().toLowerCase() === 'cancelled') o.c = true;
+                  if ((r.promotion_ids || '').toLowerCase().includes('vine')) o.vine = true;
+                });
+                const list = Object.values(orders);
+                if (!list.length) return null;
+                const firstKey = list.reduce((a, o) => o.sort < a.sort ? o : a).key;
+                let n = 0, c = 0;
+                list.forEach(o => { if (o.vine || o.key === curKey || o.key === firstKey) return; n++; if (o.c) c++; });
+                return n > 0 ? c / n : null;
+              };
+              const gA = gtSum(amzRows), gW = gtSum(wmtRows);
+              let goalsTotalActual = gA.total + gW.total;
+              const hasUsAdRow = advUsRows.some(r => parseInt(r.year, 10) === cfg.year && parseInt(r.month, 10) === cfg.month);
+              const goalsAdsActual = hasUsAdRow ? amzAdCur.sales : null;
+              let goalsCancelRate = null, lmNote;
+              if (cfg.isPartial) {
+                goalsCancelRate = gtCancelRate(amzRows);
+              } else {
+                const pendingOrders = gA.pendingOrders + gW.pendingOrders;
+                const pendingValue = gA.pendingValue + gW.pendingValue;
+                const lmRate = pendingOrders > 0 ? gtCancelRate(amzRows.concat(wmtRows)) : null;
+                if (pendingOrders > 0 && lmRate != null) goalsTotalActual -= pendingValue * lmRate;
+                lmNote = pendingOrders > 0
+                  ? `${pendingOrders} pending${lmRate != null ? ` · adj. ${Math.round(lmRate * 100)}%` : ''}`
+                  : 'closed · no pending';
+              }
+              const goalsOrganicActual = goalsAdsActual == null ? null : Math.max(0, goalsTotalActual - goalsAdsActual);
+              console.log('[Skinuva][overview][goals] amazon (US+CA)', gA.total.toFixed(2), '+ walmart', gW.total.toFixed(2), '= total', goalsTotalActual.toFixed(2), '| ads', goalsAdsActual, '| organic', goalsOrganicActual, '| cancel rate', goalsCancelRate, lmNote ? '| ' + lmNote : '');
 
               const daysInMonth = new Date(cfg.year, cfg.month, 0).getDate();
-              // ADDED 2026-09-17 per Jaclyn, ported from MiGuard's Goal
-              // Tracker spec -- pooled all-time Amazon order-cancellation
-              // rate (excluding the in-progress month itself and Vine
-              // orders), used to discount each gauge's run-rate projection
-              // below. Computed only under cfg.isPartial since a completed
-              // month's actual is already final and gets no projection at
-              // all (see buildGoalGaugeHtml). Same amzRows already fetched
-              // fresh above for the rest of this page -- no extra fetch.
-              const goalsCancelRate = cfg.isPartial ? computeAmazonCancelRate(amzRows, cfg.year, cfg.month) : null;
+              const lmOpt = cfg.isPartial ? {} : { note: lmNote };
               goalsBody.innerHTML =
-                buildGoalGaugeHtml('Total Sales', goalsTotalActual, totalGoal, cfg, daysInMonth, goalsCancelRate, true) +
-                buildGoalGaugeHtml('Organic Sales', goalsOrganicActual, organicGoal, cfg, daysInMonth, goalsCancelRate) +
-                buildGoalGaugeHtml('Ads Sales', goalsAdsActual, adsGoal, cfg, daysInMonth, goalsCancelRate);
+                buildGoalGaugeHtml('Total Sales', goalsTotalActual, totalGoal, cfg, daysInMonth, goalsCancelRate, true, Object.assign({ applyCancel: true }, lmOpt)) +
+                buildGoalGaugeHtml('Organic Sales', goalsOrganicActual, organicGoal, cfg, daysInMonth, goalsCancelRate, false, Object.assign({ applyCancel: true }, lmOpt)) +
+                buildGoalGaugeHtml('Ad Sales', goalsAdsActual, adsGoal, cfg, daysInMonth, null, false, { applyCancel: false });
             } else {
               goalsBody.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;grid-column:1/-1;flex:1;">No goals row found for ${monthNames[cfg.month - 1]} ${cfg.year}.</div>`;
             }
