@@ -1206,6 +1206,19 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
 .ovtp-pill.good{background:rgba(36,233,163,0.16);color:#128a63;}
 .ovtp-pill.bad{background:rgba(219,55,45,0.12);color:#db372d;}
 .ovtp-pill.none{background:var(--bg2);color:var(--muted);}
+/* Traffic annotations — listing changes + out-of-stock (ported from MiGuard 2026-11-16) */
+.trf-media-hd + .trf-media-item{margin-top:0;}
+.trf-media-item + .trf-media-hd{margin-top:10px;}
+.trf-chg-dot{flex:0 0 18px;height:18px;border-radius:50%;background:#001F60;color:#fff;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-top:0;}
+.trf-oos-swatch{flex:0 0 18px;height:6px;border-radius:2px;margin-top:6px;}
+.trf-chg{margin-top:3px;}
+.trf-chg summary{cursor:pointer;font-size:11px;color:var(--muted);font-weight:600;}
+.trf-chg-field{font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.04em;margin:8px 0 4px;}
+.trf-chg-row{display:flex;gap:8px;font-size:11.5px;line-height:1.45;margin-bottom:4px;color:var(--navy);}
+.trf-chg-lbl{flex:0 0 46px;font-weight:700;color:var(--muted);}
+.trf-chg-row.new .trf-chg-lbl{color:#1db88a;}
+.trf-anno-key{display:inline-flex;align-items:center;gap:6px;margin-left:16px;font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap;}
+.trf-ongoing{display:inline-block;margin-left:4px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:rgba(219,55,45,.12);color:var(--danger);}
 </style>
 <link rel="icon" type="image/png" href="/skinuva_favicon.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -1614,8 +1627,16 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
          Rendered by window.initProjections(). -->
     <div class="channel-page" id="ov-projections">
       <div class="card">
-        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;">
-          <div class="card-title" style="margin-bottom:0;">Share of Sales</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:4px;">
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+            <div class="card-title" id="proj-ads-title" style="margin-bottom:0;">Share of Sales</div>
+            <!-- View toggle — added 2026-11-16 per Jaclyn, same as MiGuard's -->
+            <div class="period-pills" id="proj-ads-pills" style="display:flex;background:var(--white);border:1px solid var(--border);border-radius:999px;padding:4px;gap:2px;">
+              <button class="period-pill active" data-view="share" onclick="window._projAdsView && window._projAdsView('share')">Share of Sales</button>
+              <button class="period-pill" data-view="organic" onclick="window._projAdsView && window._projAdsView('organic')">Organic Sales</button>
+              <button class="period-pill" data-view="ad" onclick="window._projAdsView && window._projAdsView('ad')">Ad Sales</button>
+            </div>
+          </div>
           <div id="legend-proj-ads" style="display:flex;align-items:center;"></div>
         </div>
         <div style="height:10px;"></div>
@@ -26778,8 +26799,17 @@ window.initProjections = function () {
     const csvOf = k => fetch(ovCsvUrl(cfgOf(k).fileId || '', cfgOf(k).gid || '')).then(r => r.ok ? r.text() : '').catch(() => '');
     const tbody = document.getElementById('proj-quarter-tbody');
     try {
-      const [sales, adCsv, invCsv, consCsv] = await Promise.all([
-        window.getAmazonMonthlySales(), csvOf('SHEET_STEWARDSHIP_SUMMARY'), csvOf('SHEET_PRODUCT_INVENTORY'), csvOf('SHEET_CONSIGNMENT_INVENTORY'),
+      // Ad sales source CHANGED 2026-11-16: Skinuva's Stewardship Summary
+      // ad_sales column is blank on every row, so the chart had nothing to
+      // draw. Now: Goals sheet "PPC Sales" (column I, one row per month back
+      // to Jan-23 — the Hub confirmed it matches the Advertising Cache), and
+      // the Advertising Cache (skinuva tab, SP+SB+SD) for any month the
+      // Goals sheet hasn't been filled in for yet.
+      const GOALS_FILE = '1trsHDgVSLprsOOjOuFWGZRDqVOV-eII3', GOALS_GID = '196666138', GOALS_COL_PPC_SALES = 8;
+      const [sales, goalsCsvP, advCsvP, invCsv, consCsv] = await Promise.all([
+        window.getAmazonMonthlySales(),
+        fetch(ovCsvUrl(GOALS_FILE, GOALS_GID)).then(r => r.ok ? r.text() : '').catch(() => ''),
+        csvOf('SHEET_ADVERTISING'), csvOf('SHEET_PRODUCT_INVENTORY'), csvOf('SHEET_CONSIGNMENT_INVENTORY'),
       ]);
       const { products, byAsinMonth, monthTotal, syncStart, OTHER_KEY } = sales;
       // Consignment — added 2026-10-05 per Jaclyn. Same sheet + rules as the
@@ -26804,12 +26834,25 @@ window.initProjections = function () {
 
       // ── 1) Ad vs. Organic share of sales ──
       // A month with a blank ad_sales cell is a gap on both lines, not 0%.
-      const adByMonth = {};
-      parseCsvToRows(adCsv).forEach(r => {
+      const adByMonth = {}, adSrc = {};
+      // Goals sheet: positional (its header rows aren't usable), column A =
+      // "Mon-YY", quote-aware split so " $ 15,903.99 " stays one cell.
+      const splitRow = line => { const out = []; let cur = '', q = false; for (let i = 0; i < line.length; i++) { const c = line[i]; if (c === '"') { if (q && line[i + 1] === '"') { cur += '"'; i++; } else q = !q; } else if (c === ',' && !q) { out.push(cur); cur = ''; } else cur += c; } out.push(cur); return out; };
+      String(goalsCsvP || '').replace(/\r/g, '').split('\n').forEach(line => {
+        const cols = splitRow(line);
+        const mm = String(cols[0] || '').trim().match(/^([A-Za-z]{3})-(\d{2})$/); if (!mm) return;
+        const mi = MONTHS.indexOf(mm[1].charAt(0).toUpperCase() + mm[1].slice(1).toLowerCase()); if (mi < 0) return;
+        const raw = String(cols[GOALS_COL_PPC_SALES] || '').replace(/[^0-9.\-]/g, '');
+        if (raw === '' || !parseFloat(raw)) return;
+        const k = `20${mm[2]}-${String(mi + 1).padStart(2, '0')}`;
+        adByMonth[k] = parseFloat(raw); adSrc[k] = 'goals';
+      });
+      parseCsvToRows(advCsvP).forEach(r => {
         const y = parseInt(r.year, 10), m = parseInt(r.month, 10);
-        const raw = String(r.ad_sales == null ? '' : r.ad_sales).trim();
+        const raw = String(r.sales == null ? '' : r.sales).trim();
         if (!y || !m || raw === '') return;
-        adByMonth[`${y}-${String(m).padStart(2, '0')}`] = amt(raw);
+        const k = `${y}-${String(m).padStart(2, '0')}`;
+        if (!(k in adByMonth)) { adByMonth[k] = amt(raw); adSrc[k] = 'cache'; }
       });
       const months12 = [];
       for (let i = 11; i >= 0; i--) months12.push(new Date(lastFull.getFullYear(), lastFull.getMonth() - i, 1));
@@ -26823,38 +26866,108 @@ window.initProjections = function () {
         }
         return { label: `${MONTHS[dt.getMonth()]} '${String(dt.getFullYear()).slice(2)}`, ym, pct, orgPct, adSales, total };
       });
-      const canvas = document.getElementById('proj-ads-pct-chart');
-      if (canvas && typeof Chart === 'function') {
+      // ── Share of Sales / Organic Sales / Ad Sales toggle (ported from MiGuard 2026-11-16 per Jaclyn) ──
+      // Share of Sales = the original 12-month Ad % vs Organic % chart.
+      // Organic Sales / Ad Sales = monthly $, Jan–Dec on the x-axis, one line
+      // per year for every year with data (same layout + colors as the Sales
+      // page chart: current year green/filled, then navy, sand, grey).
+      // Same sources and rules as Share of Sales: ad $ = Goals sheet PPC Sales (Advertising Cache fallback)
+      // organic $ = Amazon order total − ad $. Full months only (the
+      // month in progress is left off, like the Sales page); a month with no
+      // ad_sales value is a gap on both views, never a 0.
+      const PROJ_YEAR_COLORS = [
+        { border: '#24e9a3', bg: 'rgba(36,233,163,0.08)', fill: true },
+        { border: '#001f60', bg: 'transparent', fill: false },
+        { border: '#f4dfd0', bg: 'transparent', fill: false },
+        { border: '#ccd3d5', bg: 'transparent', fill: false },
+      ];
+      const PROJ_VIEW_TITLES = { share: 'Share of Sales', organic: 'Organic Sales', ad: 'Ad Sales' };
+      const lastFullYm = ymOf(lastFull);
+      function renderProjAdsChart(view) {
+        const canvas = document.getElementById('proj-ads-pct-chart');
+        if (!canvas || typeof Chart !== 'function') return;
         if (window._projAdsPctChart) window._projAdsPctChart.destroy();
-        const fmt$ = v => '$' + Math.round(v || 0).toLocaleString();
+        const titleEl = document.getElementById('proj-ads-title');
+        if (titleEl) titleEl.textContent = PROJ_VIEW_TITLES[view];
+        document.querySelectorAll('#proj-ads-pills .period-pill').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
+        const noteEl = document.getElementById('proj-ads-note');
+
+        if (view === 'share') {
+        {
+          const fmt$ = v => '$' + Math.round(v || 0).toLocaleString();
+          window._projAdsPctChart = new Chart(canvas, {
+            type: 'line',
+            data: { labels: pts.map(p => p.label), datasets: [
+              { label: 'Ad sales %', data: pts.map(p => p.pct), borderColor: '#24e9a3', backgroundColor: 'rgba(36,233,163,0.08)', fill: true, pointRadius: 3, tension: 0.3, borderWidth: 2.5, spanGaps: false },
+              { label: 'Organic sales %', data: pts.map(p => p.orgPct), borderColor: '#001f60', backgroundColor: 'transparent', fill: false, pointRadius: 3, tension: 0.3, borderWidth: 2.5, spanGaps: false },
+            ] },
+            options: {
+              responsive: true, maintainAspectRatio: false,
+              interaction: { mode: 'index', intersect: false },
+              plugins: {
+                legend: { display: false }, // external legend in #legend-proj-ads
+                tooltip: { callbacks: { label: ctx => {
+                  const p = pts[ctx.dataIndex];
+                  if (ctx.datasetIndex === 0) return ` Ad: ${p.pct}% (${fmt$(p.adSales)})`;
+                  return ` Organic: ${p.orgPct}% (${fmt$(Math.max(0, p.total - p.adSales))} of ${fmt$(p.total)})`;
+                } } },
+              },
+              scales: {
+                x: { grid: { color: 'rgba(0,0,0,0.04)' } },
+                y: { beginAtZero: true, max: 100, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { callback: v => v + '%' } },
+              },
+            },
+          });
+          if (typeof window.renderExternalLegend === 'function') window.renderExternalLegend(window._projAdsPctChart, 'legend-proj-ads');
+        }
+        const gaps = pts.filter(p => p.pct == null).map(p => p.label);
+        if (noteEl) noteEl.textContent = 'ℹ Ad sales from the Goals sheet (PPC Sales column), or the Advertising Cache for months not filled in there yet; total sales from Amazon orders, same as the table below.' + (gaps.length ? ' No ad sales value yet for: ' + gaps.join(', ') + ' — those months are left blank.' : '');
+          return;
+        }
+
+        // Organic Sales / Ad Sales — one line per year.
+        const byYear = {};
+        Object.keys(adByMonth).forEach(ym => {
+          if (ym > lastFullYm) return;
+          const total = monthTotal[ym], ad = adByMonth[ym];
+          let v;
+          if (view === 'ad') v = ad;
+          else { if (!(total > 0)) return; v = Math.max(0, total - ad); }
+          const y = parseInt(ym.substring(0, 4), 10), m = parseInt(ym.substring(5, 7), 10);
+          (byYear[y] = byYear[y] || Array(12).fill(null))[m - 1] = v;
+        });
+        const years = Object.keys(byYear).map(Number).sort((x, y) => y - x); // newest first
+        const fmtK = v => v == null ? '' : '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : Math.round(v));
+        const fmtFull = v => '$' + Math.round(v || 0).toLocaleString();
+        const datasets = years.map((yr, i) => {
+          const c = PROJ_YEAR_COLORS[Math.min(i, PROJ_YEAR_COLORS.length - 1)];
+          return { label: String(yr), data: byYear[yr], borderColor: c.border, backgroundColor: c.bg, fill: c.fill, pointRadius: 2, tension: 0.3, borderWidth: 2.5, spanGaps: false };
+        });
         window._projAdsPctChart = new Chart(canvas, {
           type: 'line',
-          data: { labels: pts.map(p => p.label), datasets: [
-            { label: 'Ad sales %', data: pts.map(p => p.pct), borderColor: '#24e9a3', backgroundColor: 'rgba(36,233,163,0.08)', fill: true, pointRadius: 3, tension: 0.3, borderWidth: 2.5, spanGaps: false },
-            { label: 'Organic sales %', data: pts.map(p => p.orgPct), borderColor: '#001f60', backgroundColor: 'transparent', fill: false, pointRadius: 3, tension: 0.3, borderWidth: 2.5, spanGaps: false },
-          ] },
+          data: { labels: MONTHS, datasets },
           options: {
             responsive: true, maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-              legend: { display: false }, // external legend in #legend-proj-ads
-              tooltip: { callbacks: { label: ctx => {
-                const p = pts[ctx.dataIndex];
-                if (ctx.datasetIndex === 0) return ` Ad: ${p.pct}% (${fmt$(p.adSales)})`;
-                return ` Organic: ${p.orgPct}% (${fmt$(Math.max(0, p.total - p.adSales))} of ${fmt$(p.total)})`;
-              } } },
+              legend: { display: false },
+              tooltip: { callbacks: {
+                label: ctx => ctx.parsed.y == null ? null : ` ${ctx.dataset.label}: ${fmtFull(ctx.parsed.y)}`,
+              } },
             },
             scales: {
               x: { grid: { color: 'rgba(0,0,0,0.04)' } },
-              y: { beginAtZero: true, max: 100, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { callback: v => v + '%' } },
+              y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { callback: fmtK } },
             },
           },
         });
         if (typeof window.renderExternalLegend === 'function') window.renderExternalLegend(window._projAdsPctChart, 'legend-proj-ads');
+        if (noteEl) noteEl.textContent = view === 'ad'
+          ? 'ℹ Monthly ad sales from the Goals sheet (PPC Sales column), or the Advertising Cache for months not filled in there yet. Full months only.'
+          : 'ℹ Monthly organic sales = Amazon order total (same as the table below) − ad sales (Goals sheet PPC Sales, or the Advertising Cache where that\'s blank). Full months only; months without an order total are left blank.';
       }
-      const gaps = pts.filter(p => p.pct == null).map(p => p.label);
-      const noteEl = document.getElementById('proj-ads-note');
-      if (noteEl) noteEl.textContent = 'ℹ Ad sales from the Stewardship Summary sheet (ad_sales); total sales from Amazon orders, same as the table below.' + (gaps.length ? ' No ad_sales value yet for: ' + gaps.join(', ') + ' — those months are left blank.' : '');
+      window._projAdsView = renderProjAdsChart;
+      renderProjAdsChart('share');
 
       // ── 2) Sales by Quarter ──
       // Inventory Available = latest Products Cache snapshot (US rows, by
@@ -27414,6 +27527,23 @@ window.initBmKpis = function () {
     3: { border:'#ccd3d5', bg:'transparent',           fill:false },
   };
   const METRIC_LABEL = { sessions:'Sessions', conv:'Conv Rate', units:'Units' };
+  // Listing changes + out-of-stock annotations (ported from MiGuard 2026-11-16
+  // per Jaclyn). Shared multi-brand workbooks, one tab per brand.
+  //   Out of stock: noted under the All Products chart (not drawn on it);
+  //     drawn + listed on the Category and Product charts. Bundles are left
+  //     out entirely, as are consignment (C-) rows and closed_discontinued rows.
+  //   Listing changes: Product chart only.
+  const TRF_LISTING_LOG = { fileId:'1UUBGtUsE_nUPBSH9MyuEu27CqJI-XWJBh5wpT2DsEOk', gid:'993786423' }; // Listing Change Log → skinuva
+  const TRF_OOS_LOG     = { fileId:'1lbvdt8qcSRItrkWGjWnaJHcoBhjY275b1M6fM5_dKAM', gid:'1494905008' }; // Out Of Stock Historical Log → skinuva
+  const TRF_ANNO = { listing:'#001F60', oosAll:'#db372d', oosFba:'#f08c84' };
+  const TRF_FIELD_LABEL = { title:'Title', item_highlights:'Item Highlights', description:'Description', backend_keywords:'Backend keywords', offers:'Price', bullet_points:'Bullets', bullets:'Bullets', ingredients:'Ingredients', item_type_keyword:'Item type keyword' };
+  function fieldLabel(f) {
+    f = String(f || '').trim().toLowerCase();
+    if (TRF_FIELD_LABEL[f]) return TRF_FIELD_LABEL[f];
+    const b = f.match(/^bullet[_\s-]*(?:point[_\s-]*)?(\d+)$/);
+    if (b) return 'Bullet ' + b[1];
+    return f.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
+  }
   const _trf = { loading:null, view:null, win:90, cat:null, asin:null,
                  metric:{ overall:'sessions', cat:'sessions', prod:'sessions' }, charts:{} };
   window._trf = _trf;
@@ -27447,11 +27577,13 @@ window.initBmKpis = function () {
       const br = cfg.SHEET_BUSINESS_REPORT,
             dly = (cfg.SHEET_DAILY_BUSINESS_REPORT && cfg.SHEET_DAILY_BUSINESS_REPORT.fileId) ? cfg.SHEET_DAILY_BUSINESS_REPORT
                 : { fileId:'1QLjUvYg-JR6jQmdFlykypkNarqsZvTCOgA3bFagDlVg', gid:'685174956' };
-      const [monRows, dayRows, evRows, master] = await Promise.all([
+      const [monRows, dayRows, evRows, master, listRows, oosRows] = await Promise.all([
         br ? csvRows(br.fileId, br.gid) : Promise.resolve([]),
         dly && dly.fileId ? csvRows(dly.fileId, dly.gid).catch(() => []) : Promise.resolve([]),
         csvRows(TRF_EVENTS_FILE, TRF_EVENTS_GID).catch(() => []),
         getProductMaster().catch(() => ({ byAsin:{}, bySku:{}, byRootSku:{} })),
+        csvRows(TRF_LISTING_LOG.fileId, TRF_LISTING_LOG.gid).catch(() => []),
+        csvRows(TRF_OOS_LOG.fileId, TRF_OOS_LOG.gid).catch(() => []),
       ]);
       // monthly: "YYYY-MM" -> asin -> { s, u }
       const mon = {}, skuOf = {}, totS = {};
@@ -27495,7 +27627,65 @@ window.initBmKpis = function () {
         const start = normDate(r.start_date), end = normDate(r.end_date) || start;
         return { name: (r['event name'] || '').trim(), start, end: end < start ? start : end };
       }).filter(e => e.name && e.start).sort((a, b) => a.start.localeCompare(b.start));
-      Object.assign(_trf, { mon, daily:{ byDate:daily, dates:Object.keys(daily).sort() }, catOf, nameOf, cats, skuOf, hasDailySource: !!(dly && dly.fileId) });
+      // ── Listing changes, by ASIN ──
+      // Skipped (MiGuard rules): rows with a blank old_value (the log's first
+      // capture of a field — a baseline, not a change) and rows where old and
+      // new only differ by mis-encoded characters / whitespace.
+      const isMine = r => { const b = (r.brand || '').trim().toLowerCase(); return !b || b === 'skinuva'; };
+      const plain = v => String(v || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim();
+      const sameText = (a, b) => { const n = v => plain(v).replace(/[^\x20-\x7E]/g, '').replace(/\s+/g, ' ').trim().toLowerCase(); return n(a) === n(b); };
+      const chg = {}; // asin -> date -> [items]
+      listRows.forEach(r => {
+        if (!isMine(r)) return;
+        const asin = (r.asin || '').trim().toUpperCase(); if (!asin) return;
+        const d = normDate(r.date) || normDate(r.logged_at); if (!d) return;
+        if (!plain(r.old_value) || sameText(r.old_value, r.new_value)) return;
+        ((chg[asin] = chg[asin] || {})[d] = chg[asin][d] || []).push({ field: fieldLabel(r.field), oldV: plain(r.old_value), newV: plain(r.new_value) });
+      });
+      const listingByAsin = {};
+      Object.entries(chg).forEach(([a, byD]) => { listingByAsin[a] = Object.keys(byD).sort().map(date => ({ date, items: byD[date] })); });
+
+      // ── Out of stock, by ASIN ──
+      // type fba = FBA hit 0, all_inventory = every source hit 0. Open rows run
+      // through today. Each day is 'all' if all inventory was out, else 'fba';
+      // consecutive days of one kind become one run.
+      const isBundle = a => {
+        if (catOf[a] === 'Bundles') return true;
+        const m = master.byAsin[a];
+        return !!(m && /BUNDLE/i.test(m.skuType || ''));
+      };
+      const today = todayPT();
+      const oosPeriods = {};
+      oosRows.forEach(r => {
+        if (!isMine(r)) return;
+        if ((r.status || '').trim().toLowerCase() === 'closed_discontinued') return;
+        if (/^C-/i.test((r.sku || '').trim())) return; // consignment stock, not an Amazon listing
+        const type = (r.type || '').trim().toLowerCase();
+        if (type !== 'fba' && type !== 'all_inventory') return;
+        const asin = (r.asin || '').trim().toUpperCase();
+        if (!asin || !catOf[asin] || isBundle(asin)) return; // bundles left out per Jaclyn
+        const s0 = normDate(r.start_date); if (!s0) return;
+        const e0 = normDate(r.end_date);
+        (oosPeriods[asin] = oosPeriods[asin] || []).push({ type, s: s0, e: e0 ? (e0 < s0 ? s0 : e0) : today, open: !e0 });
+      });
+      const oosRuns = [], oosDayByAsin = {};
+      Object.entries(oosPeriods).forEach(([asin, ps]) => {
+        const kindOf = {};
+        ps.forEach(pp => { for (let d = pp.s; d <= pp.e; d = addDays(d, 1)) { if (pp.type === 'all_inventory') kindOf[d] = 'all'; else if (!kindOf[d]) kindOf[d] = 'fba'; } });
+        oosDayByAsin[asin] = kindOf;
+        const hasOpen = ps.some(pp => pp.open);
+        let run = null; const mine = [];
+        Object.keys(kindOf).sort().forEach(d => {
+          const k = kindOf[d];
+          if (run && run.kind === k && addDays(run.end, 1) === d) run.end = d;
+          else { run = { asin, kind: k, start: d, end: d }; mine.push(run); }
+        });
+        mine.forEach(rn => { rn.ongoing = hasOpen && rn.end === today; oosRuns.push(rn); });
+      });
+      oosRuns.sort((a, b) => a.start.localeCompare(b.start) || (nameOf[a.asin] || '').localeCompare(nameOf[b.asin] || ''));
+
+      Object.assign(_trf, { mon, daily:{ byDate:daily, dates:Object.keys(daily).sort() }, catOf, nameOf, cats, skuOf, hasDailySource: !!(dly && dly.fileId),
+                            listingByAsin, oosRuns, oosDayByAsin });
       return _trf;
     })();
     _trf.loading.catch(() => { _trf.loading = null; });
@@ -27606,6 +27796,44 @@ window.initBmKpis = function () {
     },
   };
 
+  // Out of stock: light tint over the day/month plus a solid strip along the
+  // bottom (dark red = all inventory out, light red = FBA only). Listing
+  // change: dashed navy line + numbered pin above the plot (number = fields
+  // changed). Ported from MiGuard's Traffic page.
+  const TRF_ANNO_PLUGIN = {
+    id:'trfAnno',
+    beforeDatasetsDraw(chart, _a, opts) {
+      const oos = (opts && opts.oos) || []; if (!oos.length) return;
+      const { ctx, chartArea:{ top, bottom, left, right }, scales:{ x } } = chart;
+      const step = x.getPixelForValue(1) - x.getPixelForValue(0) || 0;
+      oos.forEach(o => {
+        const x0 = Math.max(left, x.getPixelForValue(o.i) - step / 2), x1 = Math.min(right, x.getPixelForValue(o.i) + step / 2);
+        ctx.save();
+        ctx.fillStyle = o.kind === 'all' ? TRF_ANNO.oosAll : TRF_ANNO.oosFba;
+        ctx.globalAlpha = 0.07; ctx.fillRect(x0, top, Math.max(1, x1 - x0), bottom - top);
+        ctx.globalAlpha = 0.9; ctx.fillRect(x0, bottom - 6, Math.max(2, x1 - x0), 6);
+        ctx.restore();
+      });
+    },
+    afterDatasetsDraw(chart, _a, opts) {
+      const pins = (opts && opts.pins) || []; if (!pins.length) return;
+      const { ctx, chartArea:{ top, bottom }, scales:{ x } } = chart;
+      const byI = {};
+      pins.forEach(pn => { byI[pn.i] = (byI[pn.i] || 0) + pn.c.items.length; });
+      Object.entries(byI).forEach(([i, n]) => {
+        const px = x.getPixelForValue(Number(i));
+        ctx.save();
+        ctx.strokeStyle = TRF_ANNO.listing; ctx.globalAlpha = 0.5; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.moveTo(px, top); ctx.lineTo(px, bottom); ctx.stroke();
+        ctx.globalAlpha = 1; ctx.setLineDash([]);
+        ctx.fillStyle = TRF_ANNO.listing; ctx.beginPath(); ctx.arc(px, top - 10, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.font = '700 10px DM Sans, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(String(n), px, top - 10);
+        ctx.restore();
+      });
+    },
+  };
+
   function render(key) {
     if (!_trf.mon) return;
     const metric = _trf.metric[key], asins = asinSet(key);
@@ -27616,7 +27844,7 @@ window.initBmKpis = function () {
     else if (key === 'prod') titleEl.textContent = `${_trf.nameOf[_trf.asin] || 'Product'} — ${lbl}`;
     else titleEl.textContent = `Skinuva — All Products — ${lbl}`;
 
-    let labels = [], datasets = [], note = '', bands = [];
+    let labels = [], datasets = [], note = '', bands = [], winDays = null;
     if (_trf.view === 'monthly') {
       const now = new Date(), cy = now.getFullYear(), stop = now.getMonth();
       for (let off = 0; off <= 3; off++) {
@@ -27642,6 +27870,7 @@ window.initBmKpis = function () {
       if (all.length) {
         const end = all[all.length - 1], start = [addDays(end, -(_trf.win - 1)), all[0]].sort()[1];
         const days = []; for (let d = start; d <= end; d = addDays(d, 1)) days.push(d);
+        winDays = days;
         const cur = days.map(d => val(sum(byDate[d], asins), metric));
         const ly  = days.map(d => val(sum(byDate[shiftYear(d, -1)], asins), metric));
         const finalCut = addDays(todayPT(), -TRF_FINAL_AFTER), firstProv = days.findIndex(d => d > finalCut);
@@ -27667,6 +27896,34 @@ window.initBmKpis = function () {
     }
     noteEl.innerHTML = note || 'No data for this selection yet.';
 
+    // ── Listing-change pins + out-of-stock strips (ported from MiGuard) ──
+    // All Products: OOS listed under the chart only. Category: OOS drawn +
+    // listed. Product: OOS + listing changes drawn + listed.
+    const annos = { pins: [], oos: [] }, annoList = { listing: [], oos: [] };
+    const drawOos = key !== 'overall';
+    const dayKind = {}, dayNames = {};
+    asins.forEach(a => {
+      const k = (_trf.oosDayByAsin || {})[a]; if (!k) return;
+      Object.entries(k).forEach(([d, kind]) => {
+        if (dayKind[d] !== 'all') dayKind[d] = kind === 'all' ? 'all' : 'fba';
+        (dayNames[d] = dayNames[d] || []).push(_trf.nameOf[a] + (kind === 'all' ? '' : ' (FBA)'));
+      });
+    });
+    const runs = (_trf.oosRuns || []).filter(r => asins.has(r.asin));
+    const listing = key === 'prod' ? ((_trf.listingByAsin || {})[_trf.asin] || []) : [];
+    if (_trf.view === 'monthly') {
+      const hasData = (y, i) => { const ds = datasets.find(x => x.label === String(y)); return !!(ds && ds.data[i] != null); };
+      listing.forEach(c => { const [y, m] = c.date.split('-').map(Number); if (!hasData(y, m - 1)) return; annos.pins.push({ i: m - 1, c, yr: y }); annoList.listing.push(c); });
+      const byMonth = {};
+      Object.entries(dayKind).forEach(([d, k]) => { const e = byMonth[d.slice(0, 7)] = byMonth[d.slice(0, 7)] || { all: 0, fba: 0 }; e[k]++; });
+      if (drawOos) Object.entries(byMonth).forEach(([k, n]) => { const [y, m] = k.split('-').map(Number); if (hasData(y, m - 1)) annos.oos.push({ i: m - 1, kind: n.all ? 'all' : 'fba', counts: n, yr: y }); });
+      annoList.oos = runs.filter(r => { const [y, m] = r.start.split('-').map(Number), [y1, m1] = r.end.split('-').map(Number); return hasData(y, m - 1) || hasData(y1, m1 - 1); });
+    } else if (winDays && winDays.length) {
+      listing.forEach(c => { const i = winDays.indexOf(c.date); if (i >= 0) { annos.pins.push({ i, c }); annoList.listing.push(c); } });
+      if (drawOos) winDays.forEach((d, i) => { if (dayKind[d]) annos.oos.push({ i, kind: dayKind[d], names: dayNames[d] }); });
+      annoList.oos = runs.filter(r => r.end >= winDays[0] && r.start <= winDays[winDays.length - 1]);
+    }
+
     const canvas = document.getElementById(`trf-${key}-chart`);
     if (!canvas || typeof Chart === 'undefined') return;
     const opts = chartOptions(fmt);
@@ -27674,15 +27931,26 @@ window.initBmKpis = function () {
     // Empty chart: keep a clean 0-based axis instead of Chart.js's 0/1 filler ticks
     if (!datasets.some(d => d.data.some(v => v != null))) { opts.scales.y.min = 0; opts.scales.y.max = metric === 'conv' ? 100 : 10; opts.scales.y.ticks.stepSize = metric === 'conv' ? 20 : 2; }
     opts.plugins.trfEvents = { bands };
+    opts.plugins.trfAnno = annos;
+    opts.layout = { padding: { top: annos.pins.length ? 22 : 4 } };
     const evYr = b => b.yr ? ` ${b.yr}` : (b.ly ? ' (last year)' : '');
     opts.plugins.tooltip.callbacks.footer = items => {
       const i = items.length ? items[0].dataIndex : -1;
-      return bands.filter(b => i >= b.i0 && i <= b.i1).map(b => `🛒 ${b.e.name}${evYr(b)}`);
+      const out = bands.filter(b => i >= b.i0 && i <= b.i1).map(b => `🛒 ${b.e.name}${evYr(b)}`);
+      annos.pins.filter(pn => pn.i === i).forEach(pn => out.push(`✏️ Listing change${pn.yr ? ' ' + MONTHS[i] + ' ' + pn.yr : ''}: ${[...new Set(pn.c.items.map(x => x.field))].join(', ')}`));
+      annos.oos.filter(o => o.i === i).forEach(o => {
+        if (o.counts) { const parts = []; if (o.counts.all) parts.push(`${o.counts.all} day${o.counts.all === 1 ? '' : 's'} all inventory`); if (o.counts.fba) parts.push(`${o.counts.fba} day${o.counts.fba === 1 ? '' : 's'} FBA only`); out.push(`⛔ Out of stock ${MONTHS[i]} ${o.yr}: ${parts.join(', ')}`); }
+        else out.push(`⛔ Out of stock — ${o.kind === 'all' ? 'all inventory' : 'FBA only'}${key === 'cat' ? ' (' + o.names.join(', ') + ')' : ''}`);
+      });
+      return out;
     };
     const ch = _trf.charts[key];
     if (ch) { ch.data.labels = labels; ch.data.datasets = datasets; ch.options = opts; ch.update(); }
-    else _trf.charts[key] = new Chart(canvas, { type:'line', data:{ labels, datasets }, options:opts, plugins:[TRF_EVENT_PLUGIN] });
+    else _trf.charts[key] = new Chart(canvas, { type:'line', data:{ labels, datasets }, options:opts, plugins:[TRF_EVENT_PLUGIN, TRF_ANNO_PLUGIN] });
     renderLegend(_trf.charts[key], `trf-legend-${key}`);
+    const lgEl = document.getElementById(`trf-legend-${key}`);
+    if (lgEl) lgEl.innerHTML += (annos.pins.length ? `<span class="trf-anno-key"><span class="trf-chg-dot" style="flex:0 0 14px;height:14px;font-size:0;"></span>Listing change</span>` : '')
+      + (annos.oos.length ? `<span class="trf-anno-key"><span style="width:16px;height:6px;border-radius:2px;background:${TRF_ANNO.oosAll};display:inline-block;"></span>Out of stock</span>` : '');
 
     const listEl = document.getElementById(`trf-${key}-media`);
     if (listEl) {
@@ -27690,9 +27958,27 @@ window.initBmKpis = function () {
       const fmtR = e => e.start === e.end ? fmtD(e.start) : `${fmtD(e.start).replace(/, \d{4}$/, '')} – ${fmtD(e.end)}`;
       const seen = new Set();
       const evs = bands.slice().sort((x, y) => x.i0 - y.i0 || (x.yr || 0) - (y.yr || 0)).filter(b => { const k = b.e.name + b.e.start + (b.ly ? 'L' : ''); if (seen.has(k)) return false; seen.add(k); return true; });
-      listEl.innerHTML = evs.length
+      const evHtml = evs.length
         ? `<div class="trf-media-hd">Amazon events</div>` + evs.map(b => `<div class="trf-media-item"><span class="trf-ev-swatch" style="background:${TRF_EVENT_COLOR};${b.ly ? 'opacity:.45;' : ''}"></span><span>${fmtR(b.e)}${b.ly && !b.yr ? ' <span style="color:var(--muted);">(last year, shaded on the same dates)</span>' : ''} · <b>${esc(b.e.name)}</b></span></div>`).join('')
         : '';
+      // Listing changes — one line per date, before/after behind a toggle (Product chart only).
+      const clip = (v, n) => v.length > n ? v.slice(0, n).trimEnd() + '…' : v;
+      const chgHtml = annoList.listing.length ? `<div class="trf-media-hd">Listing changes</div>` + annoList.listing.map(c => {
+        const fields = [...new Set(c.items.map(x => x.field))];
+        const detail = c.items.map(x => `<div class="trf-chg-field">${esc(x.field)}</div>`
+          + `<div class="trf-chg-row"><span class="trf-chg-lbl">Before</span><span>${esc(clip(x.oldV, 700))}</span></div>`
+          + `<div class="trf-chg-row new"><span class="trf-chg-lbl">After</span><span>${esc(clip(x.newV, 700)) || '<i>(removed)</i>'}</span></div>`).join('');
+        return `<div class="trf-media-item"><span class="trf-chg-dot">${c.items.length}</span><div style="flex:1;min-width:0;"><b>${fmtD(c.date)}</b> · ${esc(fields.join(', '))}<details class="trf-chg"><summary>Before / after</summary>${detail}</details></div></div>`;
+      }).join('') : '';
+      // Out of stock — product names shown on All Products / Category.
+      const dayN = (a, b) => Math.round((new Date(b + 'T12:00:00Z') - new Date(a + 'T12:00:00Z')) / 86400000) + 1;
+      const oosHtml = annoList.oos.length ? `<div class="trf-media-hd">Out of stock${key === 'overall' ? ' <span style="text-transform:none;font-weight:500;">(not drawn on this chart — see the category and product charts)</span>' : ''}</div>` + annoList.oos.map(r => {
+        const n = dayN(r.start, r.end);
+        const range = r.ongoing ? `${fmtD(r.start)} → today` : fmtR({ start: r.start, end: r.end });
+        const what = r.kind === 'all' ? 'Out of stock — all inventory' : 'FBA out of stock (other inventory still on hand)';
+        return `<div class="trf-media-item"><span class="trf-oos-swatch" style="background:${r.kind === 'all' ? TRF_ANNO.oosAll : TRF_ANNO.oosFba};"></span><span><b>${range}</b> · ${key !== 'prod' ? esc(_trf.nameOf[r.asin] || r.asin) + ' · ' : ''}${what} · ${n} day${n === 1 ? '' : 's'}${r.ongoing ? '<span class="trf-ongoing">Ongoing</span>' : ''}</span></div>`;
+      }).join('') : '';
+      listEl.innerHTML = evHtml + chgHtml + oosHtml;
     }
   }
 })();
