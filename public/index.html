@@ -1421,7 +1421,7 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
       <div class="card" style="margin-top:0;">
         <div class="home-card-title">Resources</div>
         <div class="home-card-sub">Shared files, routing guides, and brand docs.</div>
-        <a class="home-resource-item" href="https://www.dropbox.com/scl/fo/779lwjw5d50lais1e6f2u/AOJK7AOPyNY0WC0-Z4q7-X8?rlkey=dudkg8i08xnsx3qcp8hqbvwhg&st=05ax0b6t&dl=0" target="_blank" rel="noopener">
+        <a class="home-resource-item" href="https://www.dropbox.com/scl/fo/bs4q4yuh9xpxbe936hfcp/AGokIJ5-syO9B3WbT353hd8?rlkey=fext40i69hayo7jk89g0ud8ob&e=2&st=2nuaifql&dl=0" target="_blank" rel="noopener">
           <span class="home-resource-icon">📁</span>
           <div>
             <div class="home-resource-title">Shared Files</div>
@@ -1768,68 +1768,90 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
     <div class="page-hd">
       <div><div class="page-title">Fulfillment</div><div class="page-sub">ShipStation · Processing performance</div></div>
     </div>
+    <!-- REPLACED 2026-11-18 per Jaclyn: this page now carries exactly what was
+         on Marketing (external) → Fulfillment & Customer Service (same markup,
+         same element ids, same loaders), and that tab was removed. -->
 
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px;">
-      <div class="kpi-card">
-        <div class="kpi-label">Shipped Website Orders • Last 30 Days</div>
-        <div class="kpi-value" id="ff-kpi-shipped30">—</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Our Fulfillment Promise · Last 7 Days</div>
-        <div class="kpi-value" style="color:#1db88a;">100%</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Same Day Fulfilled · weekday orders before 1p</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Avg Processing Time · Last 7 Days</div>
-        <div class="kpi-value" id="ff-kpi-proctime">—</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Business days · weekends excluded</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Avg Shipping Cost · Last 7 Days</div>
-        <div class="kpi-value" id="ff-kpi-shipcost">—</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Inventory Prepped</div>
-        <div class="kpi-value" id="ff-kpi-invprepped">—</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Units received this month</div>
-      </div>
-    </div>
-
-    <div class="ppc-card">
-      <div class="ppc-card-title">Website Orders Shipped by Date · Last 30 Days</div>
-      <div style="position:relative;height:320px;"><canvas id="ff-shipped-chart"></canvas></div>
-      <div class="ppc-note" id="ff-chart-footer">Loading…</div>
-    </div>
-
-    <div class="ppc-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <div class="ppc-card-title" style="margin-bottom:0;">Website Orders by State · Last 30 Days</div>
-        <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);">
-          <span>Fewer</span>
-          <div style="width:80px;height:7px;border-radius:4px;background:linear-gradient(to right,#dce6f5,#001F60);"></div>
-          <span>More</span>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px;">
+        <div class="kpi-card">
+          <div class="kpi-label">Shipped Website Orders · Last 30 Days</div>
+          <div class="kpi-value" id="mx-mfc-kpi-shipped30">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Our Fulfillment Promise · Last 7 Days</div>
+          <div class="kpi-value" style="color:#1db88a;">100%</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Same Day Fulfilled · weekday orders before 1p</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Processing Time · Last 7 Days</div>
+          <div class="kpi-value" id="mx-mfc-kpi-proctime">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Business days · weekends excluded</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Shipping Cost · Last 7 Days</div>
+          <div class="kpi-value" id="mx-mfc-kpi-shipcost">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Inventory Prepped</div>
+          <div class="kpi-value" id="mx-mfc-kpi-invprepped">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="mx-mfc-lbl-invprepped">Units received</div>
         </div>
       </div>
-      <div style="position:relative;padding:8px 0;">
-        <div class="ff-map-tooltip" id="ff-map-tip"></div>
-        <svg id="ff-us-svg" viewBox="0 0 959 593" style="width:100%;height:auto;display:block;"></svg>
+
+      <div class="ppc-card">
+        <div class="ppc-card-title">Website Orders Shipped by Date · Last 30 Days</div>
+        <div style="position:relative;height:170px;"><canvas id="mx-mfc-shipped-chart"></canvas></div>
+        <div class="ppc-note" id="mx-mfc-chart-footer">Loading…</div>
       </div>
-      <div class="ppc-note" id="ff-map-footer">Loading…</div>
-      <div style="border-top:1px solid var(--border);margin-top:12px;overflow-y:auto;max-height:400px;">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>State</th><th>Orders</th>
-              <th>State</th><th>Orders</th>
-              <th>State</th><th>Orders</th>
-              <th>State</th><th>Orders</th>
-              <th>State</th><th>Orders</th>
-            </tr>
-          </thead>
-          <tbody id="ff-state-table-body"><tr><td colspan="10" style="color:var(--muted);">Loading…</td></tr></tbody>
-        </table>
+
+      <div class="ppc-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div class="ppc-card-title" style="margin-bottom:0;">Website Orders by State · Last 30 Days</div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);">
+            <span>Fewer</span>
+            <div style="width:80px;height:7px;border-radius:4px;background:linear-gradient(to right,#dce6f5,#001F60);"></div>
+            <span>More</span>
+          </div>
+        </div>
+        <div style="position:relative;padding:8px 0;">
+          <div class="ff-map-tooltip" id="mx-mfc-map-tip"></div>
+          <svg id="mx-mfc-us-svg" viewBox="0 0 959 593" style="width:100%;height:auto;display:block;"></svg>
+        </div>
+        <div class="ppc-note" id="mx-mfc-map-footer">Loading…</div>
+        <div style="border-top:1px solid var(--border);margin-top:12px;overflow-y:auto;max-height:400px;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>State</th><th>Orders</th>
+                <th>State</th><th>Orders</th>
+                <th>State</th><th>Orders</th>
+                <th>State</th><th>Orders</th>
+                <th>State</th><th>Orders</th>
+              </tr>
+            </thead>
+            <tbody id="mx-mfc-state-table-body"><tr><td colspan="10" style="color:var(--muted);">Loading…</td></tr></tbody>
+          </table>
+        </div>
       </div>
-    </div>
+
+      <div class="section-label" style="margin-top:4px;">Customer Service</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;margin-top:4px;">
+        <div class="kpi-card">
+          <div class="kpi-label">Reviews Requested</div>
+          <div class="kpi-value" id="mx-mfc-kpi-reviews">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Post Purchase Follow Up</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Compliance Cases Resolved</div>
+          <div class="kpi-value" id="mx-mfc-kpi-compliance">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="mx-mfc-kpi-compliance-sub">Open Cases: —</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Returns Processed</div>
+          <div class="kpi-value" id="mx-mfc-kpi-returns">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="mx-mfc-kpi-returns-sub">Return rate: —</div>
+        </div>
+      </div>
   </div>
 
   <!-- ══ SALES ══ -->
@@ -2779,7 +2801,6 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
            only ever come from the most recently APPROVED report month. -->
       <button class="ch-tab active" onclick="showChannel('marketing-external','mx-momentum',this)">Brand Momentum</button>
       <button class="ch-tab" onclick="showChannel('marketing-external','mx-insights',this)">Insights</button>
-      <button class="ch-tab" onclick="showChannel('marketing-external','mx-fulfillment-cs',this)">Fulfillment &amp; Customer Service</button>
       <button class="ch-tab" onclick="showChannel('marketing-external','mx-stewardship',this)">Brand Stewardship</button>
       <button class="ch-tab" onclick="showChannel('marketing-external','mx-opportunities',this)">Opportunities</button>
     </div>
@@ -2812,91 +2833,6 @@ details.inci-toggle[open] summary::before{content:'▾ ';}
         <span class="insight-text" id="mx-sns-insight-text"></span>
       </div>
     </div>
-
-    <div class="channel-page" id="mx-fulfillment-cs">
-
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px;">
-        <div class="kpi-card">
-          <div class="kpi-label">Shipped Website Orders · Last 30 Days</div>
-          <div class="kpi-value" id="mx-mfc-kpi-shipped30">—</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Our Fulfillment Promise · Last 7 Days</div>
-          <div class="kpi-value" style="color:#1db88a;">100%</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Same Day Fulfilled · weekday orders before 1p</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Avg Processing Time · Last 7 Days</div>
-          <div class="kpi-value" id="mx-mfc-kpi-proctime">—</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Business days · weekends excluded</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Avg Shipping Cost · Last 7 Days</div>
-          <div class="kpi-value" id="mx-mfc-kpi-shipcost">—</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Inventory Prepped</div>
-          <div class="kpi-value" id="mx-mfc-kpi-invprepped">—</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="mx-mfc-lbl-invprepped">Units received</div>
-        </div>
-      </div>
-
-      <div class="ppc-card">
-        <div class="ppc-card-title">Website Orders Shipped by Date · Last 30 Days</div>
-        <div style="position:relative;height:170px;"><canvas id="mx-mfc-shipped-chart"></canvas></div>
-        <div class="ppc-note" id="mx-mfc-chart-footer">Loading…</div>
-      </div>
-
-      <div class="ppc-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <div class="ppc-card-title" style="margin-bottom:0;">Website Orders by State · Last 30 Days</div>
-          <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);">
-            <span>Fewer</span>
-            <div style="width:80px;height:7px;border-radius:4px;background:linear-gradient(to right,#dce6f5,#001F60);"></div>
-            <span>More</span>
-          </div>
-        </div>
-        <div style="position:relative;padding:8px 0;">
-          <div class="ff-map-tooltip" id="mx-mfc-map-tip"></div>
-          <svg id="mx-mfc-us-svg" viewBox="0 0 959 593" style="width:100%;height:auto;display:block;"></svg>
-        </div>
-        <div class="ppc-note" id="mx-mfc-map-footer">Loading…</div>
-        <div style="border-top:1px solid var(--border);margin-top:12px;overflow-y:auto;max-height:400px;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>State</th><th>Orders</th>
-                <th>State</th><th>Orders</th>
-                <th>State</th><th>Orders</th>
-                <th>State</th><th>Orders</th>
-                <th>State</th><th>Orders</th>
-              </tr>
-            </thead>
-            <tbody id="mx-mfc-state-table-body"><tr><td colspan="10" style="color:var(--muted);">Loading…</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="section-label" style="margin-top:4px;">Customer Service</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;margin-top:4px;">
-        <div class="kpi-card">
-          <div class="kpi-label">Reviews Requested</div>
-          <div class="kpi-value" id="mx-mfc-kpi-reviews">—</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Post Purchase Follow Up</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Compliance Cases Resolved</div>
-          <div class="kpi-value" id="mx-mfc-kpi-compliance">—</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="mx-mfc-kpi-compliance-sub">Open Cases: —</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Returns Processed</div>
-          <div class="kpi-value" id="mx-mfc-kpi-returns">—</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="mx-mfc-kpi-returns-sub">Return rate: —</div>
-        </div>
-      </div>
-
-    </div><!-- /mx-fulfillment-cs -->
 
     <div class="channel-page" id="mx-stewardship">
 
@@ -13012,6 +12948,7 @@ async function initSnsExternal() {
   }
 
   // Inventory Prepped mirrors the internal tab's live value (same source).
+  window.mxMirrorInventoryPrepped = function () { return mirrorInventoryPreppedExternal(); };
   async function mirrorInventoryPreppedExternal() {
     if (typeof window.initMarketingFulfillmentCS === 'function') { try { await window.initMarketingFulfillmentCS(); } catch (e) {} }
     for (let i = 0; i < 50; i++) {
@@ -13049,11 +12986,9 @@ async function initSnsExternal() {
       // Fulfillment & CS + Subscribe & Save — always live/current, regardless
       // of whether anything has ever been approved.
       await Promise.all([
-        typeof window.initMarketingFulfillmentCSExternal === 'function' ? window.initMarketingFulfillmentCSExternal() : null,
         typeof initSnsExternal === 'function' ? initSnsExternal() : null,
         typeof window.loadSkinuvaCategoryChart === 'function' ? window.loadSkinuvaCategoryChart('mx-chart-category', '_catChartExternal') : null,
         typeof window.renderSkinuvaMomentumExternal === 'function' ? window.renderSkinuvaMomentumExternal() : null,
-        mirrorInventoryPreppedExternal(),
       ]);
     })();
     return window.__marketingExternalPromise;
@@ -20710,11 +20645,15 @@ async function ffLoadStates() {
 }
 
 window.initFulfillmentPage = async function() {
-  // Independent fetches — no reason to wait on each other one at a time.
-  // Was sequential before; that added up as a real, perceptible delay
-  // once this page had 3 fetches of its own, on top of every other
-  // page's own eagerly-loaded fetches at initial page load.
-  await Promise.all([ffLoadKpis(), ffLoadShippedChart(), ffLoadStates(), ffLoadInventoryPrepped()]);
+  // CHANGED 2026-11-18 per Jaclyn: the Fulfillment page now shows what was on
+  // Marketing (external) → Fulfillment & Customer Service, using that tab's
+  // own loaders (mxMfcLoad*: shipped KPIs, shipped-by-date chart, orders-by-
+  // state map, returns, compliance/reviews) and its Inventory Prepped mirror.
+  // The older ff* loaders below are no longer called.
+  await Promise.all([
+    typeof window.initMarketingFulfillmentCSExternal === 'function' ? window.initMarketingFulfillmentCSExternal() : null,
+    typeof window.mxMirrorInventoryPrepped === 'function' ? window.mxMirrorInventoryPrepped() : null,
+  ]);
 };
 
 // Reuses the same self-contained mfc* helpers (mfcGvizCsvUrl, mfcIsCsv,
